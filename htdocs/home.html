@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zotero Server</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; background: #f5f6fa; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
+
+.header { background: #fff; border-bottom: 1px solid #ddd; padding: 16px 0; }
+.header-inner { max-width: 800px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+.logo { font-size: 32px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; }
+.logo .z { color: #c1302b; }
+.logo .rest { color: #333; }
+
+.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
+.hero { text-align: center; max-width: 500px; }
+.hero h1 { font-size: 28px; font-weight: 300; color: #333; margin-bottom: 8px; }
+.hero p { font-size: 15px; color: #666; margin-bottom: 32px; line-height: 1.6; }
+
+.links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.links a {
+    display: block; padding: 16px 32px; border-radius: 8px; text-decoration: none;
+    font-size: 15px; font-weight: 500; transition: all .15s;
+}
+.link-account {
+    background: #c1302b; color: #fff; border: 1px solid #c1302b;
+}
+.link-account:hover { background: #a52924; }
+.link-admin {
+    background: #fff; color: #333; border: 1px solid #ddd;
+}
+.link-admin:hover { background: #f0f0f0; }
+
+.footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
+</style>
+</head>
+<body>
+<div class="header">
+    <div class="header-inner">
+        <a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
+    </div>
+</div>
+<div class="main">
+    <div class="hero">
+        <h1>Self-Hosted Zotero Server</h1>
+        <p>Your private research library sync server.<br>Manage your account, groups, and API keys.</p>
+        <div class="links">
+            <a href="/account.php" class="links a link-account">My Account</a>
+            <a href="/admin.php" class="links a link-admin">Admin Panel</a>
+        </div>
+    </div>
+</div>
+<div class="footer">Zotero Self-Hosted Server</div>
+</body>
+</html>

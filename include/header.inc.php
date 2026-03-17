@@ -253,10 +253,12 @@ Z_Core::$AWS = new Aws\Sdk($awsConfig);
 unset($awsConfig);
 
 // Elasticsearch
-$esConfig = [
-	'hosts' => Z_CONFIG::$SEARCH_HOSTS
-];
-Z_Core::$ES = \Elasticsearch\ClientBuilder::fromConfig($esConfig, true);
+if (!empty(Z_CONFIG::$SEARCH_HOSTS[0])) {
+	$esConfig = [
+		'hosts' => Z_CONFIG::$SEARCH_HOSTS
+	];
+	Z_Core::$ES = \Elasticsearch\ClientBuilder::fromConfig($esConfig, true);
+}
 
 require('interfaces/IAuthenticationPlugin.inc.php');
 

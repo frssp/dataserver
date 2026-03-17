@@ -1,0 +1,714 @@
+#!/usr/bin/php -d mysqlnd.net_read_timeout=3600
+<?php
+/*
+ * Self-hosted Zotero admin management tool.
+ * Run from inside the PHP container:
+ *   docker compose exec php-fpm php admin/manage <command> [args]
+ *
+ * Commands:
+ *   user list
+ *   user add <username> <password> <email>
+ *   user passwd <username> <new_password>
+ *   user delete <username>
+ *   user info <username>
+ *
+ *   group list
+ *   group create <owner_username> <name> [type] [editing] [reading]
+ *   group delete <groupID>
+ *   group info <groupID>
+ *   group adduser <groupID> <username> [role]
+ *   group removeuser <groupID> <username>
+ *   group members <groupID>
+ *
+ *   key list <username>
+ *   key create <username> [name]
+ *   key delete <key>
+ *   key info <key>
+ *
+ *   status
+ */
+
+set_include_path("../include");
+require("header.inc.php");
+
+// DB helpers — direct queries for operations not covered by model classes
+function wwwDB() {
+	$dev = Z_ENV_TESTING_SITE ? "_dev" : "";
+	return "zotero_www{$dev}";
+}
+
+function masterDB() {
+	return Zotero_DB::query("SELECT DATABASE()", false, false) ? "zotero_master" : "zotero_master";
+}
+
+function printTable($headers, $rows) {
+	if (empty($rows)) {
+		echo "  (none)\n";
+		return;
+	}
+	$widths = [];
+	foreach ($headers as $i => $h) {
+		$widths[$i] = mb_strlen($h);
+	}
+	foreach ($rows as $row) {
+		foreach ($row as $i => $val) {
+			$widths[$i] = max($widths[$i] ?? 0, mb_strlen((string)$val));
+		}
+	}
+	// Header
+	$line = '';
+	foreach ($headers as $i => $h) {
+		$line .= str_pad($h, $widths[$i] + 2);
+	}
+	echo "  $line\n";
+	echo "  " . str_repeat('-', array_sum($widths) + count($widths) * 2) . "\n";
+	// Rows
+	foreach ($rows as $row) {
+		$line = '';
+		foreach ($row as $i => $val) {
+			$line .= str_pad((string)$val, $widths[$i] + 2);
+		}
+		echo "  $line\n";
+	}
+}
+
+function getUserIDByUsername($username) {
+	$sql = "SELECT userID FROM users WHERE username=?";
+	$userID = Zotero_DB::valueQuery($sql, $username);
+	if (!$userID) {
+		echo "Error: User '$username' not found.\n";
+		exit(1);
+	}
+	return (int) $userID;
+}
+
+function generateKey() {
+	$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+	$key = '';
+	for ($i = 0; $i < 24; $i++) {
+		$key .= $chars[random_int(0, strlen($chars) - 1)];
+	}
+	return $key;
+}
+
+// ── Commands ──────────────────────────────────────────────────────────
+
+function cmd_user_list() {
+	$sql = "SELECT u.userID, u.username, u.libraryID, w.email
+			FROM zotero_master.users u
+			LEFT JOIN " . wwwDB() . ".users w ON u.userID = w.userID
+			ORDER BY u.userID";
+	$rows = Zotero_DB::query($sql);
+	$data = [];
+	foreach ($rows as $r) {
+		$data[] = [$r['userID'], $r['username'], $r['libraryID'], $r['email'] ?? ''];
+	}
+	printTable(['ID', 'Username', 'LibraryID', 'Email'], $data);
+}
+
+function cmd_user_add($username, $password, $email) {
+	$salt = Z_CONFIG::$AUTH_SALT;
+	$hash = sha1($salt . $password);
+	$wwwDB = wwwDB();
+
+	// Check existing
+	$existing = Zotero_DB::valueQuery("SELECT userID FROM zotero_master.users WHERE username=?", $username);
+	if ($existing) {
+		echo "Error: User '$username' already exists (ID: $existing).\n";
+		exit(1);
+	}
+
+	Zotero_DB::beginTransaction();
+	try {
+		// Create www user first (auto-increment gives us userID)
+		Zotero_DB::query(
+			"INSERT INTO $wwwDB.users (username, password, email, active, dateAdded, dateModified, slug) VALUES (?, ?, ?, 1, NOW(), NOW(), ?)",
+			[$username, $hash, $email, $username]
+		);
+		$userID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+
+		// Create library
+		Zotero_DB::query(
+			"INSERT INTO zotero_master.libraries (libraryType, lastUpdated, version, shardID, hasData) VALUES ('user', NOW(), 0, 1, 0)"
+		);
+		$libraryID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+
+		// Create master user (userID from www, not auto-increment)
+		Zotero_DB::query(
+			"INSERT INTO zotero_master.users (userID, libraryID, username) VALUES (?, ?, ?)",
+			[$userID, $libraryID, $username]
+		);
+
+		// Create shard library
+		$shardID = Zotero_Shards::getByLibraryID($libraryID);
+		Zotero_DB::query(
+			"INSERT INTO shardLibraries (libraryID, libraryType, lastUpdated, version, storageUsage) VALUES (?, 'user', NOW(), 1, 0)",
+			[$libraryID],
+			$shardID
+		);
+
+		// Create API key with full access
+		$key = generateKey();
+		Zotero_DB::query(
+			"INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, 'Full Access Key', NOW(), NOW())",
+			[$key, $userID]
+		);
+		$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+
+		// Key permissions: specific library + all-library
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'library', 1)", [$keyID, $libraryID]);
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'notes', 1)", [$keyID, $libraryID]);
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'write', 1)", [$keyID, $libraryID]);
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'library', 1)", [$keyID]);
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'notes', 1)", [$keyID]);
+		Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'write', 1)", [$keyID]);
+
+		Zotero_DB::commit();
+
+		echo "User created successfully.\n";
+		echo "  Username:   $username\n";
+		echo "  User ID:    $userID\n";
+		echo "  Library ID: $libraryID\n";
+		echo "  API Key:    $key\n";
+	}
+	catch (Exception $e) {
+		Zotero_DB::rollback();
+		echo "Error: " . $e->getMessage() . "\n";
+		exit(1);
+	}
+}
+
+function cmd_user_passwd($username, $newPassword) {
+	$salt = Z_CONFIG::$AUTH_SALT;
+	$hash = sha1($salt . $newPassword);
+	$wwwDB = wwwDB();
+
+	$userID = getUserIDByUsername($username);
+
+	Zotero_DB::query("UPDATE $wwwDB.users SET password=?, dateModified=NOW() WHERE userID=?", [$hash, $userID]);
+
+	// Clear auth cache
+	Z_Core::$MC->delete('userAuthHash_' . hash('sha256', $username . $newPassword));
+
+	echo "Password updated for '$username'.\n";
+}
+
+function cmd_user_delete($username) {
+	$userID = getUserIDByUsername($username);
+	$wwwDB = wwwDB();
+
+	echo "Deleting user '$username' (ID: $userID)...\n";
+
+	Zotero_DB::beginTransaction();
+	try {
+		// Delete www user
+		Zotero_DB::query("DELETE FROM $wwwDB.users WHERE userID=?", [$userID]);
+
+		// Delete API keys and permissions
+		$keys = Zotero_DB::query("SELECT keyID FROM zotero_master.`keys` WHERE userID=?", [$userID]);
+		if ($keys) {
+			foreach ($keys as $k) {
+				Zotero_DB::query("DELETE FROM zotero_master.keyPermissions WHERE keyID=?", [$k['keyID']]);
+			}
+			Zotero_DB::query("DELETE FROM zotero_master.`keys` WHERE userID=?", [$userID]);
+		}
+
+		// Delete shard library data
+		$libraryID = Zotero_DB::valueQuery("SELECT libraryID FROM zotero_master.users WHERE userID=?", [$userID]);
+		if ($libraryID) {
+			$shardID = Zotero_Shards::getByLibraryID($libraryID);
+			Zotero_DB::query("DELETE FROM shardLibraries WHERE libraryID=?", [$libraryID], $shardID);
+			Zotero_DB::query("DELETE FROM zotero_master.libraries WHERE libraryID=?", [$libraryID]);
+		}
+
+		// Delete master user
+		Zotero_DB::query("DELETE FROM zotero_master.users WHERE userID=?", [$userID]);
+
+		// Remove from groups
+		Zotero_DB::query("DELETE FROM zotero_master.groupUsers WHERE userID=?", [$userID]);
+
+		Zotero_DB::commit();
+		echo "User '$username' deleted.\n";
+	}
+	catch (Exception $e) {
+		Zotero_DB::rollback();
+		echo "Error: " . $e->getMessage() . "\n";
+		exit(1);
+	}
+}
+
+function cmd_user_info($username) {
+	$userID = getUserIDByUsername($username);
+	$wwwDB = wwwDB();
+
+	$user = Zotero_DB::rowQuery(
+		"SELECT u.userID, u.username, u.libraryID, w.email, w.dateAdded, w.dateModified
+		 FROM zotero_master.users u
+		 LEFT JOIN $wwwDB.users w ON u.userID = w.userID
+		 WHERE u.userID=?", [$userID]
+	);
+
+	echo "User: {$user['username']}\n";
+	echo "  ID:           {$user['userID']}\n";
+	echo "  Library ID:   {$user['libraryID']}\n";
+	echo "  Email:        " . ($user['email'] ?? 'N/A') . "\n";
+	echo "  Created:      " . ($user['dateAdded'] ?? 'N/A') . "\n";
+	echo "  Modified:     " . ($user['dateModified'] ?? 'N/A') . "\n";
+
+	// API keys
+	$keys = Zotero_DB::query(
+		"SELECT `key`, name, dateAdded, lastUsed FROM zotero_master.`keys` WHERE userID=?", [$userID]
+	);
+	echo "  API Keys:\n";
+	if ($keys) {
+		foreach ($keys as $k) {
+			echo "    - {$k['key']}  ({$k['name']}, last used: {$k['lastUsed']})\n";
+		}
+	} else {
+		echo "    (none)\n";
+	}
+
+	// Groups
+	$groups = Zotero_DB::query(
+		"SELECT g.groupID, g.name, gu.role
+		 FROM zotero_master.groupUsers gu
+		 JOIN zotero_master.groups g ON gu.groupID = g.groupID
+		 WHERE gu.userID=?", [$userID]
+	);
+	echo "  Groups:\n";
+	if ($groups) {
+		foreach ($groups as $g) {
+			echo "    - [{$g['groupID']}] {$g['name']} ({$g['role']})\n";
+		}
+	} else {
+		echo "    (none)\n";
+	}
+}
+
+// ── Group commands ────────────────────────────────────────────────────
+
+function cmd_group_list() {
+	$sql = "SELECT g.groupID, g.name, g.type, g.libraryEditing, g.libraryReading,
+				   u.username AS owner, g.dateAdded,
+				   (SELECT COUNT(*) FROM zotero_master.groupUsers gu WHERE gu.groupID = g.groupID) AS members
+			FROM zotero_master.groups g
+			JOIN zotero_master.groupUsers gu2 ON g.groupID = gu2.groupID AND gu2.role = 'owner'
+			JOIN zotero_master.users u ON gu2.userID = u.userID
+			ORDER BY g.groupID";
+	$rows = Zotero_DB::query($sql);
+	$data = [];
+	if ($rows) {
+		foreach ($rows as $r) {
+			$data[] = [$r['groupID'], $r['name'], $r['type'], $r['owner'], $r['members'], $r['libraryEditing'], $r['libraryReading']];
+		}
+	}
+	printTable(['ID', 'Name', 'Type', 'Owner', 'Members', 'Editing', 'Reading'], $data);
+}
+
+function cmd_group_create($ownerUsername, $name, $type = 'Private', $editing = 'members', $reading = 'members') {
+	$validTypes = ['Private', 'PublicOpen', 'PublicClosed'];
+	if (!in_array($type, $validTypes)) {
+		echo "Error: Invalid type '$type'. Must be one of: " . implode(', ', $validTypes) . "\n";
+		exit(1);
+	}
+
+	$ownerID = getUserIDByUsername($ownerUsername);
+
+	$group = new Zotero_Group;
+	$group->ownerUserID = $ownerID;
+	$group->name = $name;
+	$group->type = $type;
+	$group->libraryEditing = $editing;
+	$group->libraryReading = $reading;
+	$group->fileEditing = 'none';
+	$group->description = '';
+	$group->url = '';
+	$group->hasImage = false;
+
+	$group->save();
+
+	echo "Group created successfully.\n";
+	echo "  Group ID:    {$group->id}\n";
+	echo "  Name:        $name\n";
+	echo "  Type:        $type\n";
+	echo "  Owner:       $ownerUsername\n";
+	echo "  Library ID:  {$group->libraryID}\n";
+}
+
+function cmd_group_delete($groupID) {
+	$group = Zotero_Groups::get($groupID);
+	if (!$group) {
+		echo "Error: Group $groupID not found.\n";
+		exit(1);
+	}
+	echo "Deleting group '{$group->name}' (ID: $groupID)...\n";
+	$group->erase();
+	echo "Group deleted.\n";
+}
+
+function cmd_group_info($groupID) {
+	$group = Zotero_Groups::get($groupID);
+	if (!$group) {
+		echo "Error: Group $groupID not found.\n";
+		exit(1);
+	}
+	echo "Group: {$group->name}\n";
+	echo "  ID:              {$group->id}\n";
+	echo "  Library ID:      {$group->libraryID}\n";
+	echo "  Type:            {$group->type}\n";
+	echo "  Library Editing: {$group->libraryEditing}\n";
+	echo "  Library Reading: {$group->libraryReading}\n";
+	echo "  File Editing:    {$group->fileEditing}\n";
+	echo "  Description:     {$group->description}\n";
+	echo "  Created:         {$group->dateAdded}\n";
+
+	cmd_group_members($groupID);
+}
+
+function cmd_group_adduser($groupID, $username, $role = 'member') {
+	$validRoles = ['admin', 'member'];
+	if (!in_array($role, $validRoles)) {
+		echo "Error: Invalid role '$role'. Must be one of: " . implode(', ', $validRoles) . "\n";
+		exit(1);
+	}
+
+	$group = Zotero_Groups::get($groupID);
+	if (!$group) {
+		echo "Error: Group $groupID not found.\n";
+		exit(1);
+	}
+
+	$userID = getUserIDByUsername($username);
+
+	if ($group->hasUser($userID)) {
+		echo "User '$username' is already in group '{$group->name}'. Updating role to '$role'.\n";
+		$group->updateUser($userID, $role);
+	} else {
+		$group->addUser($userID, $role);
+		echo "Added '$username' to group '{$group->name}' as $role.\n";
+	}
+}
+
+function cmd_group_removeuser($groupID, $username) {
+	$group = Zotero_Groups::get($groupID);
+	if (!$group) {
+		echo "Error: Group $groupID not found.\n";
+		exit(1);
+	}
+
+	$userID = getUserIDByUsername($username);
+
+	if (!$group->hasUser($userID)) {
+		echo "Error: User '$username' is not in group '{$group->name}'.\n";
+		exit(1);
+	}
+
+	$group->removeUser($userID);
+	echo "Removed '$username' from group '{$group->name}'.\n";
+}
+
+function cmd_group_members($groupID) {
+	$group = Zotero_Groups::get($groupID);
+	if (!$group) {
+		echo "Error: Group $groupID not found.\n";
+		exit(1);
+	}
+
+	$sql = "SELECT gu.userID, u.username, gu.role, gu.joined
+			FROM zotero_master.groupUsers gu
+			JOIN zotero_master.users u ON gu.userID = u.userID
+			WHERE gu.groupID=?
+			ORDER BY FIELD(gu.role, 'owner', 'admin', 'member'), gu.joined";
+	$rows = Zotero_DB::query($sql, [$groupID]);
+	$data = [];
+	if ($rows) {
+		foreach ($rows as $r) {
+			$data[] = [$r['userID'], $r['username'], $r['role'], $r['joined']];
+		}
+	}
+	echo "  Members:\n";
+	printTable(['UserID', 'Username', 'Role', 'Joined'], $data);
+}
+
+// ── Key commands ──────────────────────────────────────────────────────
+
+function cmd_key_list($username) {
+	$userID = getUserIDByUsername($username);
+	$sql = "SELECT k.keyID, k.`key`, k.name, k.dateAdded, k.lastUsed
+			FROM zotero_master.`keys` k
+			WHERE k.userID=?
+			ORDER BY k.keyID";
+	$rows = Zotero_DB::query($sql, [$userID]);
+	$data = [];
+	if ($rows) {
+		foreach ($rows as $r) {
+			$data[] = [$r['keyID'], $r['key'], $r['name'], $r['dateAdded'], $r['lastUsed']];
+		}
+	}
+	printTable(['ID', 'Key', 'Name', 'Created', 'Last Used'], $data);
+}
+
+function cmd_key_create($username, $name = 'Full Access Key') {
+	$userID = getUserIDByUsername($username);
+	$libraryID = Zotero_DB::valueQuery("SELECT libraryID FROM zotero_master.users WHERE userID=?", [$userID]);
+
+	$key = generateKey();
+	Zotero_DB::query(
+		"INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, ?, NOW(), NOW())",
+		[$key, $userID, $name]
+	);
+	$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'library', 1)", [$keyID, $libraryID]);
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'notes', 1)", [$keyID, $libraryID]);
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'write', 1)", [$keyID, $libraryID]);
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'library', 1)", [$keyID]);
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'notes', 1)", [$keyID]);
+	Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'write', 1)", [$keyID]);
+
+	echo "API key created.\n";
+	echo "  Key:  $key\n";
+	echo "  Name: $name\n";
+}
+
+function cmd_key_delete($key) {
+	$row = Zotero_DB::rowQuery("SELECT keyID, userID FROM zotero_master.`keys` WHERE `key`=?", [$key]);
+	if (!$row) {
+		echo "Error: Key not found.\n";
+		exit(1);
+	}
+	Zotero_DB::query("DELETE FROM zotero_master.keyPermissions WHERE keyID=?", [$row['keyID']]);
+	Zotero_DB::query("DELETE FROM zotero_master.`keys` WHERE keyID=?", [$row['keyID']]);
+	echo "Key deleted.\n";
+}
+
+function cmd_key_info($key) {
+	$row = Zotero_DB::rowQuery(
+		"SELECT k.keyID, k.`key`, k.userID, k.name, k.dateAdded, k.lastUsed, u.username
+		 FROM zotero_master.`keys` k
+		 JOIN zotero_master.users u ON k.userID = u.userID
+		 WHERE k.`key`=?", [$key]
+	);
+	if (!$row) {
+		echo "Error: Key not found.\n";
+		exit(1);
+	}
+	echo "Key: {$row['key']}\n";
+	echo "  ID:        {$row['keyID']}\n";
+	echo "  User:      {$row['username']} (ID: {$row['userID']})\n";
+	echo "  Name:      {$row['name']}\n";
+	echo "  Created:   {$row['dateAdded']}\n";
+	echo "  Last Used: {$row['lastUsed']}\n";
+
+	$perms = Zotero_DB::query(
+		"SELECT libraryID, permission, granted FROM zotero_master.keyPermissions WHERE keyID=?",
+		[$row['keyID']]
+	);
+	echo "  Permissions:\n";
+	if ($perms) {
+		foreach ($perms as $p) {
+			$lib = $p['libraryID'] == 0 ? 'all' : $p['libraryID'];
+			echo "    - library=$lib  {$p['permission']}=" . ($p['granted'] ? 'yes' : 'no') . "\n";
+		}
+	}
+}
+
+// ── Status command ────────────────────────────────────────────────────
+
+function cmd_status() {
+	echo "=== Zotero Self-Hosted Server Status ===\n\n";
+
+	// Users
+	$userCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM zotero_master.users");
+	echo "Users:       $userCount\n";
+
+	// Groups
+	$groupCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM zotero_master.groups");
+	echo "Groups:      $groupCount\n";
+
+	// API keys
+	$keyCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM zotero_master.`keys`");
+	echo "API Keys:    $keyCount\n";
+
+	// Libraries
+	$libCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM zotero_master.libraries");
+	echo "Libraries:   $libCount\n";
+
+	// Items (across shards)
+	$itemCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM items", false, 1);
+	echo "Items:       $itemCount\n";
+
+	// Collections
+	$collCount = Zotero_DB::valueQuery("SELECT COUNT(*) FROM collections", false, 1);
+	echo "Collections: $collCount\n";
+
+	// Schema version
+	$schemaVer = Zotero_DB::valueQuery("SELECT value FROM zotero_master.settings WHERE name='schemaVersion'");
+	echo "Schema:      v$schemaVer\n";
+
+	echo "\n";
+}
+
+// ── Usage ─────────────────────────────────────────────────────────────
+
+function usage() {
+	echo <<<USAGE
+Zotero Self-Hosted Admin Tool
+
+Usage: php admin/manage <command> [arguments]
+
+User Management:
+  user list                                     List all users
+  user add <username> <password> <email>        Create a new user
+  user passwd <username> <new_password>          Change user password
+  user delete <username>                        Delete a user
+  user info <username>                          Show user details
+
+Group Management:
+  group list                                    List all groups
+  group create <owner> <name> [type] [editing] [reading]
+                                                Create a group
+      type:    Private (default), PublicOpen, PublicClosed
+      editing: members (default), admins
+      reading: members (default), all
+  group delete <groupID>                        Delete a group
+  group info <groupID>                          Show group details
+  group adduser <groupID> <username> [role]     Add user to group
+      role: member (default), admin
+  group removeuser <groupID> <username>         Remove user from group
+  group members <groupID>                       List group members
+
+API Key Management:
+  key list <username>                           List user's API keys
+  key create <username> [name]                  Create a new API key
+  key delete <key>                              Delete an API key
+  key info <key>                                Show key details
+
+Server Status:
+  status                                        Show server overview
+
+Examples:
+  php admin/manage user add alice secret123 alice@company.com
+  php admin/manage group create alice "Research Team" Private members members
+  php admin/manage group adduser 1 bob member
+  php admin/manage user passwd alice newpassword
+  php admin/manage status
+
+USAGE;
+	exit(0);
+}
+
+// ── Main ──────────────────────────────────────────────────────────────
+
+if ($argc < 2) usage();
+
+$command = $argv[1];
+$sub = $argv[2] ?? null;
+
+try {
+	switch ($command) {
+		case 'user':
+			if (!$sub) usage();
+			switch ($sub) {
+				case 'list':
+					cmd_user_list();
+					break;
+				case 'add':
+					if ($argc < 5) { echo "Usage: manage user add <username> <password> <email>\n"; exit(1); }
+					cmd_user_add($argv[3], $argv[4], $argv[5]);
+					break;
+				case 'passwd':
+					if ($argc < 4) { echo "Usage: manage user passwd <username> <new_password>\n"; exit(1); }
+					cmd_user_passwd($argv[3], $argv[4]);
+					break;
+				case 'delete':
+					if ($argc < 4) { echo "Usage: manage user delete <username>\n"; exit(1); }
+					cmd_user_delete($argv[3]);
+					break;
+				case 'info':
+					if ($argc < 4) { echo "Usage: manage user info <username>\n"; exit(1); }
+					cmd_user_info($argv[3]);
+					break;
+				default:
+					echo "Unknown user command: $sub\n"; usage();
+			}
+			break;
+
+		case 'group':
+			if (!$sub) usage();
+			switch ($sub) {
+				case 'list':
+					cmd_group_list();
+					break;
+				case 'create':
+					if ($argc < 5) { echo "Usage: manage group create <owner_username> <name> [type] [editing] [reading]\n"; exit(1); }
+					cmd_group_create($argv[3], $argv[4], $argv[5] ?? 'Private', $argv[6] ?? 'members', $argv[7] ?? 'members');
+					break;
+				case 'delete':
+					if ($argc < 4) { echo "Usage: manage group delete <groupID>\n"; exit(1); }
+					cmd_group_delete((int)$argv[3]);
+					break;
+				case 'info':
+					if ($argc < 4) { echo "Usage: manage group info <groupID>\n"; exit(1); }
+					cmd_group_info((int)$argv[3]);
+					break;
+				case 'adduser':
+					if ($argc < 5) { echo "Usage: manage group adduser <groupID> <username> [role]\n"; exit(1); }
+					cmd_group_adduser((int)$argv[3], $argv[4], $argv[5] ?? 'member');
+					break;
+				case 'removeuser':
+					if ($argc < 5) { echo "Usage: manage group removeuser <groupID> <username>\n"; exit(1); }
+					cmd_group_removeuser((int)$argv[3], $argv[4]);
+					break;
+				case 'members':
+					if ($argc < 4) { echo "Usage: manage group members <groupID>\n"; exit(1); }
+					cmd_group_members((int)$argv[3]);
+					break;
+				default:
+					echo "Unknown group command: $sub\n"; usage();
+			}
+			break;
+
+		case 'key':
+			if (!$sub) usage();
+			switch ($sub) {
+				case 'list':
+					if ($argc < 4) { echo "Usage: manage key list <username>\n"; exit(1); }
+					cmd_key_list($argv[3]);
+					break;
+				case 'create':
+					if ($argc < 4) { echo "Usage: manage key create <username> [name]\n"; exit(1); }
+					cmd_key_create($argv[3], $argv[4] ?? 'Full Access Key');
+					break;
+				case 'delete':
+					if ($argc < 4) { echo "Usage: manage key delete <key>\n"; exit(1); }
+					cmd_key_delete($argv[3]);
+					break;
+				case 'info':
+					if ($argc < 4) { echo "Usage: manage key info <key>\n"; exit(1); }
+					cmd_key_info($argv[3]);
+					break;
+				default:
+					echo "Unknown key command: $sub\n"; usage();
+			}
+			break;
+
+		case 'status':
+			cmd_status();
+			break;
+
+		case 'help':
+		case '-h':
+		case '--help':
+			usage();
+			break;
+
+		default:
+			echo "Unknown command: $command\n";
+			usage();
+	}
+}
+catch (Exception $e) {
+	echo "Error: " . $e->getMessage() . "\n";
+	exit(1);
+}
