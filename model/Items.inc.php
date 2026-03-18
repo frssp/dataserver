@@ -2494,7 +2494,10 @@ class Zotero_Items {
 				
 				default:
 					if (!Zotero_ItemFields::getID($key)) {
-						throw new Exception("Invalid property '$key'", Z_ERROR_INVALID_INPUT);
+						// Skip unknown properties (e.g. 'citationKey' from Better BibTeX)
+						// instead of rejecting them, for self-hosted compatibility
+						error_log("Ignoring unknown item property '$key'");
+						break;
 					}
 					if (is_array($val)) {
 						throw new Exception("Unexpected array for property '$key'", Z_ERROR_INVALID_INPUT);
