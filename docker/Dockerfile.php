@@ -1,6 +1,7 @@
 FROM php:8.4-fpm
 
 RUN apt-get update && apt-get install -y \
+    ca-certificates \
     libmemcached-dev \
     libxml2-dev \
     libcurl4-openssl-dev \
@@ -9,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     unzip \
     git \
+    && update-ca-certificates \
     && docker-php-ext-install mysqli mbstring xml curl intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
