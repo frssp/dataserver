@@ -9,12 +9,13 @@ RUN apt-get update && apt-get install -y \
     libicu-dev \
     unzip \
     git \
+    && docker-php-ext-install mysqli mbstring xml curl intl \
+    && pecl channel-update pecl.php.net \
     && pecl install igbinary \
     && docker-php-ext-enable igbinary \
     && pecl install --configureoptions 'enable-memcached-igbinary="yes"' memcached \
     && pecl install redis \
     && docker-php-ext-enable memcached redis \
-    && docker-php-ext-install mysqli mbstring xml curl intl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Short open tags required by Zotero codebase
