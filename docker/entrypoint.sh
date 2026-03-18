@@ -16,16 +16,6 @@ if [ ! -f htdocs/zotero-schema/schema.json ]; then
         echo "WARNING: Could not init submodule. Clone it manually if needed."
 fi
 
-# Install Zend Framework 1 if not present (required by DB.inc.php)
-if [ ! -d include/Zend ]; then
-    echo "Installing Zend Framework 1..."
-    cd /tmp
-    composer require shardj/zf1-future:~1.13 --no-interaction 2>/dev/null
-    cp -r vendor/shardj/zf1-future/library/Zend /var/www/dataserver/include/Zend
-    cd /var/www/dataserver
-    echo "Zend Framework installed."
-fi
-
 # Ensure tmp directory is writable
 mkdir -p tmp
 chmod 777 tmp
