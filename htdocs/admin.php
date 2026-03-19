@@ -48,6 +48,11 @@ if (isset($_GET['action'])) {
 	$action = $_GET['action'];
 	$wwwDB = wwwDB();
 
+	// Admin actions may write to DB, but requests arrive as GET
+	// (from JS fetch with query params). Disable read-only mode
+	// that header.inc.php sets for GET requests.
+	Zotero_DB::readOnly(false);
+ 
 	try {
 		switch ($action) {
 

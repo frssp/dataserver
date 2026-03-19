@@ -310,14 +310,16 @@ class Zotero_FullText {
 		
 		// Delete from MySQL
 		self::deleteByLibraryMySQL($libraryID);
-		
-		// Delete from S3
-		$s3Client = Z_Core::$AWS->createS3();
-		$start = microtime(true);
-		// Potentially slow, because internally it lists objects and then deletes by batches of 1000
-		$s3Client->deleteMatchingObjects(Z_CONFIG::$S3_BUCKET_FULLTEXT, $libraryID . '/');
-		StatsD::timing("s3.fulltext.bulk_delete", (microtime(true) - $start) * 1000);
-		
+ 
+		// Delete from S3 (skip if bucket not configured)
+		if (!empty(Z_CONFIG::$S3_BUCKET_FULLTEXT)) {
+			$s3Client = Z_Core::$AWS->createS3();
+			$start = microtime(true);
+			// Potentially slow, because internally it lists objects and then deletes by batches of 1000
+			$s3Client->deleteMatchingObjects(Z_CONFIG::$S3_BUCKET_FULLTEXT, $libraryID . '/');
+			StatsD::timing("s3.fulltext.bulk_delete", (microtime(true) - $start) * 1000);
+		}
+ 		
 		Zotero_DB::commit();
 	}
 	

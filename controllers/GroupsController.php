@@ -34,7 +34,8 @@ class GroupsController extends ApiController {
 		// Add a group
 		//
 		if ($this->method == 'POST') {
-			if (!$this->permissions->isSuper()) {
+			// Allow super-user or any authenticated user
+			if (!$this->permissions->isSuper() && !$this->userID) {
 				$this->e403();
 			}
 			
@@ -54,6 +55,11 @@ class GroupsController extends ApiController {
 			}
 			
 			$fields = $this->getFieldsFromGroupXML($group);
+ 
+			// Non-super users can only create groups they own
+			if (!$this->permissions->isSuper()) {
+				$fields['ownerUserID'] = $this->userID;
+			}
 			
 			Zotero_DB::beginTransaction();
 			
@@ -93,10 +99,6 @@ class GroupsController extends ApiController {
 		// Update a group
 		//
 		if ($this->method == 'PUT') {
-			if (!$this->permissions->isSuper()) {
-				$this->e403();
-			}
-			
 			if (!$groupID) {
 				$this->e400("PUT requests must end with a groupID (did you mean POST?)");
 			}
@@ -122,6 +124,15 @@ class GroupsController extends ApiController {
 				$group = Zotero_Groups::get($groupID);
 				if (!$group) {
 					$this->e404("Group $groupID does not exist");
+				}
+ 
+				// Allow super-user or group owner
+				if (!$this->permissions->isSuper()) {
+					if (!$this->userID || $group->ownerUserID != $this->userID) {
+						$this->e403();
+					}
+					// Non-super users cannot change ownership
+					$fields['ownerUserID'] = $group->ownerUserID;
 				}
 				foreach ($fields as $field=>$val) {
 					$group->$field = $val;
@@ -295,11 +306,6 @@ class GroupsController extends ApiController {
 	
 	
 	public function groupUsers() {
-		// For now, only allow root and user access
-		if (!$this->permissions->isSuper()) {
-			$this->e403();
-		}
-		
 		if (!is_numeric($this->scopeObjectID)) {
 			$this->e400("Invalid group ID", Z_ERROR_INVALID_INPUT);
 		}
@@ -312,6 +318,13 @@ class GroupsController extends ApiController {
 			$this->e404("Group $groupID does not exist");
 		}
 		
+		// Allow super-user or group owner
+		if (!$this->permissions->isSuper()) {
+			if (!$this->userID || $group->ownerUserID != $this->userID) {
+				$this->e403();
+			}
+		}
+
 		// Add multiple users to group
 		if ($this->method == 'POST') {
 			if ($userID) {
