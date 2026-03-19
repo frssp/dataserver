@@ -157,20 +157,24 @@ class GroupsController extends ApiController {
 		// Delete a group
 		//
 		if ($this->method == 'DELETE') {
-			if (!$this->permissions->isSuper()) {
-				$this->e403();
-			}
-			
 			if (!$groupID) {
 				$this->e400("DELETE requests must end with a groupID");
 			}
-			
+
 			Zotero_DB::beginTransaction();
-			
+
 			$group = Zotero_Groups::get($groupID);
 			if (!$group) {
 				$this->e404("Group $groupID does not exist");
 			}
+
+			// Allow super-user or group owner
+			if (!$this->permissions->isSuper()) {
+				if (!$this->userID || $group->ownerUserID != $this->userID) {
+					$this->e403();
+				}
+			}
+
 			$group->erase();
 			Zotero_DB::commit();
 			
