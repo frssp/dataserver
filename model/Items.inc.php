@@ -1872,11 +1872,15 @@ class Zotero_Items {
 					break;
 				
 				default:
+					// Skip unknown properties (e.g. 'citationKey' from Better BibTeX)
+					if (!Zotero_ItemFields::getID($key)) {
+						break;
+					}
 					$item->setField($key, $val);
 					break;
 			}
 		}
-		
+
 		if ($parentItem) {
 			$item->setSource($parentItem->id);
 		}
