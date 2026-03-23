@@ -23,7 +23,22 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS users_email (
   userID INT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
+  validated TINYINT(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (userID, email)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Storage institution quota (referenced by Storage.inc.php)
+CREATE TABLE IF NOT EXISTS storage_institutions (
+  institutionID INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  domain VARCHAR(255) NOT NULL DEFAULT '',
+  domainBlacklist VARCHAR(255) NOT NULL DEFAULT '',
+  storageQuota BIGINT UNSIGNED NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS storage_institution_email (
+  institutionID INT UNSIGNED NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  PRIMARY KEY (institutionID, email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS users_meta (
