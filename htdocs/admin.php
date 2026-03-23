@@ -260,6 +260,19 @@ if (isset($_GET['action'])) {
 			$group->removeUser($userID);
 			jsonResponse(['ok' => true]);
 
+		case 'group.update':
+			$input = json_decode(file_get_contents('php://input'), true);
+			$groupID = (int)($input['groupID'] ?? 0);
+			$group = Zotero_Groups::get($groupID);
+			if (!$group) jsonResponse(['error' => 'Group not found.'], 404);
+			if (isset($input['name'])) $group->name = trim($input['name']);
+			if (isset($input['type'])) $group->type = $input['type'];
+			if (isset($input['libraryEditing'])) $group->libraryEditing = $input['libraryEditing'];
+			if (isset($input['libraryReading'])) $group->libraryReading = $input['libraryReading'];
+			if (isset($input['description'])) $group->description = trim($input['description']);
+			$group->save();
+			jsonResponse(['ok' => true]);
+
 		// ── Keys ──────────────────────────────────────────────────
 		case 'key.list':
 			$userID = (int)($_GET['userID'] ?? 0);
@@ -346,20 +359,29 @@ if (isset($_GET['action'])) {
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
 
 /* Layout */
-.header { background: var(--primary); color: #fff; padding: 14px 24px; display: flex; align-items: center; gap: 12px; }
-.header h1 { font-size: 18px; font-weight: 600; }
-.header .subtitle { opacity: .8; font-size: 13px; }
+/* ── Unified Nav (zotero.org style) ──────────────────────────────── */
+.site-nav { background: #fff; border-bottom: 1px solid #ddd; padding: 0 24px; display: flex; align-items: center; height: 56px; }
+.site-nav .logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; margin-right: 32px; color: inherit; }
+.site-nav .logo .z { color: #c1302b; }
+.site-nav .logo .rest { color: #333; }
+.site-nav .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
+.site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
+.site-nav .nav-links a:hover { color: #111; text-decoration: none; }
+.site-nav .nav-links a.active { color: #c1302b; border-bottom-color: #c1302b; }
+.site-nav .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.site-nav .nav-user { font-size: 14px; font-weight: 500; color: #333; }
+.site-nav .nav-logout { font-size: 12px; color: #999; cursor: pointer; background: none; border: 1px solid #ddd; padding: 4px 12px; border-radius: 4px; }
+.site-nav .nav-logout:hover { color: #333; border-color: #999; }
 .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
 
-/* Tabs */
-.tabs { display: flex; gap: 2px; background: var(--border); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; margin-bottom: 0; }
-.tab { padding: 10px 20px; cursor: pointer; background: #eee; border: none; font-size: 14px; font-weight: 500; color: var(--text-muted); transition: all .15s; }
-.tab:hover { background: #e0e0e0; }
-.tab.active { background: var(--card); color: var(--text); }
+/* Sub-tabs (consistent with account.php) */
+.page-tabs { display: flex; gap: 0; border-bottom: 2px solid #ddd; margin-bottom: 24px; }
+.page-tab { padding: 10px 20px; font-size: 13px; font-weight: bold; color: #666; cursor: pointer; border: 1px solid transparent; border-bottom: 2px solid transparent; margin-bottom: -2px; background: none; transition: all .15s; }
+.page-tab:hover { color: #333; }
+.page-tab.active { color: #333; border-color: #ddd #ddd #fff; background: #fff; border-bottom-color: #fff; border-top: 2px solid #c1302b; }
 
 /* Cards */
-.card { background: var(--card); border: 1px solid var(--border); border-radius: 0 0 var(--radius) var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; }
-.card.rounded-top { border-radius: var(--radius); }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 24px; }
 
 /* Stats */
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px; }
@@ -427,29 +449,30 @@ tr:hover td { background: #f9fafb; }
 </head>
 <body>
 
-<div class="header">
-	<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
-	<div style="flex:1">
-		<h1>Zotero Admin</h1>
-		<div class="subtitle">Self-Hosted Server Management</div>
+<nav class="site-nav">
+	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
+	<div class="nav-links">
+		<a href="/library/">Web Library</a>
+		<a href="/account.php">Account</a>
+		<a href="/admin.php" class="active">Admin</a>
 	</div>
-	<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="showModal('modal-admin-passwd')">Change Password</button>
-	<button class="btn" style="background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)" onclick="adminLogout()">Log Out</button>
-</div>
+	<div class="nav-right">
+		<button class="nav-logout" onclick="showModal('modal-admin-passwd')">Change Password</button>
+		<button class="nav-logout" onclick="adminLogout()">Log Out</button>
+	</div>
+</nav>
 
 <div class="container">
-	<!-- Stats -->
-	<div class="stats" id="stats"></div>
-
 	<!-- Tabs -->
-	<div class="tabs">
-		<button class="tab active" onclick="showTab('users')">Users</button>
-		<button class="tab" onclick="showTab('groups')">Groups</button>
-		<button class="tab" onclick="showTab('keys')">API Keys</button>
+	<div class="page-tabs">
+		<button class="page-tab active" id="tab-users" onclick="showTab('users')">Users</button>
+		<button class="page-tab" id="tab-groups" onclick="showTab('groups')">Groups</button>
+		<button class="page-tab" id="tab-keys" onclick="showTab('keys')">API Keys</button>
+		<button class="page-tab" id="tab-status" onclick="showTab('status')">Status</button>
 	</div>
 
 	<!-- Users Panel -->
-	<div class="card panel active" id="panel-users">
+	<div class="panel active" id="panel-users">
 		<div class="toolbar">
 			<div style="font-size:13px;color:var(--text-muted)" id="user-count"></div>
 			<button class="btn btn-primary" onclick="showAddUser()">+ Add User</button>
@@ -461,7 +484,7 @@ tr:hover td { background: #f9fafb; }
 	</div>
 
 	<!-- Groups Panel -->
-	<div class="card panel" id="panel-groups">
+	<div class="panel" id="panel-groups">
 		<div class="toolbar">
 			<div style="font-size:13px;color:var(--text-muted)" id="group-count"></div>
 			<button class="btn btn-primary" onclick="showAddGroup()">+ Create Group</button>
@@ -473,7 +496,7 @@ tr:hover td { background: #f9fafb; }
 	</div>
 
 	<!-- Keys Panel -->
-	<div class="card panel" id="panel-keys">
+	<div class="panel" id="panel-keys">
 		<div class="toolbar">
 			<div style="font-size:13px;color:var(--text-muted)">Select a user to view their API keys</div>
 		</div>
@@ -482,6 +505,11 @@ tr:hover td { background: #f9fafb; }
 			<thead><tr><th>ID</th><th>Key</th><th>Name</th><th>Created</th><th>Last Used</th><th>Actions</th></tr></thead>
 			<tbody id="key-table"><tr class="empty-row"><td colspan="6">Select a user above</td></tr></tbody>
 		</table>
+	</div>
+	<!-- Status Panel -->
+	<div class="panel" id="panel-status">
+		<h2 style="font-size:20px;font-weight:normal;color:#333;margin-bottom:20px;border-bottom:1px solid #ddd;padding-bottom:10px">Server Status</h2>
+		<div class="stats" id="stats"></div>
 	</div>
 </div>
 
@@ -547,6 +575,35 @@ tr:hover td { background: #f9fafb; }
 		<div class="form-actions">
 			<button class="btn" onclick="closeModal('modal-add-group')">Cancel</button>
 			<button class="btn btn-primary" onclick="addGroup()">Create</button>
+		</div>
+	</div>
+</div>
+
+<div class="modal-overlay" id="modal-edit-group">
+	<div class="modal" style="width:520px">
+		<h3>Group Settings</h3>
+		<input type="hidden" id="edit-grp-id">
+		<div class="form-group"><label>Group Name</label><input id="edit-grp-name"></div>
+		<div class="form-group">
+			<label>Type</label>
+			<select id="edit-grp-type">
+				<option value="PublicOpen">Public, Open Membership</option>
+				<option value="PublicClosed">Public, Closed Membership</option>
+				<option value="Private">Private</option>
+			</select>
+		</div>
+		<div class="form-group">
+			<label>Library Reading</label>
+			<select id="edit-grp-reading"><option value="all">Anyone</option><option value="members">Members Only</option></select>
+		</div>
+		<div class="form-group">
+			<label>Library Editing</label>
+			<select id="edit-grp-editing"><option value="members">All Members</option><option value="admins">Admins Only</option></select>
+		</div>
+		<div class="form-group"><label>Description</label><textarea id="edit-grp-desc"></textarea></div>
+		<div class="form-actions">
+			<button class="btn" onclick="closeModal('modal-edit-group')">Cancel</button>
+			<button class="btn btn-primary" onclick="saveGroupSettings()">Save Changes</button>
 		</div>
 	</div>
 </div>
@@ -617,9 +674,8 @@ function toast(msg, type = 'success') {
 }
 
 function showTab(name) {
-	document.querySelectorAll('.tab').forEach((t, i) => {
-		t.classList.toggle('active', ['users','groups','keys'][i] === name);
-	});
+	document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+	document.getElementById('tab-' + name).classList.add('active');
 	document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 	document.getElementById('panel-' + name).classList.add('active');
 	if (name === 'keys') renderKeyUserSelect();
@@ -747,6 +803,7 @@ async function loadGroups() {
 			<td>${g.members}</td>
 			<td>${g.libraryEditing}</td>
 			<td class="btn-group">
+				<button class="btn btn-sm" onclick="editGroup(${g.groupID},'${esc(g.name)}','${g.type}','${g.libraryReading}','${g.libraryEditing}','${esc(g.description || '')}')">Settings</button>
 				<button class="btn btn-sm" onclick="showMembers(${g.groupID},'${esc(g.name)}')">Members</button>
 				<button class="btn btn-sm btn-danger" onclick="deleteGroup(${g.groupID},'${esc(g.name)}')">Delete</button>
 			</td>
@@ -826,6 +883,35 @@ async function removeMember(userID, username) {
 		await api('group.removeuser', {body: {groupID: currentGroupID, userID}});
 		toast('Member removed');
 		refreshMembers(); loadGroups();
+	} catch(e) { toast(e.message, 'error'); }
+}
+
+function editGroup(groupID, name, type, reading, editing, desc) {
+	document.getElementById('edit-grp-id').value = groupID;
+	document.getElementById('edit-grp-name').value = name;
+	document.getElementById('edit-grp-type').value = type;
+	document.getElementById('edit-grp-reading').value = reading;
+	document.getElementById('edit-grp-editing').value = editing;
+	document.getElementById('edit-grp-desc').value = desc;
+	showModal('modal-edit-group');
+}
+
+async function saveGroupSettings() {
+	const groupID = document.getElementById('edit-grp-id').value;
+	const name = document.getElementById('edit-grp-name').value.trim();
+	if (!name) { toast('Group name is required.', 'error'); return; }
+	try {
+		await api('group.update', {body: {
+			groupID: parseInt(groupID),
+			name,
+			type: document.getElementById('edit-grp-type').value,
+			libraryReading: document.getElementById('edit-grp-reading').value,
+			libraryEditing: document.getElementById('edit-grp-editing').value,
+			description: document.getElementById('edit-grp-desc').value
+		}});
+		toast('Group settings updated');
+		closeModal('modal-edit-group');
+		loadGroups();
 	} catch(e) { toast(e.message, 'error'); }
 }
 
