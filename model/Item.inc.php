@@ -41,7 +41,6 @@ class Zotero_Item extends Zotero_DataObject {
 	protected $_dateModified;
 	protected $_serverDateModified;
 
-	private $dataSources = [];
 	private $itemData = array();
 	private $creators = array();
 	private $creatorSummary;
