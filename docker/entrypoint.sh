@@ -16,6 +16,16 @@ if [ ! -f htdocs/zotero-schema/schema.json ]; then
         echo "WARNING: Could not init submodule. Clone it manually if needed."
 fi
 
+# Build web-library if not already built
+if [ ! -d htdocs/library ]; then
+    echo "Building web-library..."
+    cd /var/www/dataserver/web-library
+    npm install --no-fund --no-audit
+    npm run build
+    cd /var/www/dataserver
+    echo "Web-library build complete."
+fi
+
 # Ensure tmp directory is writable
 mkdir -p tmp
 chmod 777 tmp
