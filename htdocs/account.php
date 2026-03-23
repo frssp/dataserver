@@ -259,6 +259,25 @@ if (isset($_GET['action'])) {
 			$group->removeUser($userID);
 			jsonResponse(['ok' => true]);
 
+		case 'group.update':
+			$input = json_decode(file_get_contents('php://input'), true);
+			$groupID = (int)($input['groupID'] ?? 0);
+			$group = Zotero_Groups::get($groupID);
+			if (!$group) jsonResponse(['error' => 'Group not found.'], 404);
+			$role = Zotero_DB::valueQuery(
+				"SELECT role FROM zotero_master.groupUsers WHERE groupID=? AND userID=?",
+				[$groupID, $currentUserID]
+			);
+			if ($role !== 'owner') jsonResponse(['error' => 'Only the group owner can edit settings.'], 403);
+
+			if (isset($input['name'])) $group->name = trim($input['name']);
+			if (isset($input['type'])) $group->type = $input['type'];
+			if (isset($input['libraryEditing'])) $group->libraryEditing = $input['libraryEditing'];
+			if (isset($input['libraryReading'])) $group->libraryReading = $input['libraryReading'];
+			if (isset($input['description'])) $group->description = trim($input['description']);
+			$group->save();
+			jsonResponse(['ok' => true]);
+
 		// ── Keys ──────────────────────────────────────────────────
 		case 'key.list':
 			$rows = Zotero_DB::query(
@@ -316,26 +335,23 @@ if (isset($_GET['action'])) {
 <title>Zotero | Settings</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Geneva, Verdana, sans-serif; color: #333; font-size: 13px; line-height: 1.5; background: #fff; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #333; font-size: 13px; line-height: 1.5; background: #fff; }
 a { color: #38c; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── Top bar ─────────────────────────────────────────────────────── */
-.top-bar { background: #fff; border-bottom: 1px solid #ddd; padding: 10px 0; }
-.top-bar-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; display: flex; justify-content: space-between; align-items: center; }
-.logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 32px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; }
-.logo .z { color: #c1302b; }
-.logo .rest { color: #333; }
-.top-links { font-size: 12px; color: #666; }
-.top-links a { color: #900; margin: 0 4px; }
-.top-links .username { color: #38c; font-weight: bold; }
-
-/* ── Nav bar ─────────────────────────────────────────────────────── */
-.nav-bar { background: #404040; border-top: 1px solid #555; }
-.nav-inner { max-width: 980px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; }
-.nav-inner a { display: block; padding: 8px 16px; color: #ccc; font-size: 13px; font-weight: bold; text-decoration: none; transition: background .15s; }
-.nav-inner a:hover { background: #555; color: #fff; text-decoration: none; }
-.nav-inner a.active { background: #666; color: #fff; }
+/* ── Unified Nav (zotero.org style) ──────────────────────────────── */
+.site-nav { background: #fff; border-bottom: 1px solid #ddd; padding: 0 24px; display: flex; align-items: center; height: 56px; }
+.site-nav .logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; margin-right: 32px; }
+.site-nav .logo .z { color: #c1302b; }
+.site-nav .logo .rest { color: #333; }
+.site-nav .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
+.site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
+.site-nav .nav-links a:hover { color: #111; text-decoration: none; }
+.site-nav .nav-links a.active { color: #c1302b; border-bottom-color: #c1302b; }
+.site-nav .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+.site-nav .nav-user { font-size: 14px; font-weight: 500; color: #333; }
+.site-nav .nav-logout { font-size: 12px; color: #999; cursor: pointer; background: none; border: 1px solid #ddd; padding: 4px 12px; border-radius: 4px; }
+.site-nav .nav-logout:hover { color: #333; border-color: #999; }
 
 /* ── Content ─────────────────────────────────────────────────────── */
 .content { max-width: 980px; margin: 0 auto; padding: 20px; }
@@ -439,31 +455,28 @@ textarea { height: 60px; resize: vertical; }
 </head>
 <body>
 
-<!-- Top bar -->
-<div class="top-bar">
-	<div class="top-bar-inner">
-		<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
-		<div class="top-links">
-			Welcome, <a href="account.php" class="username"><?= htmlspecialchars($currentUsername) ?></a>
-			&middot; <a href="account.php">Settings</a>
-			&middot; <a href="account.php">API Keys</a>
-			&middot; <a href="#" onclick="logout();return false;">Log Out</a>
-		</div>
+<!-- Unified Nav -->
+<nav class="site-nav">
+	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
+	<div class="nav-links">
+		<a href="/library/">Web Library</a>
+		<a href="/account.php" class="active">Account</a>
+		<a href="/admin.php">Admin</a>
 	</div>
-</div>
-
-<!-- Nav bar -->
-<div class="nav-bar">
-	<div class="nav-inner">
-		<a href="/">Home</a>
-		<a href="account.php" onclick="showTab('settings');return false;" class="active" id="nav-settings">Settings</a>
-		<a href="account.php" onclick="showTab('groups');return false;" id="nav-groups">Groups</a>
-		<a href="account.php" onclick="showTab('keys');return false;" id="nav-keys">API Keys</a>
+	<div class="nav-right">
+		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>
+		<button class="nav-logout" onclick="logout();return false;">Log Out</button>
 	</div>
-</div>
+</nav>
 
 <!-- Content -->
 <div class="content">
+
+	<div class="page-tabs">
+		<button class="page-tab active" id="tab-settings" onclick="showTab('settings')">Settings</button>
+		<button class="page-tab" id="tab-groups" onclick="showTab('groups')">Groups</button>
+		<button class="page-tab" id="tab-keys" onclick="showTab('keys')">API Keys</button>
+	</div>
 
 	<!-- ══ Settings Panel ══════════════════════════════════════════ -->
 	<div class="panel active" id="panel-settings">
@@ -597,6 +610,41 @@ textarea { height: 60px; resize: vertical; }
 	</div>
 </div>
 
+<div class="modal-overlay" id="modal-edit-group">
+	<div class="modal" style="width:520px">
+		<h3>Group Settings</h3>
+		<input type="hidden" id="edit-grp-id">
+		<div class="form-row"><label>Group Name</label><input type="text" id="edit-grp-name"></div>
+		<div class="form-row">
+			<label>Group Type</label>
+			<select id="edit-grp-type">
+				<option value="PublicOpen">Public, Open Membership</option>
+				<option value="PublicClosed">Public, Closed Membership</option>
+				<option value="Private">Private</option>
+			</select>
+		</div>
+		<div class="form-row">
+			<label>Library Reading</label>
+			<select id="edit-grp-reading">
+				<option value="all">Anyone</option>
+				<option value="members">Members Only</option>
+			</select>
+		</div>
+		<div class="form-row">
+			<label>Library Editing</label>
+			<select id="edit-grp-editing">
+				<option value="members">All Members</option>
+				<option value="admins">Admins Only</option>
+			</select>
+		</div>
+		<div class="form-row"><label>Description</label><textarea id="edit-grp-desc" style="height:60px"></textarea></div>
+		<div class="modal-actions">
+			<button class="btn" onclick="closeModal('modal-edit-group')">Cancel</button>
+			<button class="btn btn-red" onclick="saveGroupSettings()">Save Changes</button>
+		</div>
+	</div>
+</div>
+
 <div class="modal-overlay" id="modal-create-key">
 	<div class="modal">
 		<h3>Create New API Key</h3>
@@ -656,9 +704,10 @@ function esc(s) { const d = document.createElement('div'); d.textContent = s; re
 function showTab(name) {
 	document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
 	document.getElementById('panel-' + name).classList.add('active');
-	document.querySelectorAll('.nav-inner a').forEach(a => a.classList.remove('active'));
-	const nav = document.getElementById('nav-' + name);
-	if (nav) nav.classList.add('active');
+	document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+	const tab = document.getElementById('tab-' + name);
+	if (tab) tab.classList.add('active');
+	history.replaceState(null, '', 'account.php?tab=' + name);
 }
 
 function showGroupList() {
@@ -729,6 +778,7 @@ async function loadGroups() {
 	tbody.innerHTML = groups.map(g => {
 		let actions = `<button class="btn-link" onclick="showMembers(${g.groupID},'${esc(g.name)}','${g.role}')">Members</button>`;
 		if (g.role === 'owner') {
+			actions += ` &middot; <button class="btn-link" onclick="editGroup(${g.groupID},'${esc(g.name)}','${g.type}','${g.libraryReading}','${g.libraryEditing}','${esc(g.description || '')}')">Settings</button>`;
 			actions += ` &middot; <button class="btn-link" style="color:#c00" onclick="deleteGroup(${g.groupID},'${esc(g.name)}')">Delete</button>`;
 		} else {
 			actions += ` &middot; <button class="btn-link" style="color:#c00" onclick="leaveGroup(${g.groupID},'${esc(g.name)}')">Leave</button>`;
@@ -827,6 +877,35 @@ async function removeMember(userID, username) {
 	} catch(e) { toast(e.message, 'error'); }
 }
 
+function editGroup(groupID, name, type, reading, editing, desc) {
+	document.getElementById('edit-grp-id').value = groupID;
+	document.getElementById('edit-grp-name').value = name;
+	document.getElementById('edit-grp-type').value = type;
+	document.getElementById('edit-grp-reading').value = reading;
+	document.getElementById('edit-grp-editing').value = editing;
+	document.getElementById('edit-grp-desc').value = desc;
+	showModal('modal-edit-group');
+}
+
+async function saveGroupSettings() {
+	const groupID = document.getElementById('edit-grp-id').value;
+	const name = document.getElementById('edit-grp-name').value.trim();
+	if (!name) { toast('Group name is required.', 'error'); return; }
+	try {
+		await api('group.update', {body: {
+			groupID: parseInt(groupID),
+			name,
+			type: document.getElementById('edit-grp-type').value,
+			libraryReading: document.getElementById('edit-grp-reading').value,
+			libraryEditing: document.getElementById('edit-grp-editing').value,
+			description: document.getElementById('edit-grp-desc').value
+		}});
+		toast('Group settings updated');
+		closeModal('modal-edit-group');
+		loadGroups();
+	} catch(e) { toast(e.message, 'error'); }
+}
+
 // ── Keys ──────────────────────────────────────────────────────────
 async function loadKeys() {
 	const keys = await api('key.list');
@@ -887,6 +966,12 @@ function logout() {
 loadProfile();
 loadGroups();
 loadKeys();
+
+// Auto-switch tab based on URL param
+const urlTab = new URLSearchParams(location.search).get('tab');
+if (urlTab && document.getElementById('panel-' + urlTab)) {
+	showTab(urlTab);
+}
 </script>
 </body>
 </html>
