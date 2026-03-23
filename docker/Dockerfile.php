@@ -2,7 +2,7 @@ FROM php:8.4-fpm
 ARG http_proxy
 ARG https_proxy
 # 사내 프록시 CA 등록 (외부 SSL inspection용) — 사내에서만 필요
-# COPY docker/samsungsemi-prx.com.pem /usr/local/share/ca-certificates/samsungsemi-prx.crt
+# COPY docker/corporate-proxy-ca.pem /usr/local/share/ca-certificates/corporate-proxy-ca.crt
 # RUN update-ca-certificates
 RUN apt-get update && apt-get install -y \
     libmemcached-dev \

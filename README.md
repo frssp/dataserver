@@ -8,7 +8,7 @@ Zotero 메타데이터(아이템, 컬렉션, 태그, 노트) 동기화를 위한
 ## 사전 준비
 
 - Docker & Docker Compose
-- 사내 프록시 인증서 (`samsungsemi-prx.com.pem`)
+- 사내 프록시 인증서 (`corporate-proxy-ca.pem`)
 
 ## 빠른 시작 (Docker)
 
@@ -17,7 +17,7 @@ Zotero 메타데이터(아이템, 컬렉션, 태그, 노트) 동기화를 위한
 사내 프록시 CA 인증서를 `docker/` 디렉토리에 복사합니다.
 
 ```bash
-cp /path/to/samsungsemi-prx.com.pem docker/samsungsemi-prx.com.pem
+cp /path/to/corporate-proxy-ca.pem docker/corporate-proxy-ca.pem
 ```
 
 ### 2. 설정 파일 생성
@@ -182,7 +182,7 @@ docker compose logs -f mysql     # MySQL 로그
 
 ## 사내 네트워크 참고
 
-- 사내 프록시 환경에서는 `samsungsemi-prx.com.pem` 인증서가 Docker 빌드 시 자동으로 등록됩니다
+- 사내 프록시 환경에서는 `corporate-proxy-ca.pem` 인증서가 Docker 빌드 시 자동으로 등록됩니다
 - 프록시 설정이 필요한 경우 Docker 빌드 시 `--build-arg` 로 전달합니다:
 
 ```bash
