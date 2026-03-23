@@ -63,9 +63,6 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
         direction: sortDirection,
         itemType: '-attachment || note',
       };
-      if (selectedCollection) {
-        params.collectionKey = selectedCollection;
-      }
       if (searchQuery) {
         params.q = searchQuery;
         params.qmode = 'titleCreatorYear';
@@ -73,7 +70,7 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
       if (selectedTags.length > 0) {
         params.tag = selectedTags.join(' || ');
       }
-      const result = await fetchItems(library.type, library.id, params);
+      const result = await fetchItems(library.type, library.id, params, selectedCollection);
       setItems(result.items);
       setTotalResults(result.totalResults);
     } catch (err) {
