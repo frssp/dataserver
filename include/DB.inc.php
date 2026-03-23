@@ -342,6 +342,22 @@ class Zotero_DB {
 	
 	
 	/**
+	 * Get the host of the current connection for a shard, or null if no connection exists.
+	 */
+	public static function getShardHost($shardID) {
+		$instance = self::getInstance();
+		// Check both replica and primary connections
+		if (isset($instance->replicaConnections[$shardID])) {
+			return 'replica:' . ($instance->replicaConnections[$shardID][0]->host ?? '?');
+		}
+		if (isset($instance->connections[$shardID])) {
+			return 'primary:' . ($instance->connections[$shardID]->host ?? '?');
+		}
+		return null;
+	}
+
+
+	/**
 	 * Start a virtual MySQL transaction or increase the transaction nesting level
 	 *
 	 * If a transaction is already in progress, the nesting level will be incremented by one
@@ -471,6 +487,12 @@ class Zotero_DB {
 	}
 
 
+	public static function isReadSnapshotActive() {
+		$instance = self::getInstance();
+		return $instance->readSnapshotActive;
+	}
+
+
 	/**
 	 * If a read snapshot is active, start a transaction on the given connection if not already
 	 * started. Called from getShardConnection() before returning replica connections.
@@ -497,8 +519,9 @@ class Zotero_DB {
 			try {
 				$conn->link->commit();
 			}
-			catch (Exception $e) {
-				// Connection may have been closed
+			catch (\Throwable $e) {
+				error_log("WARNING: Failed to commit read snapshot on "
+					. ($conn->host ?? '?') . ": " . $e->getMessage());
 			}
 			$conn->readSnapshotStarted = false;
 		}
@@ -1388,8 +1411,12 @@ class Zotero_DB {
 	
 	public static function close($shardID=0) {
 		$instance = self::getInstance();
-		$conn = $instance->getShardConnection($shardID);
-		// Remove prepared statements for this connection
+		// Access the cached connection directly to avoid triggering
+		// ensureReadSnapshot or creating new connections
+		$conn = $instance->connections[$shardID] ?? null;
+		if (!$conn) {
+			return;
+		}
 		$conn->statements = [];
 		$conn->link->closeConnection();
 	}

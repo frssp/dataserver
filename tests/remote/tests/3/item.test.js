@@ -1347,7 +1347,7 @@ describe('Items', function () {
 		let json = await API.createItem('book', false, 'jsonData');
 		let modified = json.dateModified;
 
-		for (let i = 1; i <= 4; i++) {
+		for (let i = 1; i <= 3; i++) {
 			await new Promise(resolve => setTimeout(resolve, 1100));
 
 			// For all tests after the first one, unset Date Modified
@@ -1365,11 +1365,10 @@ describe('Items', function () {
 					break;
 
 				case 3:
-					json.deleted = true;
-					break;
-
-				case 4:
-					json.deleted = false;
+					json.relations = {
+						'dc:relation': 'http://zotero.org/users/'
+							+ config.get('userID') + '/items/AAAAAAAA'
+					};
 					break;
 			}
 
@@ -1601,6 +1600,146 @@ describe('Items', function () {
 		let json = await API.groupCreateItem(config.get('ownedPrivateGroupID'), 'book', {}, 'json');
 		assert.equal(config.get('userID'), json.meta.createdByUser.id);
 		assert.equal(config.get('username'), json.meta.createdByUser.username);
+	});
+
+	it('should not update lastModifiedByUser for non-field changes', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+
+		// Create item as user 1
+		let json = await API.groupCreateItem(groupID, 'book', {}, 'json');
+		let key = json.key;
+		let version = json.version;
+
+		// Modify a field as user 2 so lastModifiedByUser gets set
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupPost(
+			groupID,
+			'items',
+			JSON.stringify([{
+				key: key,
+				version: version,
+				title: 'Modified Title'
+			}]),
+			['Content-Type: application/json']
+		);
+		json = API.getJSONFromResponse(response);
+		assert200(response);
+		version = json.successful[0].version;
+		let lastModifiedByUser = json.successful[0].meta.lastModifiedByUser;
+		assert.ok(lastModifiedByUser);
+
+		API.useAPIKey(config.get('user1APIKey'));
+
+		// Collection change
+		response = await API.groupPost(
+			groupID,
+			'collections',
+			JSON.stringify([{ name: 'Test Collection' }]),
+			['Content-Type: application/json']
+		);
+		let collectionJSON = API.getJSONFromResponse(response);
+		let collectionKey = collectionJSON.successful[0].key;
+
+		response = await API.groupPost(
+			groupID,
+			'items',
+			JSON.stringify([{
+				key: key,
+				version: version,
+				collections: [collectionKey]
+			}]),
+			['Content-Type: application/json']
+		);
+		assert200(response);
+		json = API.getJSONFromResponse(response);
+		version = json.successful[0].version;
+		assert.deepEqual(
+			lastModifiedByUser,
+			json.successful[0].meta.lastModifiedByUser,
+			'lastModifiedByUser changed after collection change'
+		);
+
+		// Relations
+		response = await API.groupPost(
+			groupID,
+			'items',
+			JSON.stringify([{
+				key: key,
+				version: version,
+				relations: {
+					'dc:relation': 'http://zotero.org/groups/' + groupID + '/items/AAAAAAAA'
+				}
+			}]),
+			['Content-Type: application/json']
+		);
+		assert200(response);
+		json = API.getJSONFromResponse(response);
+		version = json.successful[0].version;
+		assert.deepEqual(
+			lastModifiedByUser,
+			json.successful[0].meta.lastModifiedByUser,
+			'lastModifiedByUser changed after relations change'
+		);
+	});
+
+	it('should update lastModifiedByUser when trashing', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+
+		// Create item as user 1
+		let json = await API.groupCreateItem(groupID, 'book', {}, 'json');
+		let key = json.key;
+		let version = json.version;
+		let dateModified = json.data.dateModified;
+
+		// Trash as user 2
+		await new Promise(resolve => setTimeout(resolve, 1000));
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupPost(
+			groupID,
+			'items',
+			JSON.stringify([{
+				key: key,
+				version: version,
+				deleted: true
+			}]),
+			['Content-Type: application/json']
+		);
+		assert200(response);
+		json = API.getJSONFromResponse(response);
+		version = json.successful[0].version;
+		assert.ok(
+			json.successful[0].meta.lastModifiedByUser,
+			'lastModifiedByUser not set after trash'
+		);
+		assert.notEqual(
+			json.successful[0].data.dateModified,
+			dateModified,
+			'dateModified not updated after trash'
+		);
+
+		// Untrash as user 1
+		API.useAPIKey(config.get('user1APIKey'));
+		await new Promise(resolve => setTimeout(resolve, 1000));
+		dateModified = json.successful[0].data.dateModified;
+		response = await API.groupPost(
+			groupID,
+			'items',
+			JSON.stringify([{
+				key: key,
+				version: version,
+				deleted: false
+			}]),
+			['Content-Type: application/json']
+		);
+		assert200(response);
+		json = API.getJSONFromResponse(response);
+		assert.notEqual(
+			json.successful[0].data.dateModified,
+			dateModified,
+			'dateModified not updated after untrash'
+		);
+
+		API.useAPIKey(config.get('user1APIKey'));
 	});
 
 	// PHP: testNumChildrenJSON
@@ -2271,10 +2410,11 @@ describe('Items', function () {
 		);
 		let jsonData = await API.createAnnotationItem('highlight', null, attachment1Key, 'jsonData');
 
-		// Change the parent item
+		// Change the parent item and annotation data simultaneously
 		let patchJSON = {
 			version: jsonData.version,
-			parentItem: attachment2Key
+			parentItem: attachment2Key,
+			annotationComment: 'test comment'
 		};
 		let response = await API.userPatch(
 			config.get('userID'),
@@ -2282,6 +2422,14 @@ describe('Items', function () {
 			JSON.stringify(patchJSON)
 		);
 		assert204(response);
+
+		// Verify the parent actually changed
+		response = await API.userGet(
+			config.get('userID'),
+			`items/${jsonData.key}`
+		);
+		let json = API.getJSONFromResponse(response);
+		assert.equal(json.data.parentItem, attachment2Key);
 	});
 
 	// PHP: test_should_reject_changing_parent_item_of_annotation_to_invalid_items
@@ -2719,15 +2867,19 @@ describe('Items', function () {
 	});
 
 	it('should set and return lastRead for user library attachment', async function () {
-		let parentKey = await API.createItem('book', {}, 'key');
-		let json = await API.createAttachmentItem('imported_file', {}, parentKey, 'jsonData');
-		let itemKey = json.key;
-
-		// lastRead should not be present initially
-		assert.notProperty(json, 'lastRead');
-
-		// Set lastRead
+		// Set on creation
 		let lastRead = 1674668111;
+		let json = await API.createAttachmentItem('imported_file', { lastRead }, false, 'jsonData');
+		let itemKey = json.key;
+		assert.equal(json.lastRead, lastRead);
+		json = (await API.getItem(itemKey, 'json')).data;
+		assert.equal(json.lastRead, lastRead);
+
+		// Set via PATCH
+		let parentKey = await API.createItem('book', {}, 'key');
+		json = await API.createAttachmentItem('imported_file', {}, parentKey, 'jsonData');
+		itemKey = json.key;
+		assert.notProperty(json, 'lastRead');
 		let response = await API.userPatch(
 			config.get('userID'),
 			`items/${itemKey}`,
@@ -2738,10 +2890,31 @@ describe('Items', function () {
 			]
 		);
 		assert204(response);
-
-		// Should be returned in the JSON
 		json = (await API.getItem(itemKey, 'json')).data;
 		assert.equal(json.lastRead, lastRead);
+	});
+
+	it('should clear lastRead with empty string, null, or false', async function () {
+		for (let clearValue of ["", null, false]) {
+			let lastRead = 1674668111;
+			let json = await API.createAttachmentItem('imported_file', { lastRead }, false, 'jsonData');
+			let itemKey = json.key;
+			assert.equal(json.lastRead, lastRead);
+
+			let response = await API.userPatch(
+				config.get('userID'),
+				`items/${itemKey}`,
+				JSON.stringify({ lastRead: clearValue }),
+				[
+					'Content-Type: application/json',
+					`If-Unmodified-Since-Version: ${json.version}`
+				]
+			);
+			assert204(response);
+
+			json = (await API.getItem(itemKey, 'json')).data;
+			assert.notProperty(json, 'lastRead');
+		}
 	});
 
 	it('should reject lastRead for group library attachment', async function () {

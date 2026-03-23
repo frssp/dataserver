@@ -191,7 +191,7 @@ class TTSController extends ApiController {
 
 		// Provider-specific text adjustments (e.g., pronunciation fixes)
 		if (method_exists($resolved['class'], 'fixPronunciation')) {
-			$text = $resolved['class']::fixPronunciation($text);
+			$text = $resolved['class']::fixPronunciation($text, $lang);
 		}
 
 		$cacheKey = $this->computeCacheKey(

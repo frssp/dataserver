@@ -41,14 +41,11 @@ class ItemsController extends ApiController {
 				$libraryTimestampChecked = $this->checkLibraryIfUnmodifiedSinceVersion();
 			}
 			
-			// We don't update the library version in file mode, because currently
-			// to avoid conflicts in the client the timestamp can't change
-			// when the client updates file metadata.
-			//
 			// For multi-object POSTs, the version is bumped per-item inside
 			// updateMultipleFromJSON() so that each item's version and data
 			// are committed atomically. For single-object writes and DELETEs,
-			// bump the version upfront.
+			// bump the version upfront. File mode handles its own version
+			// bump in Storage::updateFileItemInfo().
 			if (!$this->fileMode && ($this->singleObject || $this->method == 'DELETE')) {
 				Zotero_DB::beginTransaction();
 				Zotero_Libraries::updateVersionAndTimestamp(
@@ -1228,7 +1225,7 @@ class ItemsController extends ApiController {
 					$storageFileID = Zotero_Storage::addFile($info);
 				}
 				
-				Zotero_Storage::updateFileItemInfo($item, $storageFileID, $info, true);
+				Zotero_Storage::updateFileItemInfo($item, $storageFileID, $info);
 				Zotero_Storage::markUploadAsCompleted($uploadKey);
 				
 				Zotero_DB::commit();

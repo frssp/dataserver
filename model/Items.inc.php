@@ -701,24 +701,12 @@ class Zotero_Items {
 		}
 		
 		Zotero_DB::beginTransaction();
-		foreach ($shardItemIDs as $shardID => $itemIDs) {
-			// Group item data
-			if ($userID && isset($shardGroupItemIDs[$shardID])) {
-				$sql = "UPDATE groupItems SET lastModifiedByUserID=? "
-					. "WHERE itemID IN ("
-					. implode(',', array_fill(0, sizeOf($shardGroupItemIDs[$shardID]), '?')) . ")";
-				Zotero_DB::query(
-					$sql,
-					array_merge(array($userID), $shardGroupItemIDs[$shardID]),
-					$shardID
-				);
-			}
-		}
 		foreach ($libraryItems as $libraryID => $items) {
 			$itemIDs = array();
 			foreach ($items as $item) {
 				$itemIDs[] = $item->id;
 			}
+			$shardID = $libraryShards[$libraryID];
 			$version = Zotero_Libraries::getUpdatedVersion($libraryID);
 			$sql = "UPDATE items SET version=? WHERE itemID IN "
 				. "(" . implode(',', array_fill(0, sizeOf($itemIDs), '?')) . ")";
@@ -1844,7 +1832,7 @@ class Zotero_Items {
 					break;
 
 				case 'lastRead':
-					$item->attachmentLastRead = $val;
+					$item->attachmentLastRead = $val !== "" ? $val : null;
 					break;
 
 				//
@@ -1901,7 +1889,7 @@ class Zotero_Items {
 		// Skip "Date Modified" update if only certain fields were updated (e.g., collections)
 		$skipDateModifiedUpdate = $dateModifiedProvided || !sizeOf(array_diff(
 			$item->getChanged(),
-			['collections', 'deleted', 'inPublications', 'relations']
+			['collections', 'inPublications', 'relations']
 		));
 		
 		if ($item->hasChanged() && !$skipDateModifiedUpdate
@@ -1910,7 +1898,9 @@ class Zotero_Items {
 			$item->dateModified = Zotero_DB::getTransactionTimestamp();
 		}
 		
-		$changed = $item->save($userID) || $changed;
+		$changed = $item->save($userID, [
+			'skipDateModifiedUpdate' => $skipDateModifiedUpdate
+		]) || $changed;
 		
 		// Additional steps that have to be performed on a saved object
 		if ($twoStage) {
@@ -2451,7 +2441,11 @@ class Zotero_Items {
 					if (Zotero_Libraries::getType($libraryID) != 'user') {
 						throw new Exception("'$key' is valid only for user library items", Z_ERROR_INVALID_INPUT);
 					}
-					if ($val !== null && $val !== false && !is_int($val)) {
+					// Allow empty string as a way to clear the value
+					if ($val === "" || $val === false) {
+						$val = null;
+					}
+					if ($val !== null && !is_int($val)) {
 						throw new Exception("'$key' must be a Unix timestamp integer", Z_ERROR_INVALID_INPUT);
 					}
 					break;

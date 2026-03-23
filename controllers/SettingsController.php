@@ -60,27 +60,26 @@ class SettingsController extends ApiController {
 		if ($this->singleObject) {
 			$this->allowMethods(array('GET', 'PUT', 'DELETE'));
 			
-			$setting = Zotero_Settings::getByLibraryAndKey($this->objectLibraryID, $this->objectKey);
-			if (!$setting) {
-				if ($this->method == 'PUT') {
-					$setting = new Zotero_Setting;
-					$setting->libraryID = $this->objectLibraryID;
-					$setting->name = $this->objectKey;
-				}
-				else {
-					$this->e404("Setting not found");
-				}
+			$setting = Zotero_Settings::getByLibraryAndKey($this->objectLibraryID, $this->objectKey)
+				?: null;
+			if (!$setting && $this->method != 'PUT') {
+				$this->e404("Setting not found");
 			}
-			
+
 			if ($this->isWriteMethod()) {
 				$this->libraryVersion = Zotero_Libraries::getUpdatedVersion($this->objectLibraryID);
-				
+
 				// Update setting
 				if ($this->method == 'PUT') {
 					$json = $this->jsonDecode($this->body);
 					$objectVersionValidated = $this->checkSingleObjectWriteVersion(
 						'setting', $setting, $json
 					);
+					if (!$setting) {
+						$setting = new Zotero_Setting;
+						$setting->libraryID = $this->objectLibraryID;
+						$setting->name = $this->objectKey;
+					}
 					
 					$changed = Zotero_Settings::updateFromJSON(
 						$setting,
@@ -118,12 +117,27 @@ class SettingsController extends ApiController {
 		}
 		// Multiple settings
 		else {
-			$this->allowMethods(array('GET', 'POST'));
-			
+			$this->allowMethods(array('GET', 'POST', 'DELETE'));
+
 			$this->libraryVersion = Zotero_Libraries::getUpdatedVersion($this->objectLibraryID);
-			
+
+			// Delete multiple settings
+			if ($this->method == 'DELETE') {
+				if (empty($_GET['settingKey'])) {
+					$this->e400("settingKey parameter not provided");
+				}
+				$keys = explode(',', $_GET['settingKey']);
+				if (count($keys) > Zotero_API::MAX_OBJECT_KEYS) {
+					$this->e400("Cannot delete more than " . Zotero_API::MAX_OBJECT_KEYS . " settings at once");
+				}
+				foreach ($keys as $key) {
+					Zotero_Settings::delete($this->objectLibraryID, $key);
+				}
+				Zotero_DB::commit();
+				$this->e204();
+			}
 			// Create/update a setting
-			if ($this->method == 'POST') {
+			else if ($this->method == 'POST') {
 				$obj = $this->jsonDecode($this->body);
 				$changed = Zotero_Settings::updateMultipleFromJSON(
 					$obj,

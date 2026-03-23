@@ -537,18 +537,14 @@ class Zotero_Storage {
 	}
 	
 	
-	public static function updateFileItemInfo($item, $storageFileID, Zotero_StorageFileInfo $info, $skipLibraryVersionUpdate = false) {
+	public static function updateFileItemInfo($item, $storageFileID, Zotero_StorageFileInfo $info) {
 		if (!$item->isStoredFileAttachment()) {
 			throw new Exception("Cannot add storage file for linked file/URL");
 		}
 		
 		Zotero_DB::beginTransaction();
-		
-		// Set to true for post-upload file registration, which doesn't need to bump the library
-		// version
-		if (!$skipLibraryVersionUpdate) {
-			Zotero_Libraries::updateVersionAndTimestamp($item->libraryID);
-		}
+
+		Zotero_Libraries::updateVersionAndTimestamp($item->libraryID);
 		
 		// 4.0 client doesn't set filename for ZIP files
 		if (!$info->zip || !empty($info->itemFilename)) {

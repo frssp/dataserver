@@ -53,17 +53,8 @@ describe('Settings', function () {
 			value: value
 		};
 
-		// No version
+		// Version > 0 for non-existent setting should fail
 		let response = await API.userPut(
-			config.get('userID'),
-			`settings/${settingKey}`,
-			JSON.stringify(json),
-			['Content-Type: application/json']
-		);
-		assert428(response);
-
-		// Version must be 0 for non-existent setting
-		response = await API.userPut(
 			config.get('userID'),
 			`settings/${settingKey}`,
 			JSON.stringify(json),
@@ -74,7 +65,7 @@ describe('Settings', function () {
 		);
 		assert412(response);
 
-		// Create
+		// Create with version 0
 		response = await API.userPut(
 			config.get('userID'),
 			`settings/${settingKey}`,
@@ -519,6 +510,49 @@ describe('Settings', function () {
 		assert.equal(await API.getLibraryVersion(), libraryVersion + 2);
 	});
 
+	it('should delete multiple settings', async function () {
+		let libraryVersion = await API.getLibraryVersion();
+
+		let key1 = 'lastPageIndex_u_AAAAAAAA';
+		let key2 = 'lastPageIndex_u_BBBBBBBB';
+		let key3 = 'lastPageIndex_u_CCCCCCCC';
+
+		// Create three settings
+		let response = await API.userPost(
+			config.get('userID'),
+			'settings',
+			JSON.stringify({
+				[key1]: { value: 1 },
+				[key2]: { value: 2 },
+				[key3]: { value: 3 }
+			}),
+			[
+				'Content-Type: application/json',
+				`If-Unmodified-Since-Version: ${libraryVersion}`
+			]
+		);
+		assert204(response);
+		libraryVersion = parseInt(response.getHeader('Last-Modified-Version'));
+
+		// Delete two of three
+		response = await API.userDelete(
+			config.get('userID'),
+			`settings?settingKey=${key1},${key2}`,
+			[`If-Unmodified-Since-Version: ${libraryVersion}`]
+		);
+		assert204(response);
+
+		// Verify deleted
+		response = await API.userGet(config.get('userID'), `settings/${key1}`);
+		assert404(response);
+		response = await API.userGet(config.get('userID'), `settings/${key2}`);
+		assert404(response);
+
+		// Verify third still exists
+		response = await API.userGet(config.get('userID'), `settings/${key3}`);
+		assert200(response);
+	});
+
 	// PHP: testDeleteNonexistentSetting
 	it('should return 404 for nonexistent setting deletion', async function () {
 		let response = await API.userDelete(
@@ -759,7 +793,7 @@ describe('Settings', function () {
 		json = {
 			// eslint-disable-next-line camelcase
 			lastPageIndex_u_ABCD2345: {
-				value: 100.1
+				value: 105.1
 			}
 		};
 		response = await API.userPost(

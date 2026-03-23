@@ -75,7 +75,10 @@ class Zotero_Item extends Zotero_DataObject {
 		'position' => null
 	];
 	private $annotationTitle = null;
-	
+
+	// Track where data was loaded from for cache mismatch debugging
+	private $dataSources = [];
+
 	private $numNotes;
 	private $numAttachments;
 	private $numAnnotations;
@@ -1021,7 +1024,7 @@ class Zotero_Item extends Zotero_DataObject {
 	}
 	
 	
-	public function save($userID=false) {
+	public function save($userID=false, $options=[]) {
 		if (!$this->_libraryID) {
 			trigger_error("Library ID must be set before saving", E_USER_ERROR);
 		}
@@ -1384,8 +1387,8 @@ class Zotero_Item extends Zotero_DataObject {
 				// Attachment
 				if ($this->isAttachment()) {
 					$sql = "INSERT INTO itemAttachments "
-						. "(itemID, sourceItemID, linkMode, mimeType, charsetID, path, storageModTime, storageHash) "
-						. "VALUES (?,?,?,?,?,?,?,?)";
+						. "(itemID, sourceItemID, linkMode, mimeType, charsetID, path, storageModTime, storageHash, lastRead) "
+						. "VALUES (?,?,?,?,?,?,?,?,?)";
 					$isEmbeddedImage = $this->attachmentLinkMode == 'embedded_image';
 					
 					$parent = $this->getSource();
@@ -1434,7 +1437,8 @@ class Zotero_Item extends Zotero_DataObject {
 					$path = $this->attachmentPath;
 					$storageModTime = $this->attachmentStorageModTime;
 					$storageHash = $this->attachmentStorageHash;
-					
+					$lastRead = $this->attachmentLastRead;
+
 					$bindParams = array(
 						$itemID,
 						$parent ? $parent : null,
@@ -1443,7 +1447,8 @@ class Zotero_Item extends Zotero_DataObject {
 						$charsetID ? $charsetID : null,
 						$path ? $path : '',
 						$storageModTime ? $storageModTime : null,
-						$storageHash ? $storageHash : null
+						$storageHash ? $storageHash : null,
+						$lastRead ? $lastRead : null
 					);
 					Zotero_DB::query($sql, $bindParams, $shardID);
 				}
@@ -1678,8 +1683,10 @@ class Zotero_Item extends Zotero_DataObject {
 				
 				$this->_serverDateModified = $timestamp;
 				
-				// Group item data
-				if ($isGroupLibrary && $userID) {
+				// Group item data -- only update lastModifiedByUserID if dateModified
+				// was updated (i.e., not for collection membership, trash, etc.)
+				if ($isGroupLibrary && $userID
+						&& empty($options['skipDateModifiedUpdate'])) {
 					$sql = "INSERT INTO groupItems VALUES (?, ?, ?)
 								ON DUPLICATE KEY UPDATE lastModifiedByUserID=?";
 					Zotero_DB::query($sql, array($this->_id, null, $userID, $userID), $shardID);
@@ -2053,6 +2060,7 @@ class Zotero_Item extends Zotero_DataObject {
 						. "(itemID, parentItemID, `type`, authorName, text, comment, color, pageLabel, sortIndex, position) "
 						. "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
 						. "ON DUPLICATE KEY UPDATE "
+						. "parentItemID=VALUES(parentItemID), "
 						. "authorName=VALUES(authorName), "
 						. "text=VALUES(text), "
 						. "comment=VALUES(comment), "
@@ -2422,7 +2430,7 @@ class Zotero_Item extends Zotero_DataObject {
 	 */
 	public function updateVersion($userID) {
 		$this->changed['version'] = true;
-		$this->save($userID);
+		$this->save($userID, ['skipDateModifiedUpdate' => true]);
 	}
 	
 	
@@ -3225,7 +3233,10 @@ class Zotero_Item extends Zotero_DataObject {
 				throw new Exception("Invalid field '$field'");
 		}
 		
-		if ($this->attachmentData[$field] !== null) {
+		// If the value was explicitly set to null (e.g., clearing lastRead), the changed
+		// flag distinguishes that from the initial null (meaning "not yet loaded from DB")
+		if ($this->attachmentData[$field] !== null
+				|| !empty($this->changed['attachmentData'][$field])) {
 			return $this->attachmentData[$field];
 		}
 		
@@ -3470,16 +3481,20 @@ class Zotero_Item extends Zotero_DataObject {
 		$fieldFull = 'annotation' . ucwords($field);
 		
 		if ($this->annotationData[$field] !== null) {
+			if (!isset($this->dataSources['annotation.' . $field])) {
+				$this->dataSources['annotation.' . $field] = 'memory';
+			}
 			return $this->annotationData[$field];
 		}
-		
+
 		if (!$this->id) {
 			return null;
 		}
-		
+
 		$sql = "SELECT $field FROM itemAnnotations WHERE itemID=?";
 		$stmt = Zotero_DB::getStatement($sql, true, Zotero_Shards::getByLibraryID($this->libraryID));
 		$value = Zotero_DB::valueQueryFromStatement($stmt, $this->id);
+		$this->dataSources['annotation.' . $field] = 'db';
 		if ($value === false) {
 			$value = '';
 		}
@@ -4261,6 +4276,7 @@ class Zotero_Item extends Zotero_DataObject {
 					&& !Z_Core::probability(10)) {
 				// Keep in sync with 'library' assignment below
 				$cached['library'] = Zotero_Libraries::toJSON($this->libraryID);
+				unset($cached['_cachedBy']);
 				return $cached;
 			}
 		}
@@ -4450,16 +4466,39 @@ class Zotero_Item extends Zotero_DataObject {
 			$cachedStr = Zotero_Utilities::formatJSON($cachedCmp);
 			$uncachedStr = Zotero_Utilities::formatJSON($uncachedCmp);
 			if ($cachedStr != $uncachedStr) {
-				$cachedByStr = $cachedBy
-					? " [cachedBy={$cachedBy['method']} {$cachedBy['uri']}"
-						. " " . date('H:i:s', (int)$cachedBy['time']) . "]"
-					: " [cachedBy=?]";
+				$shardID = Zotero_Shards::getByLibraryID($this->libraryID);
+				$currentDbHost = Zotero_DB::getShardHost($shardID);
+				$currentReadOnly = Zotero_DB::isReadOnly($shardID);
+				$currentInstanceID = file_exists('/var/lib/cloud/data/instance-id')
+					? trim(file_get_contents('/var/lib/cloud/data/instance-id'))
+					: '?';
+
+				// Header line with all metadata
 				error_log("Cached JSON item entry does not match for "
 					. $this->libraryID . "/" . $this->key
 					. " [v_cached=" . ($cached['version'] ?? '?')
 					. " v_uncached=" . ($json['version'] ?? '?') . "]"
-					. $cachedByStr
-					. " [currentMethod=" . ($_SERVER['REQUEST_METHOD'] ?? '?') . "]");
+					. " [shard=$shardID]"
+					// Caching request info
+					. " [cachedBy=" . ($cachedBy['method'] ?? '?')
+						. " " . ($cachedBy['uri'] ?? '?')
+						. " " . (isset($cachedBy['time']) ? date('H:i:s', (int)$cachedBy['time']) : '?') . "]"
+					. " [cachedByHost=" . ($cachedBy['dbHost'] ?? '?') . "]"
+					. " [cachedByReadOnly=" . (isset($cachedBy['readOnly']) ? ($cachedBy['readOnly'] ? 'Y' : 'N') : '?') . "]"
+					. " [cachedByTxn=" . (isset($cachedBy['txn']) ? ($cachedBy['txn'] ? 'Y' : 'N') : '?') . "]"
+					. " [cachedByInstance=" . ($cachedBy['instanceID'] ?? '?') . "]"
+					. " [cachedByUA=" . ($cachedBy['ua'] ?? '?') . "]"
+					. " [cachedBySrc=" . (isset($cachedBy['dataSources']) ? json_encode($cachedBy['dataSources']) : '?') . "]"
+					// Current request info
+					. " [currentMethod=" . ($_SERVER['REQUEST_METHOD'] ?? '?') . "]"
+					. " [currentHost=$currentDbHost]"
+					. " [currentReadOnly=" . ($currentReadOnly ? 'Y' : 'N') . "]"
+					. " [currentTxn=" . (Zotero_DB::transactionInProgress() ? 'Y' : 'N') . "]"
+					. " [currentInstance=$currentInstanceID]"
+					. " [currentUA=" . ($_SERVER['HTTP_USER_AGENT'] ?? '?') . "]"
+					. " [currentSrc=" . json_encode($this->dataSources) . "]"
+				);
+
 				// Log all differing lines
 				$cachedLines = explode("\n", $cachedStr);
 				$uncachedLines = explode("\n", $uncachedStr);
@@ -4484,6 +4523,64 @@ class Zotero_Item extends Zotero_DataObject {
 						}
 					}
 				}
+
+				// Log cached vs fresh tags if they differ
+				$cachedTags = $cachedCmp['data']['tags'] ?? null;
+				$freshTags = $uncachedCmp['data']['tags'] ?? null;
+				if (json_encode($cachedTags) !== json_encode($freshTags)) {
+					error_log("  cached_tags: " . json_encode($cachedTags));
+					error_log("  fresh_tags: " . json_encode($freshTags));
+				}
+
+				// Direct reads from the current connection (replica or primary)
+				// to compare with the in-memory object's data
+				$dbHostAfterCheck = Zotero_DB::getShardHost($shardID);
+				error_log("  dbHostForDirectReads: " . ($dbHostAfterCheck ?? 'null'));
+				$sql = "SELECT version FROM items WHERE itemID=?";
+				$dbVersion = Zotero_DB::valueQuery($sql, $this->id, $shardID);
+				error_log("  db_version: " . ($dbVersion ?? 'null')
+					. " (in-memory: " . $this->version . ")"
+					. " [readSnapshotActive=" . (Zotero_DB::isReadSnapshotActive() ? 'Y' : 'N') . "]");
+
+				if ($this->isAnnotation()) {
+					$sql = "SELECT comment, position FROM itemAnnotations WHERE itemID=?";
+					$row = Zotero_DB::rowQuery($sql, $this->id, $shardID);
+					if ($row) {
+						error_log("  db_annotationComment: " . mb_substr($row['comment'] ?? '', 0, 200));
+						error_log("  db_annotationPosition: " . mb_substr($row['position'] ?? '', 0, 200));
+					}
+				}
+
+				if ($this->isAttachment()) {
+					$sql = "SELECT storageHash, storageModTime FROM itemAttachments WHERE itemID=?";
+					$row = Zotero_DB::rowQuery($sql, $this->id, $shardID);
+					if ($row) {
+						error_log("  db_md5: " . ($row['storageHash'] ?? 'null'));
+						error_log("  db_mtime: " . ($row['storageModTime'] ?? 'null'));
+					}
+				}
+
+				// Creators from current connection
+				$sql = "SELECT creatorID, creatorTypeID, orderIndex FROM itemCreators WHERE itemID=? ORDER BY orderIndex";
+				$dbCreators = Zotero_DB::query($sql, $this->id, $shardID);
+				error_log("  db_creators: " . json_encode($dbCreators ?: []));
+
+				// Item data fields from current connection
+				$sql = "SELECT fieldID, value FROM itemData WHERE itemID=?";
+				$dbItemData = Zotero_DB::query($sql, $this->id, $shardID);
+				$dbFields = [];
+				if ($dbItemData) {
+					foreach ($dbItemData as $row) {
+						$dbFields[$row['fieldID']] = mb_substr($row['value'], 0, 100);
+					}
+				}
+				error_log("  db_itemData: " . json_encode($dbFields));
+
+				// Tags from current connection
+				$sql = "SELECT T.name, IT.type FROM itemTags IT "
+					. "JOIN tags T USING (tagID) WHERE IT.itemID=? ORDER BY T.name";
+				$dbTags = Zotero_DB::query($sql, $this->id, $shardID);
+				error_log("  db_tags: " . json_encode($dbTags ?: []));
 			}
 		}
 
@@ -4493,10 +4590,19 @@ class Zotero_Item extends Zotero_DataObject {
 		unset($json['data']['invalidProp']);
 
 		// TEMP: Store diagnostic info in the cached entry for mismatch debugging
+		$shardID = Zotero_Shards::getByLibraryID($this->libraryID);
 		$json['_cachedBy'] = [
 			'method' => $_SERVER['REQUEST_METHOD'] ?? '?',
 			'time' => microtime(true),
 			'uri' => $_SERVER['REQUEST_URI'] ?? '?',
+			'ua' => $_SERVER['HTTP_USER_AGENT'] ?? '?',
+			'dataSources' => $this->dataSources,
+			'dbHost' => Zotero_DB::getShardHost($shardID),
+			'readOnly' => Zotero_DB::isReadOnly($shardID),
+			'txn' => Zotero_DB::transactionInProgress(),
+			'instanceID' => file_exists('/var/lib/cloud/data/instance-id')
+				? trim(file_get_contents('/var/lib/cloud/data/instance-id'))
+				: '?',
 		];
 		Z_Core::$MC->set($cacheKey, $json, 86400);
 		unset($json['_cachedBy']);

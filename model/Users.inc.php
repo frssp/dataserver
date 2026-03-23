@@ -289,8 +289,18 @@ class Zotero_Users {
 		$libraryID = Zotero_Libraries::add('user', $shardID);
 		
 		$sql = "INSERT INTO users (userID, libraryID, username) VALUES (?, ?, ?)";
-		Zotero_DB::query($sql, array($userID, $libraryID, $username));
-		
+		try {
+			Zotero_DB::query($sql, array($userID, $libraryID, $username));
+		}
+		catch (Exception $e) {
+			Zotero_DB::rollback();
+			// Handle race condition where concurrent request already added the user
+			if (preg_match("/Duplicate entry .+ for key 'users.PRIMARY'/", $e->getMessage())) {
+				return;
+			}
+			throw $e;
+		}
+
 		Zotero_DB::commit();
 		
 		return $libraryID;

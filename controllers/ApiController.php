@@ -171,7 +171,8 @@ class ApiController extends Controller {
 						'clear',
 						'laststoragesync',
 						'removestoragefiles',
-						'itemContent'))) {
+						'itemContent',
+						'sessions'))) {
 				$this->e400("$this->method data not provided");
 			}
 			
@@ -259,18 +260,22 @@ class ApiController extends Controller {
 				}
 			}
 			if ($key) {
-				$maxKeyAuthFailures = 5;
-				$keyAuthFailureWindow = 300;
-				$ip = IPAddress::getIP();
-				$failCacheKey = "keyAuthFailures_" . $ip;
-				if (Z_Core::$MC->get($failCacheKey) > $maxKeyAuthFailures) {
-					$this->e429("Too many authentication failures");
+				if (!Z_ENV_TESTING_SITE) {
+					$maxKeyAuthFailures = 5;
+					$keyAuthFailureWindow = 300;
+					$ip = IPAddress::getIP();
+					$failCacheKey = "keyAuthFailures_" . $ip;
+					if (Z_Core::$MC->get($failCacheKey) > $maxKeyAuthFailures) {
+						$this->e429("Too many authentication failures");
+					}
 				}
 
 				$keyObj = Zotero_Keys::authenticate($key);
 				if (!$keyObj) {
-					Z_Core::$MC->add($failCacheKey, 0, $keyAuthFailureWindow);
-					Z_Core::$MC->increment($failCacheKey);
+					if (!Z_ENV_TESTING_SITE) {
+						Z_Core::$MC->add($failCacheKey, 0, $keyAuthFailureWindow);
+						Z_Core::$MC->increment($failCacheKey);
+					}
 					$this->e403('Invalid key');
 				}
 				$this->apiKey = $key;
@@ -308,8 +313,11 @@ class ApiController extends Controller {
 				
 				// Explicit auth request or not a GET or HEAD request
 				//
-				// /users/<id>/keys is an exception, since the key is embedded in the URL
-				if (($this->method != "GET" && $this->method != "HEAD") && $this->action != 'keys' && empty($extra['noauth'])) {
+				// /users/<id>/keys and /keys/sessions are exceptions
+				if (($this->method != "GET" && $this->method != "HEAD")
+						&& $this->action != 'keys'
+						&& $this->action != 'sessions'
+						&& empty($extra['noauth'])) {
 					$this->e403('An API key is required for write requests.');
 				}
 				
@@ -964,7 +972,7 @@ class ApiController extends Controller {
 					. "(to create, use If-Unmodified-Since-Version: 0, JSON 'version' 0, or PUT method)");
 			}
 			if ($version > 0) {
-				$this->e404(ucwords($objectType) . " not found (expected version $version)");
+				$this->e412(ucwords($objectType) . " not found (expected version $version)");
 			}
 			return true;
 		}
@@ -975,7 +983,7 @@ class ApiController extends Controller {
 			);
 		}
 		
-		if ($obj->version !== $version) {
+		if ($obj->version > $version) {
 			$this->libraryVersion = $obj->version;
 			$this->e412(ucwords($objectType) . " has been modified since specified version "
 				. "(expected $version, found " . $obj->version . ")");
@@ -1240,6 +1248,7 @@ class ApiController extends Controller {
 			case 404:
 			case 405:
 			case 409:
+			case 410:
 			case 412:
 			case 413:
 			case 422:
