@@ -108,13 +108,17 @@ export async function fetchItems(
   type: 'user' | 'group',
   id: number,
   params: Record<string, string> = {},
+  collectionKey?: string | null,
 ): Promise<{ items: ZoteroItem[]; totalResults: number }> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('Not authenticated');
 
   const prefix = type === 'user' ? `/users/${id}` : `/groups/${id}`;
+  const path = collectionKey
+    ? `${prefix}/collections/${collectionKey}/items`
+    : `${prefix}/items`;
   const query = new URLSearchParams({ format: 'json', ...params });
-  const res = await fetch(`${prefix}/items?${query}`, {
+  const res = await fetch(`${path}?${query}`, {
     headers: { 'Zotero-API-Key': apiKey },
   });
 
