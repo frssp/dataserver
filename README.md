@@ -58,24 +58,89 @@ public static $MEMCACHED_SERVERS = ['memcached:11211:1'];
 cp include/config/dbconnect.inc.php-sample include/config/dbconnect.inc.php
 ```
 
-모든 DB 연결의 host, user, pass, db를 아래와 같이 설정합니다:
+아래 완전한 예시를 참고하여 설정합니다. Docker 환경 기준 값입니다:
 
 ```php
-// master
-$host = 'mysql'; $port = 3306;
-$db = 'zotero_master'; $user = 'root'; $pass = 'zotero_root_pw';
+<?
+function Zotero_dbConnectAuth($db) {
+	$charset = 'utf8mb4';
 
-// shard — host/port/db는 false 유지 (동적 해석)
-$user = 'root'; $pass = 'zotero_root_pw';
+	// 공통 인증 정보 (모든 DB가 같은 MySQL 인스턴스에 있을 때)
+	$commonHost = 'mysql';    // Docker 서비스명. 외부 MySQL이면 IP/호스트명으로 변경
+	$commonPort = 3306;
+	$commonUser = 'zotero';           // docker/init-db/00-create-databases.sql 에서 생성한 사용자
+	$commonPass = 'zotero_app_pw';    // 위 사용자의 비밀번호
 
-// id1, id2
-$host = 'mysql'; $port = 3306;
-$db = 'zotero_ids'; $user = 'root'; $pass = 'zotero_root_pw';
+	if ($db == 'master') {
+		$host = $commonHost;
+		$port = $commonPort;
+		$replicas = [];   // 단일 인스턴스에서는 빈 배열
+		$db = 'zotero_master';
+		$user = $commonUser;
+		$pass = $commonPass;
+		$state = 'up';    // 'up', 'readonly', 'down'
+	}
+	else if ($db == 'shard') {
+		// shard의 host/port/db는 master DB의 shardHosts/shards 테이블에서 동적으로 결정됨
+		// 여기서는 user/pass만 제공하면 됨
+		$host = false;
+		$port = false;
+		$db = false;
+		$user = $commonUser;
+		$pass = $commonPass;
+	}
+	else if ($db == 'id1') {
+		$host = $commonHost;
+		$port = $commonPort;
+		$db = 'zotero_ids';
+		$user = $commonUser;
+		$pass = $commonPass;
+	}
+	else if ($db == 'id2') {
+		// id2는 id1과 같은 DB를 가리킴 (단일 인스턴스 환경)
+		$host = $commonHost;
+		$port = $commonPort;
+		$db = 'zotero_ids';
+		$user = $commonUser;
+		$pass = $commonPass;
+	}
+	else if ($db == 'www1') {
+		$host = $commonHost;
+		$port = $commonPort;
+		$db = 'zotero_www_dev';
+		$user = $commonUser;
+		$pass = $commonPass;
+	}
+	else if ($db == 'www2') {
+		// www2는 www1과 같은 DB를 가리킴 (단일 인스턴스 환경)
+		$host = $commonHost;
+		$port = $commonPort;
+		$db = 'zotero_www_dev';
+		$user = $commonUser;
+		$pass = $commonPass;
+	}
+	else {
+		throw new Exception("Invalid db '$db'");
+	}
 
-// www1, www2
-$host = 'mysql'; $port = 3306;
-$db = 'zotero_www_dev'; $user = 'root'; $pass = 'zotero_root_pw';
+	return [
+		'host' => $host,
+		'replicas' => !empty($replicas) ? $replicas : [],
+		'port' => $port,
+		'db' => $db,
+		'user' => $user,
+		'pass' => $pass,
+		'charset' => $charset,
+		'state' => !empty($state) ? $state : 'up'
+	];
+}
+?>
 ```
+
+> **참고:**
+> - `shard`의 `host`/`port`/`db`는 `false`로 유지합니다. 실제 연결 정보는 `zotero_master.shardHosts` + `zotero_master.shards` 테이블에서 동적으로 가져옵니다.
+> - `id1`과 `id2`, `www1`과 `www2`는 각각 같은 DB를 가리킵니다 (고가용성 구성이 아닌 단일 인스턴스 환경).
+> - Docker Compose가 아닌 외부 MySQL을 사용할 경우 `$commonHost`를 해당 서버 주소로 변경하세요.
 
 ### 3. 서버 실행
 
