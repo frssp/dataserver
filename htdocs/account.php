@@ -333,6 +333,7 @@ if (isset($_GET['action'])) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zotero | Settings</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #333; font-size: 13px; line-height: 1.5; background: #fff; }

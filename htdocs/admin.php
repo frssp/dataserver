@@ -340,6 +340,7 @@ if (isset($_GET['action'])) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zotero Admin</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <style>
 :root {
 	--bg: #f5f6fa;

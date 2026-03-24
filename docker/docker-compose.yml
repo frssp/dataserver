@@ -42,13 +42,6 @@ services:
       - redis
       - translation
 
-  web-library-build:
-    image: node:22-alpine
-    working_dir: /var/www/dataserver/web-library
-    volumes:
-      - ..:/var/www/dataserver
-    command: sh -c "npm install && npm run build"
-
   nginx:
     image: nginx:alpine
     ports:
@@ -58,7 +51,6 @@ services:
       - ..:/var/www/dataserver
     depends_on:
       - php-fpm
-      - web-library-build
 
 volumes:
   mysql_data:
