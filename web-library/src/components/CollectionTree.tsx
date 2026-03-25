@@ -203,15 +203,31 @@ export default function CollectionTree({
     setMenu({ x: rect.right + 4, y: rect.top, libType, libId, collectionKey });
   };
 
-  const handleExport = (format: string) => {
-    if (!menu) return;
+  const [exporting, setExporting] = useState(false);
+
+  const handleExport = async (format: string) => {
+    if (!menu || exporting) return;
     const url = getExportUrl(menu.libType, menu.libId, menu.collectionKey, format, apiKey);
-    // Trigger download
     const ext = format === 'bibtex' || format === 'biblatex' ? 'bib' : format === 'csljson' ? 'json' : format;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `export.${ext}`;
-    a.click();
+    setExporting(true);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) {
+        const text = await resp.text().catch(() => '');
+        throw new Error(text || `HTTP ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = `export.${ext}`;
+      a.click();
+      URL.revokeObjectURL(blobUrl);
+    } catch (err: any) {
+      alert(`Export failed: ${err.message || 'Unknown error'}\n\nThe translation server may not be running.`);
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (

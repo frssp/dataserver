@@ -27,8 +27,12 @@ services:
       - "6379:6379"
 
   translation:
-    image: zotero/translation-server:latest
+    build:
+      context: ./translation-server
+      dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "1969:1969"
 
   php-fpm:
     build:
