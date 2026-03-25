@@ -6,11 +6,14 @@ RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/
 COPY ca-cert.pem /usr/local/share/ca-certificates/ca-cert.crt
 RUN update-ca-certificates
 
-RUN git clone --depth 1 --recurse-submodules https://github.com/zotero/translation-server.git /app
+# Ensure Node.js and git use the system CA bundle
+ENV NODE_EXTRA_CA_CERTS=/etc/ssl/certs/ca-certificates.crt
+
+RUN git clone --depth 1 https://github.com/zotero/translation-server.git /app
 
 WORKDIR /app
 
-RUN git submodule update --init --recursive && npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
 EXPOSE 1969
 
