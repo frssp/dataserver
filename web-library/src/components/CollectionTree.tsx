@@ -206,12 +206,9 @@ export default function CollectionTree({
   const handleExport = (format: string) => {
     if (!menu) return;
     const url = getExportUrl(menu.libType, menu.libId, menu.collectionKey, format, apiKey);
-    // Trigger download
-    const ext = format === 'bibtex' || format === 'biblatex' ? 'bib' : format === 'csljson' ? 'json' : format;
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `export.${ext}`;
-    a.click();
+    // Avoids fetch() mixed-content blocking behind SSL-inspecting proxies
+    window.open(url, '_blank');
+    setMenu(null);
   };
 
   return (

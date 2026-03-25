@@ -251,9 +251,12 @@ class ItemsController extends ApiController {
 					break;
 				
 				default:
+					$fmt = $this->queryParams['format'];
 					$export = Zotero_Translate::doExport([$item], $this->queryParams);
 					$this->queryParams['format'] = null;
+					$ext = Zotero_Translate::getFileExtension($fmt);
 					header("Content-Type: " . $export['mimeType']);
+					header("Content-Disposition: attachment; filename=\"export.{$ext}\"");
 					echo $export['body'];
 					break;
 			}

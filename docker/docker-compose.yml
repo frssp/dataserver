@@ -27,13 +27,18 @@ services:
       - "6379:6379"
 
   translation:
-    image: zotero/translation-server:latest
+    image: zotero/translation-server:2.0.4
     restart: unless-stopped
+    ports:
+      - "1969:1969"
 
   php-fpm:
     build:
       context: ..
       dockerfile: docker/Dockerfile.php
+    environment:
+      - no_proxy=translation,mysql,memcached,redis,localhost,127.0.0.1
+      - NO_PROXY=translation,mysql,memcached,redis,localhost,127.0.0.1
     volumes:
       - ..:/var/www/dataserver
     depends_on:

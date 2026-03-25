@@ -1114,7 +1114,9 @@ class Zotero_API {
 			default:
 				if ($isExportFormat) {
 					$export = Zotero_Translate::doExport($options['results'], $options['requestParams']);
+					$ext = Zotero_Translate::getFileExtension($format);
 					header("Content-Type: " . $export['mimeType']);
+					header("Content-Disposition: attachment; filename=\"export.{$ext}\"");
 					echo $export['body'];
 				}
 				else {

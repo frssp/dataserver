@@ -95,21 +95,22 @@ class Zotero_Translate {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $json);
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array("Expect:", "Content-Type: application/json"));
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
-			curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 			curl_setopt($ch, CURLOPT_HEADER, 0); // do not return HTTP headers
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER , 1);
+			curl_setopt($ch, CURLOPT_NOPROXY, '*');
 			$response = curl_exec($ch);
-			
+
 			$time = microtime(true) - $start;
-			
+
 			$code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 			$mimeType = curl_getinfo($ch, CURLINFO_CONTENT_TYPE);
-			
+
 			if ($code != 200) {
+				$curlError = curl_error($ch);
+				Z_Core::logError("HTTP $code from translate server $server exporting items: $curlError");
 				$response = null;
-				Z_Core::logError("HTTP $code from translate server $server exporting items");
-				Z_Core::logError($response);
 				continue;
 			}
 			
@@ -173,10 +174,11 @@ class Zotero_Translate {
 			curl_setopt($ch, CURLOPT_POST, 1);
 			curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
 			curl_setopt($ch, CURLOPT_HTTPHEADER, ["Content-Type: $contentType"]);
-			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 1);
-			curl_setopt($ch, CURLOPT_TIMEOUT, 4);
+			curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 3);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 10);
 			curl_setopt($ch, CURLOPT_HEADER, 0); // do not return HTTP headers
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER , 1);
+			curl_setopt($ch, CURLOPT_NOPROXY, '*');
 			$response = curl_exec($ch);
 			
 			$time = microtime(true) - $start;
@@ -232,5 +234,22 @@ class Zotero_Translate {
 	
 	public static function isExportFormat($format) {
 		return in_array($format, self::$exportFormats);
+	}
+
+	public static function getFileExtension($format) {
+		return match($format) {
+			'bibtex', 'biblatex' => 'bib',
+			'ris' => 'ris',
+			'csljson' => 'json',
+			'csv' => 'csv',
+			'endnote_xml' => 'xml',
+			'mods' => 'xml',
+			'tei' => 'xml',
+			'rdf_bibliontology', 'rdf_dc', 'rdf_zotero' => 'rdf',
+			'refer' => 'enw',
+			'refworks_tagged' => 'tag',
+			'bookmarks' => 'html',
+			default => $format
+		};
 	}
 }
