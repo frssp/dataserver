@@ -16,7 +16,7 @@ class Z_CONFIG {
 
 	public static $AUTH_SALT = 'zotero_self_hosted_salt';
 	public static $API_SUPER_USERNAME = 'admin';
-	public static $API_SUPER_PASSWORD = 'Hfzr!0527';
+	public static $API_SUPER_PASSWORD = 'admin';
 
 	// AWS — dummy credentials (SDK factory created but never called for metadata sync)
 	public static $AWS_REGION = 'us-east-1';
