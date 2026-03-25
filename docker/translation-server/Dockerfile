@@ -1,6 +1,10 @@
 FROM node:18-slim
 
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y git ca-certificates && rm -rf /var/lib/apt/lists/*
+
+# Copy corporate CA certificate for internal network
+COPY ca-cert.pem /usr/local/share/ca-certificates/ca-cert.crt
+RUN update-ca-certificates
 
 RUN git clone --depth 1 https://github.com/zotero/translation-server.git /app
 
