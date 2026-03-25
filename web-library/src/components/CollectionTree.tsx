@@ -206,8 +206,7 @@ export default function CollectionTree({
   const handleExport = (format: string) => {
     if (!menu) return;
     const url = getExportUrl(menu.libType, menu.libId, menu.collectionKey, format, apiKey);
-    // Direct navigation — server sets Content-Disposition: attachment header
-    // This avoids fetch() mixed-content blocking behind SSL-inspecting proxies
+    // Avoids fetch() mixed-content blocking behind SSL-inspecting proxies
     window.open(url, '_blank');
     setMenu(null);
   };

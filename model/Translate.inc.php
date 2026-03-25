@@ -109,9 +109,8 @@ class Zotero_Translate {
 
 			if ($code != 200) {
 				$curlError = curl_error($ch);
-				$response = null;
 				Z_Core::logError("HTTP $code from translate server $server exporting items: $curlError");
-				Z_Core::logError($response);
+				$response = null;
 				continue;
 			}
 			
@@ -235,5 +234,22 @@ class Zotero_Translate {
 	
 	public static function isExportFormat($format) {
 		return in_array($format, self::$exportFormats);
+	}
+
+	public static function getFileExtension($format) {
+		return match($format) {
+			'bibtex', 'biblatex' => 'bib',
+			'ris' => 'ris',
+			'csljson' => 'json',
+			'csv' => 'csv',
+			'endnote_xml' => 'xml',
+			'mods' => 'xml',
+			'tei' => 'xml',
+			'rdf_bibliontology', 'rdf_dc', 'rdf_zotero' => 'rdf',
+			'refer' => 'enw',
+			'refworks_tagged' => 'tag',
+			'bookmarks' => 'html',
+			default => $format
+		};
 	}
 }
