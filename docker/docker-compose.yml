@@ -36,6 +36,9 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.php
+    environment:
+      - no_proxy=translation,mysql,memcached,redis,localhost,127.0.0.1
+      - NO_PROXY=translation,mysql,memcached,redis,localhost,127.0.0.1
     volumes:
       - ..:/var/www/dataserver
     depends_on:
