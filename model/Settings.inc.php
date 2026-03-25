@@ -35,6 +35,7 @@ class Zotero_Settings extends Zotero_ClassicDataObjects {
 		'tagColors',
 		'/^lastPageIndex_(u|g[0-9]+)_[A-Z0-9]{8}$/',
 		'/^lastRead_(g[0-9]+)_[A-Z0-9]{8}$/',
+		'/^lastReadAloudPosition_(u|g[0-9]+)_[A-Z0-9]{8}$/',
 		'readerCustomThemes'
 	];
 	
@@ -248,6 +249,13 @@ class Zotero_Settings extends Zotero_ClassicDataObjects {
 			}
 			break;
 		
+		// Object settings
+		case 'lastReadAloudPosition':
+			if (!is_object($value)) {
+				throw new Exception("'value' must be an object", Z_ERROR_INVALID_INPUT);
+			}
+			break;
+
 		case 'lastPageIndex':
 			if (!is_integer($value) && !is_string($value) && !is_float($value)) {
 				throw new Exception("'value' must be an integer, string, or decimal", Z_ERROR_INVALID_INPUT);
