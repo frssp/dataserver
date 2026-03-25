@@ -27,9 +27,7 @@ services:
       - "6379:6379"
 
   translation:
-    build:
-      context: ./translation-server
-      dockerfile: Dockerfile
+    image: zotero/translation-server:2.0.4
     restart: unless-stopped
     ports:
       - "1969:1969"
