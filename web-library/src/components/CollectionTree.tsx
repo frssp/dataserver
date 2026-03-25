@@ -217,16 +217,23 @@ export default function CollectionTree({
         throw new Error(text || `HTTP ${resp.status}`);
       }
       const blob = await resp.blob();
+      if (blob.size === 0) {
+        throw new Error('No items to export');
+      }
       const blobUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = blobUrl;
       a.download = `export.${ext}`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
     } catch (err: any) {
-      alert(`Export failed: ${err.message || 'Unknown error'}\n\nThe translation server may not be running.`);
+      console.error('Export error:', err, 'URL:', url);
+      alert(`Export failed: ${err.message || 'Unknown error'}\n\nCheck browser console for details.`);
     } finally {
       setExporting(false);
+      setMenu(null);
     }
   };
 
