@@ -203,38 +203,13 @@ export default function CollectionTree({
     setMenu({ x: rect.right + 4, y: rect.top, libType, libId, collectionKey });
   };
 
-  const [exporting, setExporting] = useState(false);
-
-  const handleExport = async (format: string) => {
-    if (!menu || exporting) return;
+  const handleExport = (format: string) => {
+    if (!menu) return;
     const url = getExportUrl(menu.libType, menu.libId, menu.collectionKey, format, apiKey);
-    const ext = format === 'bibtex' || format === 'biblatex' ? 'bib' : format === 'csljson' ? 'json' : format;
-    setExporting(true);
-    try {
-      const resp = await fetch(url);
-      if (!resp.ok) {
-        const text = await resp.text().catch(() => '');
-        throw new Error(text || `HTTP ${resp.status}`);
-      }
-      const blob = await resp.blob();
-      if (blob.size === 0) {
-        throw new Error('No items to export');
-      }
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = `export.${ext}`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-    } catch (err: any) {
-      console.error('Export error:', err, 'URL:', url);
-      alert(`Export failed: ${err.message || 'Unknown error'}\n\nCheck browser console for details.`);
-    } finally {
-      setExporting(false);
-      setMenu(null);
-    }
+    // Direct navigation — server sets Content-Disposition: attachment header
+    // This avoids fetch() mixed-content blocking behind SSL-inspecting proxies
+    window.open(url, '_blank');
+    setMenu(null);
   };
 
   return (

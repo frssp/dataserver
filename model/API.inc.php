@@ -1114,7 +1114,15 @@ class Zotero_API {
 			default:
 				if ($isExportFormat) {
 					$export = Zotero_Translate::doExport($options['results'], $options['requestParams']);
+					$ext = match($format) {
+						'bibtex', 'biblatex' => 'bib',
+						'ris' => 'ris',
+						'csljson' => 'json',
+						'csv' => 'csv',
+						default => 'txt'
+					};
 					header("Content-Type: " . $export['mimeType']);
+					header("Content-Disposition: attachment; filename=\"export.{$ext}\"");
 					echo $export['body'];
 				}
 				else {
