@@ -13,6 +13,10 @@ ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_PASS="${ADMIN_PASS:-admin_secret_change_me}"
 SERVER_PORT="${SERVER_PORT:-8080}"
 
+has_systemd() {
+    command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1
+}
+
 echo "=== Zotero DataServer Native Install ==="
 echo "Project dir : $DATASERVER_DIR"
 echo "MySQL root pw: $MYSQL_ROOT_PW"
@@ -112,7 +116,7 @@ fi
 
 # ── 4. Start services ──
 echo ">>> Starting services..."
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+if has_systemd; then
     # systemd environment (bare-metal / VM)
     systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || systemctl enable --now mysqld 2>/dev/null || true
     systemctl enable --now memcached
@@ -145,7 +149,6 @@ fi
 
 # ── 5. Initialize MySQL databases ──
 # Check if databases already exist
-DB_EXISTS=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='zotero_master';" 2>/dev/null || echo "0")
 TABLE_EXISTS=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='zotero_master' AND TABLE_NAME='libraries';" 2>/dev/null || echo "0")
 
 if [ "$TABLE_EXISTS" -gt 0 ]; then
@@ -387,7 +390,7 @@ elif [ -d /etc/nginx/conf.d ]; then
 fi
 
 nginx -t
-if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+if has_systemd; then
     systemctl restart nginx
 else
     # Kill existing nginx and start fresh

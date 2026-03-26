@@ -26,10 +26,12 @@ if command -v mysql &>/dev/null; then
 fi
 
 # Test Memcached
-if echo "stats" | nc -w1 127.0.0.1 11211 &>/dev/null 2>&1; then
-    echo "Memcached          : OK (port 11211)"
-else
-    echo "Memcached          : NOT responding"
+if command -v nc &>/dev/null; then
+    if echo "stats" | nc -w1 127.0.0.1 11211 &>/dev/null 2>&1; then
+        echo "Memcached          : OK (port 11211)"
+    else
+        echo "Memcached          : NOT responding"
+    fi
 fi
 
 # Test Redis
