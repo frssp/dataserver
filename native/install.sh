@@ -88,23 +88,20 @@ fi
 
 # ── 3. Configure PHP ──
 echo ">>> Configuring PHP..."
-PHP_INI_DIR=""
-if [ -d /etc/php/7.4/fpm/conf.d ]; then
-    PHP_INI_DIR=/etc/php/7.4/fpm/conf.d
-elif [ -d /etc/php.d ]; then
-    PHP_INI_DIR=/etc/php.d
-fi
 
-if [ -n "$PHP_INI_DIR" ]; then
-    cat > "$PHP_INI_DIR/99-zotero.ini" <<'PHPINI'
-short_open_tag = On
+ZOTERO_INI="short_open_tag = On
 memory_limit = 256M
 max_execution_time = 120
 post_max_size = 50M
-upload_max_filesize = 50M
-PHPINI
-    echo "  Created $PHP_INI_DIR/99-zotero.ini"
-fi
+upload_max_filesize = 50M"
+
+# Apply to both FPM and CLI
+for INI_DIR in /etc/php/7.4/fpm/conf.d /etc/php/7.4/cli/conf.d /etc/php.d; do
+    if [ -d "$INI_DIR" ]; then
+        echo "$ZOTERO_INI" > "$INI_DIR/99-zotero.ini"
+        echo "  Created $INI_DIR/99-zotero.ini"
+    fi
+done
 
 # Fix PHP-FPM pool to listen on socket or TCP
 PHP_FPM_POOL=""
@@ -340,6 +337,9 @@ function Zotero_dbConnectAuth(\$db) {
 ?>
 EOCFG
 
+# Make config readable by PHP-FPM (www-data)
+chmod 644 "$CONFIG_DIR/config.inc.php" "$CONFIG_DIR/dbconnect.inc.php"
+
 # ── 10. Nginx config ──
 echo ">>> Configuring Nginx..."
 
@@ -400,7 +400,7 @@ fi
 
 # ── 11. Run schema update ──
 echo ">>> Running schema update..."
-cd "$DATASERVER_DIR/admin" && php schema_update 2>&1 || echo "WARNING: schema_update failed (may already be up to date)."
+cd "$DATASERVER_DIR/admin" && php -d short_open_tag=On schema_update 2>&1 || echo "WARNING: schema_update failed (may already be up to date)."
 
 echo ""
 echo "=== Installation complete ==="
