@@ -216,41 +216,43 @@ if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
 }
 
 //
-// Set up AWS service factory
+// Set up AWS service factory (skip if S3 not configured — self-hosted metadata-only)
 //
-$awsConfig = [
-	'region' => !empty(Z_CONFIG::$AWS_REGION) ? Z_CONFIG::$AWS_REGION : 'us-east-1',
-	'version' => 'latest',
-	'signature' => 'v4',
-	'http' => [
-		'timeout' => 3
-	],
-	'retries' => 2
-];
-// IAM role authentication
-if (empty(Z_CONFIG::$AWS_ACCESS_KEY)) {
-	// If APC cache is available, use that to cache temporary credentials
-	if (function_exists('apc_store')) {
-		$cache = new PsrCacheAdapter(new ApcuAdapter());
-	}
-	// Otherwise use temp dir
-	else {
-		$cache = new PsrCacheAdapter(new FilesystemAdapter('', 0, Z_ENV_BASE_PATH . 'tmp/cache'));
-	}
-
-	$provider = CredentialProvider::defaultProvider();
-	$cachedProvider = CredentialProvider::cache($provider, $cache);
-	$awsConfig['credentials'] = $cachedProvider;
-}
-// Access key and secret
-else {
-	$awsConfig['credentials'] = [
-		'key' => Z_CONFIG::$AWS_ACCESS_KEY,
-		'secret' => Z_CONFIG::$AWS_SECRET_KEY
+if (!empty(Z_CONFIG::$S3_BUCKET)) {
+	$awsConfig = [
+		'region' => !empty(Z_CONFIG::$AWS_REGION) ? Z_CONFIG::$AWS_REGION : 'us-east-1',
+		'version' => 'latest',
+		'signature' => 'v4',
+		'http' => [
+			'timeout' => 3
+		],
+		'retries' => 2
 	];
+	// IAM role authentication
+	if (empty(Z_CONFIG::$AWS_ACCESS_KEY)) {
+		// If APC cache is available, use that to cache temporary credentials
+		if (function_exists('apc_store')) {
+			$cache = new PsrCacheAdapter(new ApcuAdapter());
+		}
+		// Otherwise use temp dir
+		else {
+			$cache = new PsrCacheAdapter(new FilesystemAdapter('', 0, Z_ENV_BASE_PATH . 'tmp/cache'));
+		}
+
+		$provider = CredentialProvider::defaultProvider();
+		$cachedProvider = CredentialProvider::cache($provider, $cache);
+		$awsConfig['credentials'] = $cachedProvider;
+	}
+	// Access key and secret
+	else {
+		$awsConfig['credentials'] = [
+			'key' => Z_CONFIG::$AWS_ACCESS_KEY,
+			'secret' => Z_CONFIG::$AWS_SECRET_KEY
+		];
+	}
+	Z_Core::$AWS = new Aws\Sdk($awsConfig);
+	unset($awsConfig);
 }
-Z_Core::$AWS = new Aws\Sdk($awsConfig);
-unset($awsConfig);
 
 // Elasticsearch
 if (!empty(Z_CONFIG::$SEARCH_HOSTS[0])) {
