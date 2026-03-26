@@ -99,7 +99,7 @@ class Schema {
 	 * Get the schema version we should use for the given version number -- the given version or
 	 * the lowest known version above the given verson
 	 */
-	public static function getEffectiveVersion(int|null $version): int {
+	public static function getEffectiveVersion(?int $version): int {
 		$currentVersion = self::getVersion();
 		if (!$version || $version == $currentVersion) {
 			return $currentVersion;
