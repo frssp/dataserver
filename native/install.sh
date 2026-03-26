@@ -143,8 +143,15 @@ else
 fi
 
 # ── 5. Initialize MySQL databases ──
-echo ">>> Setting up MySQL databases..."
-mysql -u root <<EOSQL
+# Check if databases already exist
+DB_EXISTS=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='zotero_master';" 2>/dev/null || echo "0")
+TABLE_EXISTS=$(mysql -u root -N -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA='zotero_master' AND TABLE_NAME='libraries';" 2>/dev/null || echo "0")
+
+if [ "$TABLE_EXISTS" -gt 0 ]; then
+    echo ">>> Databases already initialized, skipping schema setup."
+else
+    echo ">>> Setting up MySQL databases..."
+    mysql -u root <<EOSQL
 CREATE DATABASE IF NOT EXISTS zotero_master CHARACTER SET utf8mb4;
 CREATE DATABASE IF NOT EXISTS zotero_shard1 CHARACTER SET utf8mb4;
 CREATE DATABASE IF NOT EXISTS zotero_ids CHARACTER SET utf8mb4;
@@ -158,23 +165,24 @@ GRANT ALL PRIVILEGES ON zotero_www_dev.* TO '${ZOTERO_DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 EOSQL
 
-# Load schemas
-echo ">>> Loading database schemas..."
-SCHEMA_DIR="$DATASERVER_DIR/docker/init-db"
-mysql -u root zotero_master < "$SCHEMA_DIR/master.schema"
-mysql -u root zotero_master < "$SCHEMA_DIR/coredata.schema"
-mysql -u root zotero_master -e "INSERT IGNORE INTO shardHosts VALUES (1, 'localhost', 3306, 'up');"
-mysql -u root zotero_master -e "INSERT IGNORE INTO shards VALUES (1, 1, 'zotero_shard1', 'up', 0);"
+    # Load schemas
+    echo ">>> Loading database schemas..."
+    SCHEMA_DIR="$DATASERVER_DIR/docker/init-db"
+    mysql -u root zotero_master < "$SCHEMA_DIR/master.schema"
+    mysql -u root zotero_master < "$SCHEMA_DIR/coredata.schema"
+    mysql -u root zotero_master -e "INSERT IGNORE INTO shardHosts VALUES (1, 'localhost', 3306, 'up');"
+    mysql -u root zotero_master -e "INSERT IGNORE INTO shards VALUES (1, 1, 'zotero_shard1', 'up', 0);"
 
-mysql -u root zotero_shard1 < "$SCHEMA_DIR/shard.schema"
-mysql -u root zotero_shard1 < "$SCHEMA_DIR/triggers.schema"
+    mysql -u root zotero_shard1 < "$SCHEMA_DIR/shard.schema"
+    mysql -u root zotero_shard1 < "$SCHEMA_DIR/triggers.schema"
 
-mysql -u root zotero_ids < "$SCHEMA_DIR/ids.schema"
+    mysql -u root zotero_ids < "$SCHEMA_DIR/ids.schema"
 
-mysql -u root zotero_www_dev < "$SCHEMA_DIR/04-www-schema.sql"
+    mysql -u root zotero_www_dev < "$SCHEMA_DIR/04-www-schema.sql"
 
-echo ">>> Seeding initial user (testuser/test123)..."
-mysql -u root < "$SCHEMA_DIR/05-seed-data.sql"
+    echo ">>> Seeding initial user (testuser/test123)..."
+    mysql -u root < "$SCHEMA_DIR/05-seed-data.sql"
+fi
 
 # ── 6. PHP dependencies ──
 # vendor/ is committed to the repo — no composer needed at deploy time.
