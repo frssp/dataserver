@@ -5,10 +5,10 @@ set -euo pipefail
 echo "=== Zotero DataServer Service Status ==="
 echo ""
 
-for svc in mysql mysqld memcached redis-server redis php7.4-fpm php-fpm nginx; do
-    if systemctl list-units --type=service --all 2>/dev/null | grep -q "$svc.service"; then
-        status=$(systemctl is-active "$svc" 2>/dev/null || echo "inactive")
-        printf "  %-16s : %s\n" "$svc" "$status"
+# Process check (works in K8s pods, containers, and bare-metal)
+for proc in mysqld mariadbd memcached redis-server php-fpm nginx; do
+    if pgrep -x "$proc" &>/dev/null; then
+        printf "  %-16s : running\n" "$proc"
     fi
 done
 
@@ -26,12 +26,10 @@ if command -v mysql &>/dev/null; then
 fi
 
 # Test Memcached
-if command -v nc &>/dev/null || command -v ncat &>/dev/null; then
-    if echo "stats" | nc -w1 127.0.0.1 11211 &>/dev/null; then
-        echo "Memcached          : OK (port 11211)"
-    else
-        echo "Memcached          : NOT responding"
-    fi
+if echo "stats" | nc -w1 127.0.0.1 11211 &>/dev/null 2>&1; then
+    echo "Memcached          : OK (port 11211)"
+else
+    echo "Memcached          : NOT responding"
 fi
 
 # Test Redis

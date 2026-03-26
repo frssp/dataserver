@@ -112,10 +112,35 @@ fi
 
 # ── 4. Start services ──
 echo ">>> Starting services..."
-systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || systemctl enable --now mysqld 2>/dev/null || true
-systemctl enable --now memcached
-systemctl enable --now redis-server 2>/dev/null || systemctl enable --now redis 2>/dev/null || true
-systemctl enable --now php7.4-fpm 2>/dev/null || systemctl enable --now php-fpm 2>/dev/null || true
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+    # systemd environment (bare-metal / VM)
+    systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || systemctl enable --now mysqld 2>/dev/null || true
+    systemctl enable --now memcached
+    systemctl enable --now redis-server 2>/dev/null || systemctl enable --now redis 2>/dev/null || true
+    systemctl enable --now php7.4-fpm 2>/dev/null || systemctl enable --now php-fpm 2>/dev/null || true
+else
+    # No systemd (K8s pod, Docker container, etc.) — start processes directly
+    echo "  (no systemd detected — starting services directly)"
+    # MariaDB / MySQL
+    if [ -x /usr/bin/mysqld_safe ]; then
+        mysqld_safe --skip-syslog &
+    elif [ -x /usr/sbin/mariadbd ]; then
+        mariadbd --user=mysql &
+    elif [ -x /usr/sbin/mysqld ]; then
+        mysqld --user=mysql &
+    fi
+    # Wait for MySQL to be ready
+    for i in $(seq 1 30); do
+        mysqladmin ping &>/dev/null && break
+        sleep 1
+    done
+    # Memcached
+    memcached -d -u memcache -m 64 -p 11211 2>/dev/null || memcached -d -u nobody -m 64 -p 11211 2>/dev/null || true
+    # Redis
+    redis-server --daemonize yes --bind 127.0.0.1 2>/dev/null || true
+    # PHP-FPM
+    php-fpm7.4 -D 2>/dev/null || php-fpm -D 2>/dev/null || true
+fi
 
 # ── 5. Initialize MySQL databases ──
 echo ">>> Setting up MySQL databases..."
@@ -349,7 +374,14 @@ elif [ -d /etc/nginx/conf.d ]; then
     cp /etc/nginx/sites-available/zotero /etc/nginx/conf.d/zotero.conf
 fi
 
-nginx -t && systemctl restart nginx
+nginx -t
+if command -v systemctl &>/dev/null && systemctl is-system-running &>/dev/null 2>&1; then
+    systemctl restart nginx
+else
+    # Kill existing nginx and start fresh
+    nginx -s stop 2>/dev/null || true
+    nginx
+fi
 
 # ── 11. Run schema update ──
 echo ">>> Running schema update..."
