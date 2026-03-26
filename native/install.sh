@@ -40,13 +40,8 @@ if [ "$PKG" = "apt" ]; then
         add-apt-repository -y ppa:ondrej/php
         apt-get update
     fi
-    # Use default-mysql-server (MariaDB) on Debian, mysql-server on Ubuntu
-    MYSQL_PKG="default-mysql-server"
-    if apt-cache show mysql-server &>/dev/null 2>&1; then
-        MYSQL_PKG="mysql-server"
-    fi
     apt-get install -y \
-        $MYSQL_PKG \
+        mariadb-server \
         memcached \
         redis-server \
         nginx \
@@ -117,7 +112,7 @@ fi
 
 # ── 4. Start services ──
 echo ">>> Starting services..."
-systemctl enable --now mysql 2>/dev/null || systemctl enable --now mysqld 2>/dev/null || true
+systemctl enable --now mariadb 2>/dev/null || systemctl enable --now mysql 2>/dev/null || systemctl enable --now mysqld 2>/dev/null || true
 systemctl enable --now memcached
 systemctl enable --now redis-server 2>/dev/null || systemctl enable --now redis 2>/dev/null || true
 systemctl enable --now php7.4-fpm 2>/dev/null || systemctl enable --now php-fpm 2>/dev/null || true
