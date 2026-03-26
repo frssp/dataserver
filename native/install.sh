@@ -176,11 +176,15 @@ mysql -u root zotero_www_dev < "$SCHEMA_DIR/04-www-schema.sql"
 echo ">>> Seeding initial user (testuser/test123)..."
 mysql -u root < "$SCHEMA_DIR/05-seed-data.sql"
 
-# ── 6. Composer install ──
-echo ">>> Installing PHP dependencies..."
-cd "$DATASERVER_DIR"
-if [ ! -f vendor/autoload.php ]; then
+# ── 6. PHP dependencies ──
+# vendor/ is committed to the repo — no composer needed at deploy time.
+# If vendor/ is missing, try composer as fallback.
+if [ ! -f "$DATASERVER_DIR/vendor/autoload.php" ]; then
+    echo ">>> vendor/ not found, running composer install..."
+    cd "$DATASERVER_DIR"
     composer install --no-dev --no-interaction
+else
+    echo ">>> vendor/ already present, skipping composer."
 fi
 
 # ── 7. Git submodule (zotero-schema) ──
