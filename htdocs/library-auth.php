@@ -18,6 +18,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 	exit;
 }
 
+// Auth may trigger DB writes, so disable read-only mode set by header.inc.php for GET
+Zotero_DB::readOnly(false);
+
 // ── Helpers ──────────────────────────────────────────────────────────
 function jsonOut($data, $code = 200) {
 	http_response_code($code);

@@ -211,7 +211,10 @@ chmod 777 "$DATASERVER_DIR/tmp"
 echo ">>> Generating config files..."
 CONFIG_DIR="$DATASERVER_DIR/include/config"
 
-# config.inc.php
+# config.inc.php — preserve existing config (admin may have changed passwords)
+if [ -f "$CONFIG_DIR/config.inc.php" ]; then
+    echo "  config.inc.php already exists, skipping (delete it manually to regenerate)."
+else
 cat > "$CONFIG_DIR/config.inc.php" <<EOCFG
 <?
 class Z_CONFIG {
@@ -283,8 +286,12 @@ class Z_CONFIG {
 }
 ?>
 EOCFG
+fi
 
-# dbconnect.inc.php
+# dbconnect.inc.php — preserve existing
+if [ -f "$CONFIG_DIR/dbconnect.inc.php" ]; then
+    echo "  dbconnect.inc.php already exists, skipping."
+else
 cat > "$CONFIG_DIR/dbconnect.inc.php" <<EOCFG
 <?
 function Zotero_dbConnectAuth(\$db) {
@@ -336,6 +343,7 @@ function Zotero_dbConnectAuth(\$db) {
 }
 ?>
 EOCFG
+fi
 
 # Make config readable by PHP-FPM (www-data)
 chmod 644 "$CONFIG_DIR/config.inc.php" "$CONFIG_DIR/dbconnect.inc.php"
