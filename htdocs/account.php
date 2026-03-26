@@ -28,7 +28,9 @@ if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
 	exit;
 }
 
-// Auth may trigger DB writes (user auto-creation), so disable read-only mode
+// Standalone page — disable API read-only mode set by header.inc.php
+// Auth may trigger DB writes (user auto-creation in Password.inc.php)
+Zotero_DB::commitReadSnapshot();
 Zotero_DB::readOnly(false);
 
 $authResult = Zotero_Users::authenticate('password', [

@@ -8,6 +8,10 @@
 set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
+// Standalone page — disable API read-only mode set by header.inc.php
+Zotero_DB::commitReadSnapshot();
+Zotero_DB::readOnly(false);
+
 // ── Auth ──────────────────────────────────────────────────────────────
 $realm = 'Zotero Admin';
 if (
