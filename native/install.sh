@@ -138,7 +138,8 @@ else
     memcached -d -u memcache -m 64 -p 11211 2>/dev/null || memcached -d -u nobody -m 64 -p 11211 2>/dev/null || true
     # Redis
     redis-server --daemonize yes --bind 127.0.0.1 2>/dev/null || true
-    # PHP-FPM
+    # PHP-FPM — ensure socket directory exists
+    mkdir -p /run/php
     php-fpm7.4 -D 2>/dev/null || php-fpm -D 2>/dev/null || true
 fi
 
