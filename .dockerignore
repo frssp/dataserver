@@ -1,0 +1,11 @@
+.git
+.gitignore
+.dockerignore
+docker/
+node_modules/
+web-library/node_modules/
+tests/
+misc/
+tmp/
+*.md
+LICENSE

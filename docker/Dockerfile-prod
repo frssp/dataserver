@@ -14,7 +14,6 @@ RUN apt-get update && apt-get install -y \
     libonig-dev \
     libicu-dev \
     unzip \
-    git \
     && mkdir -p /tmp/pecl \
     && cd /tmp/pecl \
     && curl -L https://github.com/igbinary/igbinary/archive/refs/tags/3.2.16.tar.gz -o igbinary.tar.gz \
@@ -39,21 +38,20 @@ RUN apt-get update && apt-get install -y \
 RUN echo "short_open_tag = On" > /usr/local/etc/php/conf.d/zotero.ini
 
 # Install composer
-COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy project files
-RUN mkdir -p /var/www/dataserver
-COPY . /var/www/dataserver/
 WORKDIR /var/www/dataserver
 
-# Install composer dependencies
-RUN composer install --no-dev --no-interaction --no-progress
+# Copy composer files first for better layer caching
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --no-interaction --no-progress --no-autoloader
 
-# Initialize git submodule if possible
-RUN git submodule update --init htdocs/zotero-schema 2>/dev/null || true
+# Copy project files (relies on .dockerignore to exclude .git, docker/, etc.)
+COPY . .
+RUN composer dump-autoload --no-dev --optimize
 
-# Ensure tmp directory exists
-RUN mkdir -p tmp && chmod 777 tmp
+# Ensure tmp directory is writable by php-fpm
+RUN mkdir -p tmp && chown www-data:www-data tmp
 
 # Nginx config — listen on port 8080
 RUN rm -f /etc/nginx/sites-enabled/default
@@ -62,6 +60,11 @@ COPY docker/nginx-prod.conf /etc/nginx/conf.d/default.conf
 # Supervisor config to run both nginx and php-fpm
 COPY docker/supervisord-prod.conf /etc/supervisor/conf.d/supervisord.conf
 
+# Entrypoint for MySQL readiness check + schema update
+COPY docker/entrypoint-prod.sh /entrypoint-prod.sh
+RUN chmod +x /entrypoint-prod.sh
+
 EXPOSE 8080
 
+ENTRYPOINT ["/entrypoint-prod.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
