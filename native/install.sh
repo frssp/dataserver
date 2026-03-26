@@ -223,7 +223,7 @@ class Z_CONFIG {
 	public static \$MAINTENANCE_MESSAGE = 'Server updates in progress. Please try again in a few minutes.';
 	public static \$BACKOFF = 0;
 
-	public static \$TESTING_SITE = false;
+	public static \$TESTING_SITE = true;
 	public static \$DEV_SITE = false;
 
 	public static \$DEBUG_LOG = false;
