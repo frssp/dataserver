@@ -5,7 +5,7 @@
  * Protected by HTTP Basic Auth using API_SUPER credentials from config.
  */
 
-set_include_path("../include");
+set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
 // ── Auth ──────────────────────────────────────────────────────────────

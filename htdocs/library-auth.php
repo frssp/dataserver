@@ -5,7 +5,7 @@
  * GET ?action=me: verify stored key and return user info.
  */
 
-set_include_path("../include");
+set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
 // ── CORS ─────────────────────────────────────────────────────────────
