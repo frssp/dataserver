@@ -40,13 +40,18 @@ if [ "$PKG" = "apt" ]; then
         add-apt-repository -y ppa:ondrej/php
         apt-get update
     fi
+    # Use default-mysql-server (MariaDB) on Debian, mysql-server on Ubuntu
+    MYSQL_PKG="default-mysql-server"
+    if apt-cache show mysql-server &>/dev/null 2>&1; then
+        MYSQL_PKG="mysql-server"
+    fi
     apt-get install -y \
-        mysql-server \
+        $MYSQL_PKG \
         memcached \
         redis-server \
         nginx \
         php7.4-fpm \
-        php7.4-mysqli \
+        php7.4-mysql \
         php7.4-memcached \
         php7.4-redis \
         php7.4-mbstring \
