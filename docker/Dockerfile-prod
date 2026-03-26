@@ -1,0 +1,67 @@
+FROM php:7.4-fpm
+
+ARG http_proxy
+ARG https_proxy
+
+# Install system dependencies + PHP extensions
+RUN apt-get update && apt-get install -y \
+    nginx \
+    supervisor \
+    libmemcached-dev \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    zlib1g-dev \
+    libonig-dev \
+    libicu-dev \
+    unzip \
+    git \
+    && mkdir -p /tmp/pecl \
+    && cd /tmp/pecl \
+    && curl -L https://github.com/igbinary/igbinary/archive/refs/tags/3.2.16.tar.gz -o igbinary.tar.gz \
+    && tar xzf igbinary.tar.gz && cd igbinary-3.2.16 \
+    && phpize && ./configure && make && make install \
+    && docker-php-ext-enable igbinary \
+    && cd /tmp/pecl \
+    && curl -L https://github.com/php-memcached-dev/php-memcached/archive/refs/tags/v3.2.0.tar.gz -o memcached.tar.gz \
+    && tar xzf memcached.tar.gz && cd php-memcached-3.2.0 \
+    && phpize && ./configure --enable-memcached-igbinary && make && make install \
+    && docker-php-ext-enable memcached \
+    && cd /tmp/pecl \
+    && curl -L https://github.com/phpredis/phpredis/archive/refs/tags/5.3.7.tar.gz -o redis.tar.gz \
+    && tar xzf redis.tar.gz && cd phpredis-5.3.7 \
+    && phpize && ./configure --enable-redis-igbinary && make && make install \
+    && docker-php-ext-enable redis \
+    && docker-php-ext-install mysqli mbstring xml curl intl \
+    && rm -rf /tmp/pecl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# PHP config
+RUN echo "short_open_tag = On" > /usr/local/etc/php/conf.d/zotero.ini
+
+# Install composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
+
+# Copy project files
+RUN mkdir -p /var/www/dataserver
+COPY . /var/www/dataserver/
+WORKDIR /var/www/dataserver
+
+# Install composer dependencies
+RUN composer install --no-dev --no-interaction --no-progress
+
+# Initialize git submodule if possible
+RUN git submodule update --init htdocs/zotero-schema 2>/dev/null || true
+
+# Ensure tmp directory exists
+RUN mkdir -p tmp && chmod 777 tmp
+
+# Nginx config — listen on port 8080
+RUN rm -f /etc/nginx/sites-enabled/default
+COPY docker/nginx-prod.conf /etc/nginx/conf.d/default.conf
+
+# Supervisor config to run both nginx and php-fpm
+COPY docker/supervisord-prod.conf /etc/supervisor/conf.d/supervisord.conf
+
+EXPOSE 8080
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
