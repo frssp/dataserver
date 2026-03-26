@@ -195,12 +195,11 @@ else
     echo ">>> vendor/ already present, skipping composer."
 fi
 
-# ── 7. Git submodule (zotero-schema) ──
+# ── 7. Verify zotero-schema ──
+# zotero-schema is committed directly (not as submodule) for air-gapped environments.
 if [ ! -f "$DATASERVER_DIR/htdocs/zotero-schema/schema.json" ]; then
-    echo ">>> Initializing zotero-schema submodule..."
-    cd "$DATASERVER_DIR"
-    git submodule update --init htdocs/zotero-schema 2>/dev/null || \
-        echo "WARNING: Could not init submodule. Clone it manually if needed."
+    echo "ERROR: htdocs/zotero-schema/schema.json not found. This should be in the repo."
+    exit 1
 fi
 
 # ── 8. Create tmp directory ──
