@@ -1376,7 +1376,7 @@ class ApiController extends Controller {
 			$parts = [];
 			foreach ($this->timings as $label => $elapsed) {
 				// Skip internal start markers
-				if (str_starts_with($label, '_start_')) continue;
+				if (strpos($label, '_start_') === 0) continue;
 				$parts[] = "$label=" . round($elapsed * 1000) . "ms";
 			}
 			if (Z_Core::$MC) {
@@ -1517,7 +1517,7 @@ class ApiController extends Controller {
 		}
 		
 		foreach ($this->timings as $label => $elapsed) {
-			if (str_starts_with($label, '_start_')) continue;
+			if (strpos($label, '_start_') === 0) continue;
 			StatsD::timing("api.request.phase.$label", $elapsed * 1000, 0.25);
 		}
 

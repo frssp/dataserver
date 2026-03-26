@@ -237,19 +237,32 @@ class Zotero_Translate {
 	}
 
 	public static function getFileExtension($format) {
-		return match($format) {
-			'bibtex', 'biblatex' => 'bib',
-			'ris' => 'ris',
-			'csljson' => 'json',
-			'csv' => 'csv',
-			'endnote_xml' => 'xml',
-			'mods' => 'xml',
-			'tei' => 'xml',
-			'rdf_bibliontology', 'rdf_dc', 'rdf_zotero' => 'rdf',
-			'refer' => 'enw',
-			'refworks_tagged' => 'tag',
-			'bookmarks' => 'html',
-			default => $format
-		};
+		switch ($format) {
+			case 'bibtex':
+			case 'biblatex':
+				return 'bib';
+			case 'ris':
+				return 'ris';
+			case 'csljson':
+				return 'json';
+			case 'csv':
+				return 'csv';
+			case 'endnote_xml':
+			case 'mods':
+			case 'tei':
+				return 'xml';
+			case 'rdf_bibliontology':
+			case 'rdf_dc':
+			case 'rdf_zotero':
+				return 'rdf';
+			case 'refer':
+				return 'enw';
+			case 'refworks_tagged':
+				return 'tag';
+			case 'bookmarks':
+				return 'html';
+			default:
+				return $format;
+		}
 	}
 }

@@ -5,8 +5,12 @@
  * Protected by HTTP Basic Auth using API_SUPER credentials from config.
  */
 
-set_include_path("../include");
+set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
+
+// Standalone page — disable API read-only mode set by header.inc.php
+Zotero_DB::commitReadSnapshot();
+Zotero_DB::readOnly(false);
 
 // ── Auth ──────────────────────────────────────────────────────────────
 $realm = 'Zotero Admin';

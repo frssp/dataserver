@@ -5,7 +5,7 @@
  * GET ?action=me: verify stored key and return user info.
  */
 
-set_include_path("../include");
+set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
 // ── CORS ─────────────────────────────────────────────────────────────
@@ -17,6 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 	http_response_code(204);
 	exit;
 }
+
+// Standalone page — disable API read-only mode set by header.inc.php
+Zotero_DB::commitReadSnapshot();
+Zotero_DB::readOnly(false);
 
 // ── Helpers ──────────────────────────────────────────────────────────
 function jsonOut($data, $code = 200) {

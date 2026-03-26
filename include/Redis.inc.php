@@ -49,7 +49,7 @@ class Z_Redis {
 				
 				$redis = new Redis();
 				// 1s connection timeout, 100ms retry interval
-				if (!$redis->pconnect($host, $port, 1, NULL, 100)) {
+				if (!@$redis->pconnect($host, $port, 1, NULL, 100)) {
 					throw new Exception("Redis connection to {$host}:{$port} failed");
 				}
 				

@@ -1,4 +1,4 @@
-FROM php:8.4-fpm
+FROM php:7.4-fpm
 ARG http_proxy
 ARG https_proxy
 # 사내 프록시 CA 등록 (외부 SSL inspection용) — 사내에서만 필요
@@ -20,13 +20,13 @@ RUN apt-get update && apt-get install -y \
     && phpize && ./configure && make && make install \
     && docker-php-ext-enable igbinary \
     && cd /tmp/pecl \
-    && curl -L https://github.com/php-memcached-dev/php-memcached/archive/refs/tags/v3.3.0.tar.gz -o memcached.tar.gz \
-    && tar xzf memcached.tar.gz && cd php-memcached-3.3.0 \
+    && curl -L https://github.com/php-memcached-dev/php-memcached/archive/refs/tags/v3.2.0.tar.gz -o memcached.tar.gz \
+    && tar xzf memcached.tar.gz && cd php-memcached-3.2.0 \
     && phpize && ./configure --enable-memcached-igbinary && make && make install \
     && docker-php-ext-enable memcached \
     && cd /tmp/pecl \
-    && curl -L https://github.com/phpredis/phpredis/archive/refs/tags/6.1.0.tar.gz -o redis.tar.gz \
-    && tar xzf redis.tar.gz && cd phpredis-6.1.0 \
+    && curl -L https://github.com/phpredis/phpredis/archive/refs/tags/5.3.7.tar.gz -o redis.tar.gz \
+    && tar xzf redis.tar.gz && cd phpredis-5.3.7 \
     && phpize && ./configure --enable-redis-igbinary && make && make install \
     && docker-php-ext-enable redis \
     && docker-php-ext-install mysqli mbstring xml curl intl \

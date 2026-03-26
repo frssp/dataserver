@@ -86,8 +86,13 @@ class Zotero_Notes {
 		if (strlen(trim($text)) == 0) {
 			return $text;
 		}
-		
+
 		$url = Z_CONFIG::$HTMLCLEAN_SERVER_URL;
+
+		// Skip sanitization if htmlclean server is not configured (self-hosted)
+		if (empty($url)) {
+			return $text;
+		}
 		
 		$start = microtime(true);
 		

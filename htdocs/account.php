@@ -5,7 +5,7 @@
  * Authenticated via HTTP Basic Auth against the www users table.
  */
 
-set_include_path("../include");
+set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
 // ── Auth ──────────────────────────────────────────────────────────────
@@ -27,6 +27,11 @@ if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
 	echo 'Please log in with your Zotero username and password.';
 	exit;
 }
+
+// Standalone page — disable API read-only mode set by header.inc.php
+// Auth may trigger DB writes (user auto-creation in Password.inc.php)
+Zotero_DB::commitReadSnapshot();
+Zotero_DB::readOnly(false);
 
 $authResult = Zotero_Users::authenticate('password', [
 	'username' => $_SERVER['PHP_AUTH_USER'],
