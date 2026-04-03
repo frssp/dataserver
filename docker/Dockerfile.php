@@ -2,7 +2,7 @@ FROM php:7.4-fpm
 ARG http_proxy
 ARG https_proxy
 # 사내 프록시 CA 등록 (외부 SSL inspection용) — 사내에서만 필요
-# COPY docker/samsungsemi-prx.com.pem /usr/local/share/ca-certificates/samsungsemi-prx.crt
+# COPY docker/corporate-proxy-ca.pem /usr/local/share/ca-certificates/corporate-proxy-ca.crt
 # RUN update-ca-certificates
 RUN apt-get update && apt-get install -y \
     libmemcached-dev \
@@ -31,6 +31,10 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-enable redis \
     && docker-php-ext-install mysqli mbstring xml curl intl \
     && rm -rf /tmp/pecl \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Node.js for web-library build
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 RUN echo "short_open_tag = On" > /usr/local/etc/php/conf.d/zotero.ini
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
