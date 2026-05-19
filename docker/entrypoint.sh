@@ -3,9 +3,22 @@ set -e
 
 cd /var/www/dataserver
 
-# Install composer dependencies if needed
-if [ ! -f vendor/autoload.php ]; then
+# Install composer dependencies if vendor is missing or the autoloader is broken.
+# A stale bind mount can leave vendor/autoload.php referencing a
+# ComposerAutoloaderInit<hash> class that no longer exists in
+# vendor/composer/autoload_real.php, producing a fatal "Class not found"
+# error. Detect this by trying to actually load the autoloader.
+needs_composer_install=0
+if [ ! -f vendor/autoload.php ] || [ ! -f vendor/composer/autoload_real.php ]; then
+    needs_composer_install=1
+elif ! php -d display_errors=0 -r "require 'vendor/autoload.php';" >/dev/null 2>&1; then
+    echo "vendor/autoload.php failed to load (likely a hash mismatch); regenerating..."
+    needs_composer_install=1
+fi
+
+if [ "$needs_composer_install" = "1" ]; then
     echo "Installing composer dependencies..."
+    rm -rf vendor/composer vendor/autoload.php
     composer install --no-dev --no-interaction
 fi
 
