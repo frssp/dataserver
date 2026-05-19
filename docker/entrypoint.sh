@@ -3,6 +3,13 @@ set -e
 
 cd /var/www/dataserver
 
+# Composer (and the submodule update below) shells out to git, which
+# refuses to operate on a working tree owned by a different uid than
+# the process — common with bind mounts from a host user. Whitelist
+# this path so those commands don't abort with "dubious ownership".
+git config --global --add safe.directory /var/www/dataserver \
+    || echo "WARNING: could not configure git safe.directory."
+
 # Install composer dependencies if vendor is missing or the autoloader is broken.
 # A stale bind mount can leave vendor/autoload.php referencing a
 # ComposerAutoloaderInit<hash> class that no longer exists in
@@ -19,7 +26,14 @@ fi
 if [ "$needs_composer_install" = "1" ]; then
     echo "Installing composer dependencies..."
     rm -rf vendor/composer vendor/autoload.php
-    composer install --no-dev --no-interaction
+    # Don't let a composer failure kill php-fpm — surface the error and
+    # keep the container alive so it can be debugged from outside.
+    if ! composer install --no-dev --no-interaction; then
+        echo "ERROR: composer install failed. php-fpm will start anyway,"
+        echo "       but PHP requests that need the autoloader will 500."
+        echo "       Likely causes: composer.lock out of sync with composer.json"
+        echo "       (run 'composer update'), or a network/proxy issue."
+    fi
 fi
 
 # Initialize git submodule if needed
