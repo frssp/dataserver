@@ -39,6 +39,16 @@ services:
     environment:
       - no_proxy=translation,mysql,memcached,redis,localhost,127.0.0.1
       - NO_PROXY=translation,mysql,memcached,redis,localhost,127.0.0.1
+      # ─── Self-hosted server config (used by docker/entrypoint.sh) ───
+      # URL clients use to reach this server. The Zotero 7+ client opens this
+      # URL in a browser during sign-in, so it MUST be reachable from client
+      # machines (not 'localhost' unless every client runs on this host).
+      - ZOTERO_BASE_URL=http://localhost:8080/
+      # Super-user (HTTP Basic) credentials. CHANGE IN PRODUCTION.
+      - ZOTERO_API_SUPER_USERNAME=admin
+      - ZOTERO_API_SUPER_PASSWORD=admin
+      # Random secret for hashing. CHANGE to a unique string (e.g. `openssl rand -hex 32`).
+      - ZOTERO_AUTH_SALT=zotero_self_hosted_salt
     volumes:
       - ..:/var/www/dataserver
     depends_on:

@@ -22,43 +22,20 @@ cp /path/to/samsungsemi-prx.com.pem docker/samsungsemi-prx.com.pem
 
 ### 2. 설정 파일 생성
 
-두 개의 설정 파일을 생성합니다.
+**`include/config/config.inc.php`** — 손으로 만들 필요가 없습니다. 컨테이너 첫 기동 시 `docker/entrypoint.sh`가 `docker/config.inc.php.template`에 환경변수를 치환해서 자동 생성합니다.
 
-**`include/config/config.inc.php`**
+`docker/docker-compose.yml`의 `php-fpm.environment` 블록에서 값을 조정하세요:
 
-```bash
-cp include/config/config.inc.php-sample include/config/config.inc.php
-```
+| 환경변수 | 기본값 | 설명 |
+|----------|--------|------|
+| `ZOTERO_BASE_URL` | `http://localhost:8080/` | **클라이언트에서 접근 가능한 URL**. Zotero 7+ 클라이언트가 로그인 시 브라우저로 이 URL을 열기 때문에 반드시 클라이언트 머신에서 도달 가능해야 합니다 (단일 호스트가 아니면 `localhost` 사용 불가). |
+| `ZOTERO_API_SUPER_USERNAME` | `admin` | 슈퍼유저(`admin.php`) 사용자명 |
+| `ZOTERO_API_SUPER_PASSWORD` | `admin` | 슈퍼유저 비밀번호 — **운영 환경 반드시 변경** |
+| `ZOTERO_AUTH_SALT` | `zotero_self_hosted_salt` | 해시 솔트 — **운영 환경 반드시 변경** (`openssl rand -hex 32`로 생성 권장) |
 
-아래 항목을 수정합니다:
+> 기존에 직접 작성한 `include/config/config.inc.php`가 있으면 entrypoint는 그대로 보존합니다. 환경변수 변경을 반영하려면 그 파일을 삭제하고 컨테이너를 재시작하세요.
 
-```php
-public static $BASE_URI = 'http://localhost:8080/';
-public static $API_BASE_URI = 'http://localhost:8080/';
-public static $WWW_BASE_URI = 'http://localhost:8080/';
-
-public static $AUTH_SALT = 'zotero_self_hosted_salt';
-public static $API_SUPER_USERNAME = 'admin';
-public static $API_SUPER_PASSWORD = 'admin_password';  // 반드시 변경
-
-public static $REDIS_HOSTS = [
-    'default' => ['host' => 'redis:6379'],
-    'request-limiter' => ['host' => 'redis:6379'],
-    'notifications' => ['host' => 'redis:6379'],
-    'fulltext-migration' => ['host' => 'redis:6379', 'cluster' => false]
-];
-
-public static $MEMCACHED_ENABLED = true;
-public static $MEMCACHED_SERVERS = ['memcached:11211:1'];
-```
-
-**`include/config/dbconnect.inc.php`**
-
-```bash
-cp include/config/dbconnect.inc.php-sample include/config/dbconnect.inc.php
-```
-
-아래 완전한 예시를 참고하여 설정합니다. Docker 환경 기준 값입니다:
+**`include/config/dbconnect.inc.php`** — 이 파일도 entrypoint가 자동 생성하므로 일반적으로는 손댈 필요가 없습니다. 외부 MySQL을 쓰는 등 커스터마이즈가 필요하면 미리 직접 생성해 두면 entrypoint가 그 파일을 보존합니다. 참고용 예시:
 
 ```php
 <?
@@ -239,9 +216,11 @@ docker compose logs -f mysql     # MySQL 로그
 | `extensions.zotero.streaming.enabled` | `false` |
 
 4. Zotero 재시작
-5. `편집` → `설정` → `동기화`에서 사용자명/비밀번호 입력 후 동기화
+5. `편집` → `설정` → `동기화`에서 `Sign In` 클릭
+6. 브라우저가 `http://<서버주소>:8080/login?session=...` 페이지를 열면 사용자명/비밀번호 입력
+7. "Signed in" 표시 후 클라이언트로 돌아오면 자동으로 동기화 키가 등록됨
 
-> `<서버주소>`는 서버가 실행 중인 호스트의 IP 또는 도메인으로 변경하세요.
+> **중요**: `<서버주소>`는 클라이언트가 접근 가능한 IP/도메인이어야 합니다. Zotero 7 이상은 더 이상 클라이언트 안에서 비밀번호를 직접 받지 않고, 위처럼 브라우저로 로그인 세션 페이지를 열기 때문입니다. 서버 측 `ZOTERO_BASE_URL`(아래 "설정" 참조)이 클라이언트가 도달 불가한 `localhost`로 남아있으면 로그인이 진행되지 않습니다.
 
 ---
 

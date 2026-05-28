@@ -10,9 +10,35 @@ if [ ! -f vendor/autoload.php ]; then
 fi
 
 # Generate config files if missing (both are .gitignored)
+# Values come from env vars set in docker-compose.yml; sensible defaults if unset.
+ZOTERO_BASE_URL="${ZOTERO_BASE_URL:-http://localhost:8080/}"
+ZOTERO_API_SUPER_USERNAME="${ZOTERO_API_SUPER_USERNAME:-admin}"
+ZOTERO_API_SUPER_PASSWORD="${ZOTERO_API_SUPER_PASSWORD:-admin}"
+ZOTERO_AUTH_SALT="${ZOTERO_AUTH_SALT:-zotero_self_hosted_salt}"
+
 if [ ! -f include/config/config.inc.php ]; then
-    echo "Creating include/config/config.inc.php from sample..."
-    cp include/config/config.inc.php-sample include/config/config.inc.php
+    echo "Generating include/config/config.inc.php from docker template..."
+    # Escape '|' and '&' for safe use as sed replacement
+    esc() { printf '%s' "$1" | sed -e 's/[\\|&]/\\&/g'; }
+    sed -e "s|@@BASE_URL@@|$(esc "$ZOTERO_BASE_URL")|g" \
+        -e "s|@@SUPER_USERNAME@@|$(esc "$ZOTERO_API_SUPER_USERNAME")|g" \
+        -e "s|@@SUPER_PASSWORD@@|$(esc "$ZOTERO_API_SUPER_PASSWORD")|g" \
+        -e "s|@@AUTH_SALT@@|$(esc "$ZOTERO_AUTH_SALT")|g" \
+        docker/config.inc.php.template > include/config/config.inc.php
+fi
+
+# Warn about insecure defaults (whether or not the config file existed)
+case "$ZOTERO_BASE_URL" in
+    *localhost*|*127.0.0.1*)
+        echo "WARNING: ZOTERO_BASE_URL is '$ZOTERO_BASE_URL'. Zotero clients on other machines"
+        echo "         will try to open this URL during sign-in and fail. Set ZOTERO_BASE_URL"
+        echo "         in docker-compose.yml to a URL reachable from client machines." ;;
+esac
+if [ "$ZOTERO_API_SUPER_PASSWORD" = "admin" ]; then
+    echo "WARNING: Using default super-user password 'admin'. Set ZOTERO_API_SUPER_PASSWORD."
+fi
+if [ "$ZOTERO_AUTH_SALT" = "zotero_self_hosted_salt" ]; then
+    echo "WARNING: Using default AUTH_SALT. Set ZOTERO_AUTH_SALT to a random secret."
 fi
 
 if [ ! -f include/config/dbconnect.inc.php ]; then
