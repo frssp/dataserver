@@ -204,12 +204,10 @@ Zotero_DB::addCallback("begin", array(Z_Core::$MC, "begin"));
 Zotero_DB::addCallback("commit", array(Z_Core::$MC, "commit"));
 Zotero_DB::addCallback("reset", array(Z_Core::$MC, "reset"));
 
-// Use a read snapshot for GET requests to ensure consistent reads across tables on replicas.
-// Transactions are started lazily on each replica connection as it's first used, outside the
-// virtual transaction nesting counter, so normal write transactions (e.g., user creation in
-// init()) are unaffected and commit/rollback independently.
+// Register shutdown handler to commit read snapshot if one was started.
+// The snapshot itself is started after init() in ApiController to avoid
+// trapping writes (e.g., logAccess) that happen during authentication.
 if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] == 'GET') {
-	Zotero_DB::beginReadSnapshot();
 	register_shutdown_function(function () {
 		Zotero_DB::commitReadSnapshot();
 	});

@@ -245,6 +245,59 @@ class Zotero_Users {
 	}
 	
 	
+	/**
+	 * Get validated email addresses for a user, with primary email first
+	 *
+	 * @param int $userID
+	 * @return array|false - Array of email strings, or false on failure
+	 */
+	public static function getEmails($userID) {
+		$cacheKey = "userEmailsByID_" . $userID;
+		$emails = Z_Core::$MC->get($cacheKey);
+		if ($emails !== false) {
+			return $emails;
+		}
+
+		// Primary email first (sortOrder 0), then additional validated
+		// emails sorted by date added
+		$sql = "SELECT email, 0 AS sortOrder, NULL AS dateAdded FROM users WHERE userID=? "
+			. "UNION ALL "
+			. "SELECT email, 1 AS sortOrder, dateAdded FROM users_email "
+			. "WHERE userID=? AND validated=1 "
+			. "ORDER BY sortOrder, dateAdded";
+		$params = [$userID, $userID];
+		try {
+			$rows = Zotero_WWW_DB_2::query($sql, $params);
+			Zotero_WWW_DB_2::close();
+		}
+		catch (Exception $e) {
+			try {
+				Z_Core::logError("WARNING: $e -- retrying on primary");
+				$rows = Zotero_WWW_DB_1::query($sql, $params);
+				Zotero_WWW_DB_1::close();
+			}
+			catch (Exception $e2) {
+				Z_Core::logError("WARNING: " . $e2);
+				return false;
+			}
+		}
+
+		$emails = [];
+		$seen = [];
+		if ($rows) {
+			foreach ($rows as $row) {
+				if (!isset($seen[$row['email']])) {
+					$emails[] = $row['email'];
+					$seen[$row['email']] = true;
+				}
+			}
+		}
+		Z_Core::$MC->set($cacheKey, $emails, 300);
+
+		return $emails;
+	}
+
+
 	public static function toJSON($userID) {
 		$realName = Zotero_Users::getRealName($userID);
 		$json = [

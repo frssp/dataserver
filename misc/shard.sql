@@ -288,7 +288,7 @@ CREATE TABLE `savedSearches` (
 
 CREATE TABLE `settings` (
   `libraryID` int(10) unsigned NOT NULL,
-  `name` varchar(35) NOT NULL,
+  `name` varchar(60) NOT NULL,
   `value` TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
   `version` int(10) unsigned NOT NULL,
   `lastUpdated` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

@@ -2,3 +2,4 @@ include/config/config.inc.php
 include/config/dbconnect.inc.php
 tmp/
 docker/.env
+model/tts/

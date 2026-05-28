@@ -301,4 +301,23 @@ describe('Groups', function () {
 		let response = await API.groupGet(groupID, '');
 		assert404(response);
 	});
+
+	it('should include isAdmin true for owner', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		let response = await API.groupGet(groupID, '');
+		assert200(response);
+		let json = JSON.parse(response.getBody());
+		assert.property(json.meta, 'isAdmin');
+		assert.isTrue(json.meta.isAdmin);
+	});
+
+	it('should include isAdmin false for member', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupGet(groupID, '');
+		assert200(response);
+		let json = JSON.parse(response.getBody());
+		assert.property(json.meta, 'isAdmin');
+		assert.isFalse(json.meta.isAdmin);
+	});
 });

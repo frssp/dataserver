@@ -38,6 +38,13 @@ class Zotero_Settings extends Zotero_ClassicDataObjects {
 		'/^lastReadAloudPosition_(u|g[0-9]+)_[A-Z0-9]{8}$/',
 		'readerCustomThemes'
 	];
+
+	// Settings that require group admin/owner privileges to modify
+	public static $adminOnlySettings = [
+		'attachmentRenameTemplate',
+		'autoRenameFiles',
+		'autoRenameFilesFileTypes'
+	];
 	
 	protected static $ZDO_object = 'setting';
 	protected static $ZDO_key = 'name';
@@ -223,7 +230,6 @@ class Zotero_Settings extends Zotero_ClassicDataObjects {
 			break;
 		
 		// Array settings
-		case 'autoRenameFilesFileTypes':
 		case 'readerCustomThemes':
 		case 'tagColors':
 			if (!is_array($value)) {

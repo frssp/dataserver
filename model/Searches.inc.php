@@ -55,7 +55,9 @@ class Zotero_Searches {
 		else {
 			$sql .= "searchID";
 		}
-		$sql .= " FROM savedSearches WHERE libraryID=? ";
+		$sql .= " FROM savedSearches WHERE libraryID=? "
+			// Skip legacy 'Overdue NSF Reviewers' searches with `dateDue` condition
+			. "AND searchName != 'Overdue NSF Reviewers' ";
 		$sqlParams = array($libraryID);
 		
 		// Pass a list of searchIDs, for when the initial search is done via SQL

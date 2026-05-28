@@ -315,7 +315,10 @@ class Zotero_Items {
 		}
 		
 		$sql .= "WHERE I.libraryID=? ";
-		
+
+		// Skip custom item types (e.g., nsfReviewer) not in the global schema
+		$sql .= "AND I.itemTypeID < 10000 ";
+
 		if (!$includeTrashed) {
 			$sql .= "AND DI.itemID IS NULL ";
 			
@@ -1828,7 +1831,7 @@ class Zotero_Items {
 					if (!$val) {
 						continue 2;
 					}
-					$item->attachmentStorageModTime = $val;
+					$item->attachmentStorageModTime = (int) $val;
 					break;
 
 				case 'lastRead':
@@ -1886,20 +1889,23 @@ class Zotero_Items {
 			$item->inPublications = !empty($json->inPublications);
 		}
 		
-		// Skip "Date Modified" update if only certain fields were updated (e.g., collections)
-		$skipDateModifiedUpdate = $dateModifiedProvided || !sizeOf(array_diff(
+		// Skip "Date Modified" and "Modified By" updates if only certain fields were updated
+		// (e.g., collections)
+		$skipLastModifiedByUserIDUpdate = !sizeOf(array_diff(
 			$item->getChanged(),
 			['collections', 'inPublications', 'relations']
 		));
-		
+		$skipDateModifiedUpdate = $dateModifiedProvided || $skipLastModifiedByUserIDUpdate;
+
 		if ($item->hasChanged() && !$skipDateModifiedUpdate
 				&& (($apiVersion >= 3 && $tmpZoteroClientDateModifiedHack) || !$changedDateModified)) {
 			// Update item with the current timestamp
 			$item->dateModified = Zotero_DB::getTransactionTimestamp();
 		}
-		
+
 		$changed = $item->save($userID, [
-			'skipDateModifiedUpdate' => $skipDateModifiedUpdate
+			'skipDateModifiedUpdate' => $skipDateModifiedUpdate,
+			'skipLastModifiedByUserIDUpdate' => $skipLastModifiedByUserIDUpdate
 		]) || $changed;
 		
 		// Additional steps that have to be performed on a saved object
@@ -1966,7 +1972,7 @@ class Zotero_Items {
 		$isNew = !$item || !$item->version;
 		
 		if (!is_object($json)) {
-			throw new Exception("Invalid item object (found " . gettype($json) . " '" . $json . "')", Z_ERROR_INVALID_INPUT);
+			throw new Exception("Invalid item object (found " . gettype($json) . " '" . json_encode($json) . "')", Z_ERROR_INVALID_INPUT);
 		}
 		
 		if (isset($json->items) && is_array($json->items)) {

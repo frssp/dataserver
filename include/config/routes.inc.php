@@ -20,8 +20,6 @@ $router->map('/users/i:objectUserID/:controller/top', array('extra' => array('su
 $router->map('/groups/i:objectGroupID/:controller/top', array('extra' => array('subset' => 'top')));
 
 // Attachment files
-$router->map('/users/i:objectUserID/laststoragesync', array('controller' => 'Storage', 'action' => 'laststoragesync', 'extra' => array('auth' => true)));
-$router->map('/groups/i:objectGroupID/laststoragesync', array('controller' => 'Storage', 'action' => 'laststoragesync', 'extra' => array('auth' => true)));
 $router->map('/users/i:objectUserID/storageadmin', array('controller' => 'Storage', 'action' => 'storageadmin'));
 $router->map('/storagepurge', array('controller' => 'Storage', 'action' => 'storagepurge'));
 $router->map('/users/i:objectUserID/removestoragefiles', ['controller' => 'Storage', 'action' => 'removestoragefiles']);

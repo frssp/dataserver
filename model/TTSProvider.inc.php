@@ -24,7 +24,7 @@
     ***** END LICENSE BLOCK *****
 */
 
-class Zotero_TTS_Provider {
+class Zotero_TTSProvider {
 	/**
 	 * @return array{httpCode: int, body: string}
 	 */

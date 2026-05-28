@@ -544,6 +544,13 @@ class Zotero_Storage {
 		
 		Zotero_DB::beginTransaction();
 
+		// Write to master first so that if the master connection dies, we haven't
+		// written to the shard yet. A storageFileLibraries row without a
+		// storageFileItems row is harmless, but the reverse could cause incorrect
+		// purging of in-use files.
+		self::addFileLibraryReference($storageFileID, $item->libraryID);
+		self::updateLastAdded($storageFileID);
+
 		Zotero_Libraries::updateVersionAndTimestamp($item->libraryID);
 		
 		// 4.0 client doesn't set filename for ZIP files
@@ -577,8 +584,7 @@ class Zotero_Storage {
 			Zotero_Shards::getByLibraryID($item->libraryID)
 		);
 		self::clearUserUsage(Zotero_Libraries::getOwner($item->libraryID));
-		self::addFileLibraryReference($storageFileID, $item->libraryID);
-		
+
 		Zotero_DB::commit();
 	}
 	
