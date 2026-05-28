@@ -828,13 +828,6 @@ describe('File', function () {
 		let mtime = Math.round(stats.mtimeMs);
 		let size = stats.size;
 
-		// Get last storage sync - should be 404
-		let response = await API.userGet(
-			config.get('userID'),
-			'laststoragesync'
-		);
-		assert404(response);
-
 		let json = await API.createAttachmentItem('imported_file', {
 			contentType: contentType,
 			charset: charset
@@ -843,7 +836,7 @@ describe('File', function () {
 		let originalVersion = json.version;
 
 		// File shouldn't exist yet
-		response = await API.userGet(
+		let response = await API.userGet(
 			config.get('userID'),
 			`items/${key}/file`
 		);
@@ -951,13 +944,6 @@ describe('File', function () {
 		let mtime = Math.floor(Date.now() / 1000); // seconds
 		let hash = crypto.createHash('md5').update(fileContents).digest('hex');
 
-		// Get last storage sync - should be 404
-		let response = await API.userGet(
-			config.get('userID'),
-			'laststoragesync'
-		);
-		assert404(response);
-
 		// Create parent item and attachment
 		let json = await API.createItem('book', false, 'jsonData');
 		let parentKey = json.key;
@@ -983,7 +969,7 @@ describe('File', function () {
 		let zipSize = zipFileContents.length;
 
 		// Get upload authorization
-		response = await API.userPost(
+		let response = await API.userPost(
 			config.get('userID'),
 			`items/${key}/file`,
 			implodeParams({
@@ -1054,14 +1040,6 @@ describe('File', function () {
 		assert.equal(json.filename, filename);
 		assert.equal(json.contentType, contentType);
 		assert.equal(json.charset, charset);
-
-		// Check laststoragesync
-		response = await API.userGet(
-			config.get('userID'),
-			'laststoragesync'
-		);
-		assert200(response);
-		assert.match(response.getBody(), /^[0-9]{10}$/);
 
 		// File exists check
 		response = await API.userPost(
@@ -1901,15 +1879,5 @@ describe('File', function () {
 		assert404(response);
 
 		await API.deleteGroup(groupID);
-	});
-
-	// PHP: testLastStorageSyncNoAuthorization
-	it('should require authorization for last storage sync', async function () {
-		API.useAPIKey(false);
-		let response = await API.userGet(
-			config.get('userID'),
-			'laststoragesync'
-		);
-		assert401(response);
 	});
 });

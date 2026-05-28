@@ -61,8 +61,6 @@ describe('Keys', function () {
 		assert.isArray(json);
 		assert.isTrue(json.length > 0);
 		assert.property(json[0], 'dateAdded');
-		assert.property(json[0], 'lastUsed');
-		assert.property(json[0], 'recentIPs');
 	});
 
 	// PHP: testGetKeyInfoCurrent
@@ -121,6 +119,31 @@ describe('Keys', function () {
 		assert.notProperty(json, 'dateAdded');
 		assert.notProperty(json, 'lastUsed');
 		assert.notProperty(json, 'recentIPs');
+	});
+
+	it('should include lastUsed after authenticated request', async function () {
+		// Make an authenticated request to trigger logAccess
+		API.useAPIKey(config.get('apiKey'));
+		let response = await API.userGet(config.get('userID'), 'items?limit=1');
+		assert200(response);
+
+		// Get key info with root access -- should now have lastUsed
+		API.useAPIKey('');
+		response = await API.userGet(
+			config.get('userID'),
+			'keys',
+			[],
+			{
+				username: config.get('rootUsername'),
+				password: config.get('rootPassword')
+			}
+		);
+		assert200(response);
+		let json = API.getJSONFromResponse(response);
+		let keyObj = json.find(k => k.key === config.get('apiKey'));
+		assert.ok(keyObj, 'API key should be in response');
+		assert.property(keyObj, 'lastUsed');
+		assert.property(keyObj, 'recentIPs');
 	});
 
 	// PHP: testGetKeyInfoWithUser

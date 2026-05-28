@@ -792,7 +792,13 @@ class Zotero_Group {
 			'lastModified' => Zotero_Date::sqlToISO8601($this->dateModified),
 			'numItems' => $this->numItems()
 		];
-		
+
+		// Add isAdmin for authenticated users
+		if (!empty($requestParams['userID'])) {
+			$role = $this->getUserRole($requestParams['userID']);
+			$json['meta']['isAdmin'] = in_array($role, ['owner', 'admin']);
+		}
+
 		$json['data'] = $this->toJSON($requestParams, true);
 		
 		return $json;

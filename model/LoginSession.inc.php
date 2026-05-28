@@ -181,6 +181,10 @@ class Zotero_LoginSession {
 			$json['apiKey'] = $keyObj->key;
 			$json['userID'] = $this->userID;
 			$json['username'] = Zotero_Users::getUsername($this->userID);
+			$emails = Zotero_Users::getEmails($this->userID);
+			if ($emails !== false) {
+				$json['emails'] = $emails;
+			}
 		}
 
 		return $json;

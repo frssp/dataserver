@@ -198,10 +198,12 @@ class GroupsController extends ApiController {
 		// View one or more groups
 		//
 		
+		$this->queryParams['userID'] = $this->userID;
+
 		// Single group
 		if ($groupID) {
 			if (!$this->permissions->canAccess($this->objectLibraryID)) {
-				$this->e403();
+				$this->e404();
 			}
 			$group = Zotero_Groups::get($groupID);
 			if (!$group) {

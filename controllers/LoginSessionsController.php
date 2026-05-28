@@ -60,6 +60,7 @@ class LoginSessionsController extends ApiController {
 					$this->e409("Session already completed, expired, or cancelled");
 				}
 				$session->cancel();
+				Zotero_LoginSessions::sendCancelNotification($session);
 				$this->e204();
 			}
 		}

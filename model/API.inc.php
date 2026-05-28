@@ -486,12 +486,14 @@ class Zotero_API {
 				// Allow leading/trailing commas
 				$objectKeys = trim($value, ",");
 				$objectKeys = explode(",", $objectKeys);
-				// Make sure all keys are plausible
-				foreach ($objectKeys as $objectKey) {
+				// Filter out and log invalid keys, which will never match server objects anyway
+				$objectKeys = array_values(array_filter($objectKeys, function ($objectKey) use ($key, $value) {
 					if (!Zotero_ID::isValidKey($objectKey)) {
-						throw new Exception("Invalid '$key' value '$value'", Z_ERROR_INVALID_INPUT);
+						Z_Core::logError("Warning: Ignoring invalid key '$objectKey' in '$key' parameter");
+						return false;
 					}
-				}
+					return true;
+				}));
 				$value = $objectKeys;
 				
 				// Force limit if explicit object keys are used

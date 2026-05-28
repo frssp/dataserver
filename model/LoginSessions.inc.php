@@ -215,6 +215,32 @@ class Zotero_LoginSessions {
 			'userID' => $session->userID,
 			'username' => Zotero_Users::getUsername($session->userID)
 		];
+		$emails = Zotero_Users::getEmails($session->userID);
+		if ($emails !== false) {
+			$message['emails'] = $emails;
+		}
+
+		$channel = "login-session:" . $session->sessionToken;
+		$redis->publish($channel, json_encode($message, JSON_UNESCAPED_SLASHES));
+	}
+
+
+	/**
+	 * Send Redis notification for login session cancellation
+	 *
+	 * @param Zotero_LoginSession $session
+	 */
+	public static function sendCancelNotification($session) {
+		$redis = Z_Redis::get('notifications');
+		if (!$redis) {
+			Z_Core::logError('Error: Failed to get Redis client for login cancel notification');
+			return;
+		}
+
+		$message = [
+			'event' => 'loginCancelled',
+			'topic' => 'login-session:' . $session->sessionToken,
+		];
 
 		$channel = "login-session:" . $session->sessionToken;
 		$redis->publish($channel, json_encode($message, JSON_UNESCAPED_SLASHES));

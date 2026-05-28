@@ -10,7 +10,9 @@ import {
 	assert200,
 	assert204,
 	assert400,
+	assert403,
 	assert404,
+	assert403ForObject,
 	assert412,
 	assert428,
 	assertContentType
@@ -862,5 +864,104 @@ describe('Settings', function () {
 			['Content-Type: application/json']
 		);
 		assert204(response);
+	});
+
+	it('should allow group admin to write admin-only settings', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		let response = await API.groupPost(
+			groupID,
+			'settings',
+			JSON.stringify({
+				attachmentRenameTemplate: {
+					value: '{{ title }}'
+				}
+			}),
+			['Content-Type: application/json']
+		);
+		assert204(response);
+	});
+
+	it('should return 403 for non-admin single admin-only setting PUT', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupPut(
+			groupID,
+			'settings/attachmentRenameTemplate',
+			JSON.stringify({
+				value: '{{ title }}',
+				version: 0
+			}),
+			['Content-Type: application/json']
+		);
+		assert403(response);
+	});
+
+	it('should allow non-admin to write non-admin-only group settings', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupPost(
+			groupID,
+			'settings',
+			JSON.stringify({
+				tagColors: {
+					value: [{ name: '_READ', color: '#990000' }]
+				}
+			}),
+			['Content-Type: application/json']
+		);
+		assert204(response);
+	});
+
+	it('should return per-object 403 for non-admin admin-only settings in multi POST', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+		API.useAPIKey(config.get('user2APIKey'));
+		let response = await API.groupPost(
+			groupID,
+			'settings',
+			JSON.stringify({
+				tagColors: {
+					value: [{ name: '_READ', color: '#990000' }]
+				},
+				attachmentRenameTemplate: {
+					value: '{{ title }}'
+				}
+			}),
+			['Content-Type: application/json']
+		);
+		// tagColors should not be in failed -- it's allowed for members
+		// attachmentRenameTemplate (index 1) should fail with 403
+		assert403ForObject(response, false, 1);
+
+		// tagColors should still have been saved
+		API.useAPIKey(config.get('apiKey'));
+		let getResponse = await API.groupGet(groupID, 'settings/tagColors');
+		assert200(getResponse);
+	});
+
+	it('should return 403 for non-admin single admin-only setting DELETE', async function () {
+		let groupID = config.get('ownedPrivateGroupID');
+
+		// Create setting as admin first
+		let response = await API.groupPost(
+			groupID,
+			'settings',
+			JSON.stringify({
+				attachmentRenameTemplate: {
+					value: '{{ title }}'
+				}
+			}),
+			['Content-Type: application/json']
+		);
+		assert204(response);
+		let libraryVersion = response.getHeader('Last-Modified-Version');
+
+		// Try to delete as non-admin
+		API.useAPIKey(config.get('user2APIKey'));
+		response = await API.groupDelete(
+			groupID,
+			'settings/attachmentRenameTemplate',
+			[`If-Unmodified-Since-Version: ${libraryVersion}`]
+		);
+		assert403(response);
 	});
 });

@@ -47,7 +47,14 @@ class Zotero_Keys {
 	
 	public static function getUserKeys($userID) {
 		$keys = array();
-		$keyIDs = Zotero_DB::columnQuery("SELECT keyID FROM `keys` WHERE userID=?", $userID);
+		$keyIDs = Zotero_DB::columnQuery(
+			"SELECT `keys`.keyID FROM `keys` "
+				. "LEFT JOIN keyAccessLog USING (keyID) "
+				. "WHERE userID=? "
+				. "GROUP BY `keys`.keyID "
+				. "ORDER BY MAX(timestamp) DESC",
+			$userID
+		);
 		if ($keyIDs) {
 			foreach ($keyIDs as $keyID) {
 				$keyObj = new Zotero_Key;

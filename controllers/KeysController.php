@@ -61,7 +61,8 @@ class KeysController extends ApiController {
 		
 		$options = [
 			'website' => $isWebsite,
-			'super' => $isSuper
+			'super' => $isSuper,
+			'includeEmails' => !empty($_GET['includeEmails'])
 		];
 		
 		if ($this->method == 'GET') {

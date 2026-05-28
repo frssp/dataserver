@@ -129,6 +129,14 @@ class Zotero_CharacterSets {
 	}
 	
 	public static function getID($charsetOrCharsetID) {
+		// Canonicalize charset label before lookup (e.g., "sjis" -> "shift_jis")
+		if (is_string($charsetOrCharsetID) && !is_numeric($charsetOrCharsetID)) {
+			$canonical = self::toCanonical($charsetOrCharsetID);
+			if ($canonical !== false) {
+				$charsetOrCharsetID = $canonical;
+			}
+		}
+
 		if (isset(self::$charsetIDs[$charsetOrCharsetID])) {
 			return self::$charsetIDs[$charsetOrCharsetID];
 		}

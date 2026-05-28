@@ -79,6 +79,7 @@ function assertFailedForObjectWithCode(code) {
 }
 
 let assert400ForObject = assertFailedForObjectWithCode(400);
+let assert403ForObject = assertFailedForObjectWithCode(403);
 let assert404ForObject = assertFailedForObjectWithCode(404);
 let assert409ForObject = assertFailedForObjectWithCode(409);
 let assert412ForObject = assertFailedForObjectWithCode(412);
@@ -153,6 +154,7 @@ export {
 	assertUnchangedForObject,
 	assertFailedForObject,
 	assert400ForObject,
+	assert403ForObject,
 	assert404ForObject,
 	assert409ForObject,
 	assert412ForObject,

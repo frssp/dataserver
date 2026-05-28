@@ -69,6 +69,13 @@ class SettingsController extends ApiController {
 			if ($this->isWriteMethod()) {
 				$this->libraryVersion = Zotero_Libraries::getUpdatedVersion($this->objectLibraryID);
 
+				// Restrict admin-only settings in group libraries
+				if ($this->isAdminOnlySetting($this->objectKey)) {
+					Zotero_DB::rollback();
+					$this->e403("Only group admins can change setting "
+						. "'{$this->objectKey}'");
+				}
+
 				// Update setting
 				if ($this->method == 'PUT') {
 					$json = $this->jsonDecode($this->body);
@@ -131,14 +138,75 @@ class SettingsController extends ApiController {
 					$this->e400("Cannot delete more than " . Zotero_API::MAX_OBJECT_KEYS . " settings at once");
 				}
 				foreach ($keys as $key) {
+					if ($this->isAdminOnlySetting($key)) {
+						Zotero_DB::rollback();
+						$this->e403("Only group admins can change setting '$key'");
+					}
 					Zotero_Settings::delete($this->objectLibraryID, $key);
 				}
 				Zotero_DB::commit();
 				$this->e204();
 			}
-			// Create/update a setting
+			// Create/update settings
 			else if ($this->method == 'POST') {
 				$obj = $this->jsonDecode($this->body);
+
+				// Check for admin-only settings written by non-admins
+				$restrictedKeys = [];
+				foreach ($obj as $name => $jsonObject) {
+					if ($this->isAdminOnlySetting($name)) {
+						$restrictedKeys[] = $name;
+					}
+				}
+
+				if ($restrictedKeys) {
+					// Split into allowed and restricted, process separately
+					$allowed = new stdClass();
+					$results = new Zotero_Results($this->queryParams);
+					$i = 0;
+					foreach ($obj as $name => $jsonObject) {
+						if (in_array($name, $restrictedKeys)) {
+							$e = new Exception(
+								"Only group admins can change setting '$name'",
+								Z_ERROR_LIBRARY_ACCESS_DENIED
+							);
+							$results->addFailure($i, $name, $e);
+						}
+						else {
+							$allowed->$name = $jsonObject;
+						}
+						$i++;
+					}
+
+					// Process allowed settings normally
+					$changed = false;
+					if (count(get_object_vars($allowed)) > 0) {
+						$changed = Zotero_Settings::updateMultipleFromJSON(
+							$allowed,
+							$this->queryParams,
+							$this->objectLibraryID,
+							$this->userID,
+							$this->permissions,
+							$libraryTimestampChecked ? 0 : 1,
+							null
+						);
+					}
+
+					if (!$changed) {
+						$this->libraryVersion = Zotero_Libraries::getOriginalVersion(
+							$this->objectLibraryID
+						);
+						Zotero_DB::rollback();
+					}
+					else {
+						Zotero_DB::commit();
+					}
+
+					$this->queryParams['format'] = 'writereport';
+					echo Zotero_Utilities::formatJSON($results->generateReport());
+					$this->end();
+				}
+
 				$changed = Zotero_Settings::updateMultipleFromJSON(
 					$obj,
 					$this->queryParams,
@@ -178,6 +246,24 @@ class SettingsController extends ApiController {
 	}
 	
 	
+	/**
+	 * Check whether the given setting requires admin privileges and the current user is not an
+	 * admin. Returns false for non-group libraries or non-admin-only settings.
+	 */
+	private function isAdminOnlySetting($settingName) {
+		if (!in_array($settingName, Zotero_Settings::$adminOnlySettings)) {
+			return false;
+		}
+		if (Zotero_Libraries::getType($this->objectLibraryID) != 'group') {
+			return false;
+		}
+		$groupID = Zotero_Groups::getGroupIDFromLibraryID($this->objectLibraryID);
+		$group = Zotero_Groups::get($groupID);
+		$role = $group->getUserRole($this->userID);
+		return $role != 'owner' && $role != 'admin';
+	}
+
+
 	/**
 	 * Settings values are stored as strings, so treat bigints as strings. No valid value should
 	 * ever be a bigint, but we don't want to convert them to floats, particularly for something

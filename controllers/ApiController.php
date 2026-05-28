@@ -132,6 +132,7 @@ class ApiController extends Controller {
 			header("Access-Control-Allow-Methods: HEAD, GET, POST, PUT, PATCH, DELETE");
 			header("Access-Control-Allow-Headers: Authorization, Content-Type, If-Match, If-None-Match, If-Modified-Since-Version, If-Unmodified-Since-Version, Zotero-API-Key, Zotero-API-Version, Zotero-Schema-Version, Zotero-Write-Token");
 			header("Access-Control-Expose-Headers: Backoff, ETag, Last-Modified-Version, Link, Retry-After, Total-Results, Zotero-API-Version, Zotero-TTS-Standard-Credits-Remaining, Zotero-TTS-Premium-Credits-Remaining, Zotero-TTS-Dev");
+			header("Access-Control-Max-Age: 86400");
 		}
 		
 		if (isset($_SERVER['HTTP_CONTINUED'])) {
@@ -169,7 +170,6 @@ class ApiController extends Controller {
 			if ($this->body == ""
 					&& !in_array($this->action, array(
 						'clear',
-						'laststoragesync',
 						'removestoragefiles',
 						'itemContent',
 						'sessions'))) {
@@ -515,7 +515,14 @@ class ApiController extends Controller {
 		if ($this->objectLibraryID) {
 			Zotero_DB::close();
 		}
-		
+
+		// Start read snapshot after init so that writes during authentication
+		// (e.g., logAccess) auto-commit instead of being trapped in the snapshot
+		// transaction, which would be lost when close() drops the master connection.
+		if (Zotero_DB::isReadOnly()) {
+			Zotero_DB::beginReadSnapshot();
+		}
+
 		header("Zotero-API-Version: " . $version);
 		StatsD::increment("api.request.version.v" . $version, 0.25);
 		
@@ -884,8 +891,9 @@ class ApiController extends Controller {
 			throw new Exception('$obj must be a data object or null');
 		}
 		
-		// In versions below 3, no writes to missing objects
-		if (!$obj && $this->apiVersion < 3) {
+		// In versions below 3, no writes to missing objects (except settings,
+		// which can be created via PUT)
+		if (!$obj && $this->apiVersion < 3 && $objectType != 'setting') {
 			$this->e404(ucwords($objectType) . " not found");
 		}
 		

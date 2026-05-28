@@ -694,7 +694,8 @@ describe('Versioning', function () {
 		assert.equal(json[0].tag, 'bar');
 	}
 
-	// PATCH with version header > 0 to a missing object is a 404
+	// PATCH with version header > 0 to a missing object is a 412, since the
+	// client expected the object to exist at that version
 	async function _testPatchMissingObjectWithVersionHeader(objectType) {
 		let objectTypePlural = API.getPluralObjectType(objectType);
 		let json = await API.createUnsavedDataObject(objectType);
@@ -708,7 +709,7 @@ describe('Versioning', function () {
 				'If-Unmodified-Since-Version: 123'
 			]
 		);
-		assert404(response);
+		assert412(response);
 	}
 
 	// PATCH to a missing object with version 0 header is a 204

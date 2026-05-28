@@ -50,17 +50,8 @@ describe('Settings (API v2)', function () {
 
 		let json = { value };
 
-		// No version
+		// Version > 0 for non-existent setting should fail
 		let response = await API.userPut(
-			config.get('userID'),
-			`settings/${settingKey}?key=${config.get('apiKey')}`,
-			JSON.stringify(json),
-			['Content-Type: application/json']
-		);
-		assert428(response);
-
-		// Version must be 0 for non-existent setting
-		response = await API.userPut(
 			config.get('userID'),
 			`settings/${settingKey}?key=${config.get('apiKey')}`,
 			JSON.stringify(json),
@@ -71,7 +62,7 @@ describe('Settings (API v2)', function () {
 		);
 		assert412(response);
 
-		// Create
+		// Create with version 0
 		response = await API.userPut(
 			config.get('userID'),
 			`settings/${settingKey}?key=${config.get('apiKey')}`,
