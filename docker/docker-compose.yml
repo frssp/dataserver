@@ -2,7 +2,7 @@ services:
   mysql:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: zotero_root_pw
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-zotero_root_pw}
     ports:
       - "3306:3306"
     volumes:
@@ -40,15 +40,13 @@ services:
       - no_proxy=translation,mysql,memcached,redis,localhost,127.0.0.1
       - NO_PROXY=translation,mysql,memcached,redis,localhost,127.0.0.1
       # ─── Self-hosted server config (used by docker/entrypoint.sh) ───
-      # URL clients use to reach this server. The Zotero 7+ client opens this
-      # URL in a browser during sign-in, so it MUST be reachable from client
-      # machines (not 'localhost' unless every client runs on this host).
-      - ZOTERO_BASE_URL=http://localhost:8080/
-      # Super-user (HTTP Basic) credentials. CHANGE IN PRODUCTION.
-      - ZOTERO_API_SUPER_USERNAME=admin
-      - ZOTERO_API_SUPER_PASSWORD=admin
-      # Random secret for hashing. CHANGE to a unique string (e.g. `openssl rand -hex 32`).
-      - ZOTERO_AUTH_SALT=zotero_self_hosted_salt
+      # Override these in docker/.env (gitignored). Defaults work for a
+      # single-host local test but are NOT safe for any real deployment.
+      # See docker/.env.example for details.
+      - ZOTERO_BASE_URL=${ZOTERO_BASE_URL:-http://localhost:8080/}
+      - ZOTERO_API_SUPER_USERNAME=${ZOTERO_API_SUPER_USERNAME:-admin}
+      - ZOTERO_API_SUPER_PASSWORD=${ZOTERO_API_SUPER_PASSWORD:-admin}
+      - ZOTERO_AUTH_SALT=${ZOTERO_AUTH_SALT:-zotero_self_hosted_salt}
     volumes:
       - ..:/var/www/dataserver
     depends_on:

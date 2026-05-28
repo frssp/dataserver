@@ -24,16 +24,24 @@ cp /path/to/samsungsemi-prx.com.pem docker/samsungsemi-prx.com.pem
 
 **`include/config/config.inc.php`** — 손으로 만들 필요가 없습니다. 컨테이너 첫 기동 시 `docker/entrypoint.sh`가 `docker/config.inc.php.template`에 환경변수를 치환해서 자동 생성합니다.
 
-`docker/docker-compose.yml`의 `php-fpm.environment` 블록에서 값을 조정하세요:
+배포별 값은 `docker/.env`(gitignored)에 넣습니다:
+
+```bash
+cp docker/.env.example docker/.env
+# 편집기로 docker/.env 열어서 본인 환경에 맞게 수정
+```
+
+`docker compose`는 compose 파일과 같은 디렉토리의 `.env`를 자동으로 읽습니다.
 
 | 환경변수 | 기본값 | 설명 |
 |----------|--------|------|
 | `ZOTERO_BASE_URL` | `http://localhost:8080/` | **클라이언트에서 접근 가능한 URL**. Zotero 7+ 클라이언트가 로그인 시 브라우저로 이 URL을 열기 때문에 반드시 클라이언트 머신에서 도달 가능해야 합니다 (단일 호스트가 아니면 `localhost` 사용 불가). |
 | `ZOTERO_API_SUPER_USERNAME` | `admin` | 슈퍼유저(`admin.php`) 사용자명 |
 | `ZOTERO_API_SUPER_PASSWORD` | `admin` | 슈퍼유저 비밀번호 — **운영 환경 반드시 변경** |
-| `ZOTERO_AUTH_SALT` | `zotero_self_hosted_salt` | 해시 솔트 — **운영 환경 반드시 변경** (`openssl rand -hex 32`로 생성 권장) |
+| `ZOTERO_AUTH_SALT` | `zotero_self_hosted_salt` | 해시 솔트 — **운영 환경 반드시 변경** (`openssl rand -hex 32`로 생성 권장). 한 번 정하면 절대 바꾸지 마세요 (저장된 비밀번호 해시가 깨짐). |
+| `MYSQL_ROOT_PASSWORD` | `zotero_root_pw` | MySQL root 비밀번호 |
 
-> 기존에 직접 작성한 `include/config/config.inc.php`가 있으면 entrypoint는 그대로 보존합니다. 환경변수 변경을 반영하려면 그 파일을 삭제하고 컨테이너를 재시작하세요.
+> 기존에 직접 작성한 `include/config/config.inc.php`가 있으면 entrypoint는 그대로 보존합니다. `.env` 변경을 반영하려면 그 파일을 삭제하고 컨테이너를 재시작하세요.
 
 **`include/config/dbconnect.inc.php`** — 이 파일도 entrypoint가 자동 생성하므로 일반적으로는 손댈 필요가 없습니다. 외부 MySQL을 쓰는 등 커스터마이즈가 필요하면 미리 직접 생성해 두면 entrypoint가 그 파일을 보존합니다. 참고용 예시:
 
