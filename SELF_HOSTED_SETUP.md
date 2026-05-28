@@ -522,6 +522,17 @@ extensions.zotero.api.url = https://your-server:8080/
 extensions.zotero.streaming.enabled = false
 ```
 
+### Login Flow (Zotero 7+)
+
+The client no longer takes username/password directly. Clicking **Sign In** in
+**Settings → Sync** opens the browser to `<api.url>/login?session=<token>`,
+where the user submits credentials. The page (`htdocs/login.php`) authenticates
+against `zotero_www.users`, calls `Zotero_LoginSessions::complete()` server-side
+to mint an API key, and the client picks it up via polling.
+
+For this to work, `Z_CONFIG::$WWW_BASE_URI` (set from `ZOTERO_BASE_URL` env var in
+the docker setup) must be a URL reachable from the client machine.
+
 ### For Custom Build (resource/config.mjs)
 ```javascript
 API_URL: 'https://your-server.corp/',
