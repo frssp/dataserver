@@ -293,6 +293,31 @@ docker compose -f docker/docker-compose.yml exec php-fpm \
   php -r 'var_dump(function_exists("opcache_get_status") && opcache_get_status() !== false);'
 ```
 
+## Migrating an Existing Deployment
+
+`init-db/*.sql` and the config template only run on a *first-boot* MySQL
+volume / missing `config.inc.php`. After pulling changes that touch
+either, you must apply them by hand to an existing deployment:
+
+**Config template changes** (e.g., `BASE_URI`, new `Z_CONFIG` fields):
+```bash
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  cp include/config/config.inc.php include/config/config.inc.php.bak
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  rm include/config/config.inc.php
+docker compose -f docker/docker-compose.yml restart php-fpm
+# diff the backup to confirm only the intended fields changed
+```
+
+**Schema changes in `init-db/*.sql`**: apply the ALTER manually, e.g.
+```bash
+docker compose -f docker/docker-compose.yml exec mysql \
+  mysql -uroot -p"$MYSQL_ROOT_PASSWORD" zotero_www_dev \
+  -e "ALTER TABLE users_email ADD COLUMN ..."
+```
+
+`docker compose down -v` would re-run init-db but **destroys all data**.
+
 ## Test Infrastructure
 - `misc/test_reset` — Shell script to reset all test DBs (GOLD MINE for understanding setup)
 - `misc/test_setup` — PHP script to create sample data
