@@ -318,6 +318,26 @@ docker compose -f docker/docker-compose.yml exec mysql \
 
 `docker compose down -v` would re-run init-db but **destroys all data**.
 
+### Known footgun: super-password drift between web UI and .env
+
+`htdocs/admin.php` (`admin.passwd` action) rewrites
+`$API_SUPER_PASSWORD` directly inside the generated
+`include/config/config.inc.php` — it does **not** touch `docker/.env`.
+
+This means a later regenerate-from-template (`rm config.inc.php &&
+restart php-fpm`, or the migration flow above) will silently revert the
+super-password to whatever is still in `.env`. Two-source-of-truth bug.
+
+Workaround for now: whenever you change the super-password via the web
+admin, also update `ZOTERO_API_SUPER_PASSWORD` in `docker/.env` to the
+same value. Proper fix is one of:
+- entrypoint warns / refuses to overwrite when `.env` value disagrees
+  with the existing `config.inc.php`;
+- the `admin.passwd` handler writes both files (needs host `.env`
+  writable from the php-fpm container);
+- remove the regex-rewrite path entirely and require all super-password
+  changes to go through `.env` + restart.
+
 ## Test Infrastructure
 - `misc/test_reset` — Shell script to reset all test DBs (GOLD MINE for understanding setup)
 - `misc/test_setup` — PHP script to create sample data

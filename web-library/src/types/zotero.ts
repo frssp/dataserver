@@ -35,6 +35,7 @@ export interface ZoteroCollection {
     version: number;
     name: string;
     parentCollection: string | false;
+    deleted?: boolean;
   };
   meta: {
     numCollections: number;

@@ -44,7 +44,7 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
     setPage(1);
 
     fetchCollections(library.type, library.id)
-      .then(setCollections)
+      .then((cols) => setCollections(cols.filter((c) => !c.data.deleted)))
       .catch(console.error);
 
     fetchTags(library.type, library.id)
