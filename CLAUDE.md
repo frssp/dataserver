@@ -146,6 +146,8 @@ CREATE TABLE users (
 CREATE TABLE users_email (
   userID INT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
+  validated TINYINT(1) NOT NULL DEFAULT 1,  -- Users::getEmails() filters on this
+  dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (userID, email)
 );
 
