@@ -265,6 +265,32 @@ STREAMING_URL: '',  // disable
 - Config: `Z_CONFIG::$PROPERTY_NAME` (static class properties)
 - Error handling: `$this->e400()`, `$this->e403()`, `$this->e404()`, `$this->e500()` in controllers
 
+## When to Restart Docker Services
+
+The repo is bind-mounted into the `php-fpm` and `nginx` containers
+(`..:/var/www/dataserver` in `docker/docker-compose.yml`), and the PHP image
+does **not** enable OPcache. So most changes are picked up immediately
+without a restart.
+
+| Change                                                  | Action                                                       |
+|---------------------------------------------------------|--------------------------------------------------------------|
+| PHP code (`*.php`, `*.inc.php` in `controllers/`, `model/`, `include/`, `htdocs/`) | **None.** Next request sees the new code. |
+| Static web assets (`htdocs/library/**`, images, css)    | **None.** Just rebuild the SPA (`npm run build`) if relevant. |
+| `web-library/` source                                   | **None** for `npm run dev`. For prod, `npm run build` → served by nginx, no restart. |
+| `docker/nginx.conf`                                     | `docker compose restart nginx`                               |
+| `docker/entrypoint.sh`, env vars, `config.inc.php.template` | `docker compose restart php-fpm` (entrypoint regenerates `config.inc.php` on boot) |
+| `docker/.env` (any var consumed by compose)             | `docker compose up -d` (recreates affected containers)       |
+| `docker/Dockerfile.php` (new PHP extensions, base image, etc.) | `docker compose build php-fpm && docker compose up -d php-fpm` |
+| `docker/docker-compose.yml` (new service, port, volume) | `docker compose up -d`                                       |
+| `docker/init-db/*.sql`                                  | **Only runs on a fresh MySQL volume.** To re-apply: `docker compose down -v` (⚠️  destroys data) then `docker compose up -d`. For an existing DB, apply by hand via `docker compose exec mysql mysql ...`. |
+| New OPcache config later                                | If OPcache gets enabled, PHP code changes will require `docker compose restart php-fpm` (or `opcache_reset()`). Currently N/A. |
+
+Quick check whether OPcache is on:
+```bash
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  php -r 'var_dump(function_exists("opcache_get_status") && opcache_get_status() !== false);'
+```
+
 ## Test Infrastructure
 - `misc/test_reset` — Shell script to reset all test DBs (GOLD MINE for understanding setup)
 - `misc/test_setup` — PHP script to create sample data
