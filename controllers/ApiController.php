@@ -539,6 +539,14 @@ class ApiController extends Controller {
 		echo "Nothing to see here.";
 		exit;
 	}
+
+
+	// Retraction feed is a zotero.org service; self-hosted server returns empty.
+	public function retractions() {
+		header('Content-Type: application/json');
+		echo '[]';
+		exit;
+	}
 	
 	
 	/**

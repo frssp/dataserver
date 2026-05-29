@@ -146,6 +146,8 @@ CREATE TABLE users (
 CREATE TABLE users_email (
   userID INT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
+  validated TINYINT(1) NOT NULL DEFAULT 1,  -- Users::getEmails() filters on this
+  dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (userID, email)
 );
 
@@ -264,6 +266,57 @@ STREAMING_URL: '',  // disable
 - Memcached: `Z_Core::$MC->get()` / `->set()` / `->delete()`
 - Config: `Z_CONFIG::$PROPERTY_NAME` (static class properties)
 - Error handling: `$this->e400()`, `$this->e403()`, `$this->e404()`, `$this->e500()` in controllers
+
+## When to Restart Docker Services
+
+The repo is bind-mounted into the `php-fpm` and `nginx` containers
+(`..:/var/www/dataserver` in `docker/docker-compose.yml`), and the PHP image
+does **not** enable OPcache. So most changes are picked up immediately
+without a restart.
+
+| Change                                                  | Action                                                       |
+|---------------------------------------------------------|--------------------------------------------------------------|
+| PHP code (`*.php`, `*.inc.php` in `controllers/`, `model/`, `include/`, `htdocs/`) | **None.** Next request sees the new code. |
+| Static web assets (`htdocs/library/**`, images, css)    | **None.** Just rebuild the SPA (`npm run build`) if relevant. |
+| `web-library/` source                                   | **None** for `npm run dev`. For prod, `npm run build` → served by nginx, no restart. |
+| `docker/nginx.conf`                                     | `docker compose restart nginx`                               |
+| `docker/entrypoint.sh`, env vars, `config.inc.php.template` | `docker compose restart php-fpm` (entrypoint regenerates `config.inc.php` on boot) |
+| `docker/.env` (any var consumed by compose)             | `docker compose up -d` (recreates affected containers)       |
+| `docker/Dockerfile.php` (new PHP extensions, base image, etc.) | `docker compose build php-fpm && docker compose up -d php-fpm` |
+| `docker/docker-compose.yml` (new service, port, volume) | `docker compose up -d`                                       |
+| `docker/init-db/*.sql`                                  | **Only runs on a fresh MySQL volume.** To re-apply: `docker compose down -v` (⚠️  destroys data) then `docker compose up -d`. For an existing DB, apply by hand via `docker compose exec mysql mysql ...`. |
+| New OPcache config later                                | If OPcache gets enabled, PHP code changes will require `docker compose restart php-fpm` (or `opcache_reset()`). Currently N/A. |
+
+Quick check whether OPcache is on:
+```bash
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  php -r 'var_dump(function_exists("opcache_get_status") && opcache_get_status() !== false);'
+```
+
+## Migrating an Existing Deployment
+
+`init-db/*.sql` and the config template only run on a *first-boot* MySQL
+volume / missing `config.inc.php`. After pulling changes that touch
+either, you must apply them by hand to an existing deployment:
+
+**Config template changes** (e.g., `BASE_URI`, new `Z_CONFIG` fields):
+```bash
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  cp include/config/config.inc.php include/config/config.inc.php.bak
+docker compose -f docker/docker-compose.yml exec php-fpm \
+  rm include/config/config.inc.php
+docker compose -f docker/docker-compose.yml restart php-fpm
+# diff the backup to confirm only the intended fields changed
+```
+
+**Schema changes in `init-db/*.sql`**: apply the ALTER manually, e.g.
+```bash
+docker compose -f docker/docker-compose.yml exec mysql \
+  mysql -uroot -p"$MYSQL_ROOT_PASSWORD" zotero_www_dev \
+  -e "ALTER TABLE users_email ADD COLUMN ..."
+```
+
+`docker compose down -v` would re-run init-db but **destroys all data**.
 
 ## Test Infrastructure
 - `misc/test_reset` — Shell script to reset all test DBs (GOLD MINE for understanding setup)

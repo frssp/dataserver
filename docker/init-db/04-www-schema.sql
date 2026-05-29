@@ -23,6 +23,9 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS users_email (
   userID INT UNSIGNED NOT NULL,
   email VARCHAR(255) NOT NULL,
+  -- Users::getEmails() filters secondary emails on validated=1
+  validated TINYINT(1) NOT NULL DEFAULT 1,
+  dateAdded TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (userID, email)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

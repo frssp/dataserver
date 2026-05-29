@@ -293,15 +293,17 @@ class Zotero_FullText {
 			Zotero_Shards::getByLibraryID($libraryID)
 		);
 		
-		// Delete from S3
-		$s3Client = Z_Core::$AWS->createS3();
-		$start = microtime(true);
-		$s3Client->deleteObject([
-			'Bucket' => Z_CONFIG::$S3_BUCKET_FULLTEXT,
-			'Key' => $libraryID . '/' . $key
-		]);
-		StatsD::timing("s3.fulltext.delete", (microtime(true) - $start) * 1000);
-		
+		// Delete from S3 (skip if bucket not configured)
+		if (!empty(Z_CONFIG::$S3_BUCKET_FULLTEXT)) {
+			$s3Client = Z_Core::$AWS->createS3();
+			$start = microtime(true);
+			$s3Client->deleteObject([
+				'Bucket' => Z_CONFIG::$S3_BUCKET_FULLTEXT,
+				'Key' => $libraryID . '/' . $key
+			]);
+			StatsD::timing("s3.fulltext.delete", (microtime(true) - $start) * 1000);
+		}
+
 		Zotero_DB::commit();
 	}
 	

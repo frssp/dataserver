@@ -15,7 +15,13 @@ class Z_CONFIG {
 
 	public static $DEBUG_LOG = false;
 
-	public static $BASE_URI = '';
+	// BASE_URI is the canonical identifier prefix embedded in item relations
+	// (owl:sameAs, dc:replaces, etc.) — it is NOT the network address of this
+	// server. Clients sync against zotero.org-rooted URIs as the standard
+	// data-model identifier, so keep this value even on a self-hosted server,
+	// or items synced from a previous zotero.org account will fail
+	// validation in Zotero_URI::getURIObject() with "Invalid base URI".
+	public static $BASE_URI = 'http://zotero.org/';
 	public static $API_BASE_URI = '@@BASE_URL@@';
 	public static $WWW_BASE_URI = '@@BASE_URL@@';
 
