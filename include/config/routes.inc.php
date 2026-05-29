@@ -132,6 +132,9 @@ $router->map('/tts/credits', ['controller' => 'TTS', 'action' => 'credits']);
 // 4.0 sync warning
 $router->map('/login', ['controller' => 'Api', 'action' => 'noop']);
 
+// Retracted publications feed (stubbed for self-hosted server)
+$router->map('/retractions/list', ['controller' => 'Api', 'action' => 'retractions']);
+
 $router->map('/test/setup', array('controller' => 'Api', 'action' => 'testSetup'));
 
 return $router->match($_SERVER['REQUEST_URI']);

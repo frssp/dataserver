@@ -539,6 +539,16 @@ class ApiController extends Controller {
 		echo "Nothing to see here.";
 		exit;
 	}
+
+
+	// Stub for the retracted-publications feed. The upstream service publishes
+	// partial hashes of retracted DOIs/PMIDs for client-side checking; a
+	// self-hosted server has no such feed, so return an empty list.
+	public function retractions() {
+		header('Content-Type: application/json');
+		echo '[]';
+		exit;
+	}
 	
 	
 	/**
