@@ -25,32 +25,18 @@ if (
 	exit;
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────
-function wwwDB() {
-	$dev = Z_ENV_TESTING_SITE ? "_dev" : "";
-	return "zotero_www{$dev}";
-}
-
-function jsonResponse($data, $code = 200) {
-	http_response_code($code);
-	header('Content-Type: application/json');
-	echo json_encode($data);
-	exit;
-}
-
-function generateKey() {
-	$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	$key = '';
-	for ($i = 0; $i < 24; $i++) {
-		$key .= $chars[random_int(0, strlen($chars) - 1)];
-	}
-	return $key;
-}
+require_once("selfhosted.inc.php");
 
 // ── API Handler ───────────────────────────────────────────────────────
 if (isset($_GET['action'])) {
 	$action = $_GET['action'];
 	$wwwDB = wwwDB();
+
+	// All other actions modify state and must be CSRF-protected
+	$readActions = ['status', 'user.list', 'user.info', 'group.list', 'group.members', 'key.list'];
+	if (!in_array($action, $readActions, true)) {
+		requireAjaxPost();
+	}
 
 	// Admin actions may write to DB, but requests arrive as GET
 	// (from JS fetch with query params). Disable read-only mode
@@ -95,8 +81,8 @@ if (isset($_GET['action'])) {
 			$existing = Zotero_DB::valueQuery("SELECT userID FROM zotero_master.users WHERE username=?", $username);
 			if ($existing) jsonResponse(['error' => "User '$username' already exists."], 409);
 
-			$salt = Z_CONFIG::$AUTH_SALT;
-			$hash = sha1($salt . $password);
+			// Password.inc.php tries password_verify() first, salted SHA1 second
+			$hash = password_hash($password, PASSWORD_BCRYPT);
 
 			Zotero_DB::beginTransaction();
 
@@ -122,15 +108,10 @@ if (isset($_GET['action'])) {
 			);
 
 			// API key
-			$key = generateKey();
+			$key = generateAPIKey();
 			Zotero_DB::query("INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, 'Full Access Key', NOW(), NOW())", [$key, $userID]);
 			$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'library', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'notes', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'write', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'library', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'notes', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'write', 1)", [$keyID]);
+			addDefaultKeyPermissions($keyID, $libraryID);
 
 			Zotero_DB::commit();
 			jsonResponse(['userID' => (int)$userID, 'libraryID' => (int)$libraryID, 'apiKey' => $key], 201);
@@ -140,7 +121,7 @@ if (isset($_GET['action'])) {
 			$userID = (int)($input['userID'] ?? 0);
 			$password = $input['password'] ?? '';
 			if (!$userID || !$password) jsonResponse(['error' => 'userID and password required.'], 400);
-			$hash = sha1(Z_CONFIG::$AUTH_SALT . $password);
+			$hash = password_hash($password, PASSWORD_BCRYPT);
 			Zotero_DB::query("UPDATE $wwwDB.users SET password=?, dateModified=NOW() WHERE userID=?", [$hash, $userID]);
 			jsonResponse(['ok' => true]);
 
@@ -292,15 +273,10 @@ if (isset($_GET['action'])) {
 			$libraryID = Zotero_DB::valueQuery("SELECT libraryID FROM zotero_master.users WHERE userID=?", [$userID]);
 			if (!$libraryID) jsonResponse(['error' => 'User not found.'], 404);
 
-			$key = generateKey();
+			$key = generateAPIKey();
 			Zotero_DB::query("INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, ?, NOW(), NOW())", [$key, $userID, $name]);
 			$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'library', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'notes', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'write', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'library', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'notes', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'write', 1)", [$keyID]);
+			addDefaultKeyPermissions($keyID, $libraryID);
 			jsonResponse(['key' => $key, 'keyID' => (int)$keyID], 201);
 
 		case 'key.delete':
@@ -314,18 +290,24 @@ if (isset($_GET['action'])) {
 			$current = $input['current'] ?? '';
 			$newPass = $input['password'] ?? '';
 			if (!$newPass) jsonResponse(['error' => 'New password is required.'], 400);
+			// Quotes/backslashes would break the single-quoted PHP literal this
+			// gets written into (and its regex match on the next change)
+			if (preg_match('/[\'\\\\]/', $newPass)) jsonResponse(['error' => "Password must not contain ' or \\ characters."], 400);
 			if ($current !== Z_CONFIG::$API_SUPER_PASSWORD) jsonResponse(['error' => 'Current password is incorrect.'], 403);
 
 			$configFile = realpath("../include/config/config.inc.php");
 			$content = file_get_contents($configFile);
-			$escaped = addcslashes($newPass, "'\\");
 			$content = preg_replace(
 				'/\$API_SUPER_PASSWORD\s*=\s*\'[^\']*\'/',
-				'$API_SUPER_PASSWORD = \'' . $escaped . '\'',
-				$content
+				'$API_SUPER_PASSWORD = \'' . $newPass . '\'',
+				$content, 1, $replaced
 			);
-			file_put_contents($configFile, $content);
-			jsonResponse(['ok' => true]);
+			if ($content === null || $replaced !== 1) jsonResponse(['error' => 'Could not locate $API_SUPER_PASSWORD in config file.'], 500);
+			if (file_put_contents($configFile, $content) === false) jsonResponse(['error' => 'Failed to write config file.'], 500);
+			jsonResponse([
+				'ok' => true,
+				'warning' => 'If this server runs under docker, also update ZOTERO_API_SUPER_PASSWORD in docker/.env — otherwise a config regeneration will silently revert this change.'
+			]);
 
 		default:
 			jsonResponse(['error' => 'Unknown action.'], 400);
@@ -659,10 +641,13 @@ let allUsers = [];
 async function api(action, opts = {}) {
 	const params = new URLSearchParams({action, ...opts.params});
 	const url = `${API}?${params}`;
-	const fetchOpts = {method: opts.method || 'GET'};
+	const fetchOpts = {
+		method: opts.method || 'GET',
+		headers: {'X-Requested-With': 'XMLHttpRequest'}
+	};
 	if (opts.body) {
 		fetchOpts.method = 'POST';
-		fetchOpts.headers = {'Content-Type': 'application/json'};
+		fetchOpts.headers['Content-Type'] = 'application/json';
 		fetchOpts.body = JSON.stringify(opts.body);
 	}
 	const res = await fetch(url, fetchOpts);
@@ -762,7 +747,7 @@ async function changePassword() {
 async function deleteUser(userID, username) {
 	if (!confirm(`Delete user "${username}"? This cannot be undone.`)) return;
 	try {
-		await api('user.delete', {params: {userID}});
+		await api('user.delete', {method: 'POST', params: {userID}});
 		toast('User deleted');
 		loadUsers(); loadStats();
 	} catch(e) { toast(e.message, 'error'); }
@@ -842,7 +827,7 @@ async function addGroup() {
 async function deleteGroup(groupID, name) {
 	if (!confirm(`Delete group "${name}"? All group data will be lost.`)) return;
 	try {
-		await api('group.delete', {params: {groupID}});
+		await api('group.delete', {method: 'POST', params: {groupID}});
 		toast('Group deleted');
 		loadGroups(); loadStats();
 	} catch(e) { toast(e.message, 'error'); }
@@ -992,7 +977,7 @@ async function createKey(userID) {
 async function deleteKey(keyID, key) {
 	if (!confirm(`Delete key ${key}?`)) return;
 	try {
-		await api('key.delete', {params: {keyID}});
+		await api('key.delete', {method: 'POST', params: {keyID}});
 		toast('Key deleted');
 		if (currentKeyUserID) loadKeys(currentKeyUserID);
 		loadStats();
@@ -1025,9 +1010,10 @@ async function changeAdminPassword() {
 	if (!current || !newPw) { toast('Please fill in all fields', 'error'); return; }
 	if (newPw !== confirmPw) { toast('New passwords do not match', 'error'); return; }
 	try {
-		await api('admin.passwd', {body: {current, password: newPw}});
+		const res = await api('admin.passwd', {body: {current, password: newPw}});
 		closeModal('modal-admin-passwd');
 		['admin-current-pw','admin-new-pw','admin-confirm-pw'].forEach(id => document.getElementById(id).value = '');
+		if (res.warning) alert(res.warning);
 		toast('Admin password updated. Reloading...');
 		// Clear cached Basic Auth and force re-login with new password
 		setTimeout(() => {
