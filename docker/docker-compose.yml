@@ -1,10 +1,13 @@
 services:
   mysql:
     image: mysql:8.0
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-zotero_root_pw}
     ports:
-      - "3306:3306"
+      # Bound to localhost: only for debugging from the docker host.
+      # Containers reach mysql via the compose network instead.
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./init-db:/docker-entrypoint-initdb.d
@@ -15,16 +18,29 @@ services:
       --default-time-zone=+00:00
       --sql-mode=STRICT_ALL_TABLES
       --event-scheduler=ON
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
 
   memcached:
     image: memcached:1.6-alpine
+    restart: unless-stopped
     ports:
-      - "11211:11211"
+      - "127.0.0.1:11211:11211"
 
   redis:
     image: redis:7-alpine
+    restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
 
   translation:
     image: zotero/translation-server:2.0.4
@@ -36,6 +52,7 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile.php
+    restart: unless-stopped
     environment:
       - no_proxy=translation,mysql,memcached,redis,localhost,127.0.0.1
       - NO_PROXY=translation,mysql,memcached,redis,localhost,127.0.0.1
@@ -47,16 +64,22 @@ services:
       - ZOTERO_API_SUPER_USERNAME=${ZOTERO_API_SUPER_USERNAME:-admin}
       - ZOTERO_API_SUPER_PASSWORD=${ZOTERO_API_SUPER_PASSWORD:-admin}
       - ZOTERO_AUTH_SALT=${ZOTERO_AUTH_SALT:-zotero_self_hosted_salt}
+      - ZOTERO_DB_PASSWORD=${ZOTERO_DB_PASSWORD:-zotero_app_pw}
     volumes:
       - ..:/var/www/dataserver
     depends_on:
-      - mysql
-      - memcached
-      - redis
-      - translation
+      mysql:
+        condition: service_healthy
+      memcached:
+        condition: service_started
+      redis:
+        condition: service_healthy
+      translation:
+        condition: service_started
 
   nginx:
     image: nginx:alpine
+    restart: unless-stopped
     ports:
       - "8080:80"
     volumes:
