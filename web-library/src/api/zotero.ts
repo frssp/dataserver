@@ -22,13 +22,16 @@ function clearAuth() {
   localStorage.removeItem(USER_INFO_STORAGE);
 }
 
-async function apiFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
+function authHeaders(): Record<string, string> {
   const apiKey = getApiKey();
   if (!apiKey) throw new Error('Not authenticated');
+  return { 'Zotero-API-Key': apiKey };
+}
 
+async function apiFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {
   const query = new URLSearchParams({ ...params, format: 'json' });
   const res = await fetch(`${path}?${query}`, {
-    headers: { 'Zotero-API-Key': apiKey },
+    headers: authHeaders(),
   });
 
   if (res.status === 403 || res.status === 401) {
@@ -110,16 +113,13 @@ export async function fetchItems(
   params: Record<string, string> = {},
   collectionKey?: string | null,
 ): Promise<{ items: ZoteroItem[]; totalResults: number }> {
-  const apiKey = getApiKey();
-  if (!apiKey) throw new Error('Not authenticated');
-
   const prefix = type === 'user' ? `/users/${id}` : `/groups/${id}`;
   const path = collectionKey
     ? `${prefix}/collections/${collectionKey}/items`
     : `${prefix}/items`;
   const query = new URLSearchParams({ format: 'json', ...params });
   const res = await fetch(`${path}?${query}`, {
-    headers: { 'Zotero-API-Key': apiKey },
+    headers: authHeaders(),
   });
 
   if (!res.ok) throw new Error(`API error: ${res.status}`);

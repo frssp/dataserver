@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import DOMPurify from 'dompurify';
 import type { ZoteroItem } from '../types/zotero';
 
 interface Props {
@@ -131,7 +132,7 @@ export default function ItemDetail({ item }: Props) {
             {item.data.note ? (
               <div
                 className="note-content"
-                dangerouslySetInnerHTML={{ __html: item.data.note }}
+                dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(item.data.note) }}
               />
             ) : (
               <p className="empty-message">No notes</p>

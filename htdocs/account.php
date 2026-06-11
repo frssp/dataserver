@@ -48,32 +48,18 @@ if (!$authResult) {
 $currentUserID = (int) $authResult;
 $currentUsername = Zotero_Users::getUsername($currentUserID, true);
 
-// ── Helpers ───────────────────────────────────────────────────────────
-function wwwDB() {
-	$dev = Z_ENV_TESTING_SITE ? "_dev" : "";
-	return "zotero_www{$dev}";
-}
-
-function jsonResponse($data, $code = 200) {
-	http_response_code($code);
-	header('Content-Type: application/json');
-	echo json_encode($data);
-	exit;
-}
-
-function generateKey() {
-	$chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-	$key = '';
-	for ($i = 0; $i < 24; $i++) {
-		$key .= $chars[random_int(0, strlen($chars) - 1)];
-	}
-	return $key;
-}
+require_once("selfhosted.inc.php");
 
 // ── API Handler ───────────────────────────────────────────────────────
 if (isset($_GET['action'])) {
 	$action = $_GET['action'];
 	$wwwDB = wwwDB();
+
+	// All other actions modify state and must be CSRF-protected
+	$readActions = ['profile', 'group.list', 'group.members', 'key.list'];
+	if (!in_array($action, $readActions, true)) {
+		requireAjaxPost();
+	}
 
 	// Admin actions may write to DB, but requests arrive as GET
 	// (from JS fetch with query params). Disable read-only mode
@@ -123,7 +109,8 @@ if (isset($_GET['action'])) {
 			]);
 			if (!$verify) jsonResponse(['error' => 'Current password is incorrect.'], 403);
 
-			$hash = sha1(Z_CONFIG::$AUTH_SALT . $newPass);
+			// Password.inc.php tries password_verify() first, salted SHA1 second
+			$hash = password_hash($newPass, PASSWORD_BCRYPT);
 			Zotero_DB::query("UPDATE $wwwDB.users SET password=?, dateModified=NOW() WHERE userID=?", [$hash, $currentUserID]);
 
 			// Clear old auth cache
@@ -296,15 +283,10 @@ if (isset($_GET['action'])) {
 			$name = trim($input['name'] ?? 'My API Key');
 			$libraryID = Zotero_DB::valueQuery("SELECT libraryID FROM zotero_master.users WHERE userID=?", [$currentUserID]);
 
-			$key = generateKey();
+			$key = generateAPIKey();
 			Zotero_DB::query("INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, ?, NOW(), NOW())", [$key, $currentUserID, $name]);
 			$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'library', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'notes', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, ?, 'write', 1)", [$keyID, $libraryID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'library', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'notes', 1)", [$keyID]);
-			Zotero_DB::query("INSERT INTO zotero_master.keyPermissions VALUES (?, 0, 'write', 1)", [$keyID]);
+			addDefaultKeyPermissions($keyID, $libraryID);
 			jsonResponse(['key' => $key, 'keyID' => (int)$keyID], 201);
 
 		case 'key.delete':
@@ -315,11 +297,6 @@ if (isset($_GET['action'])) {
 			Zotero_DB::query("DELETE FROM zotero_master.keyPermissions WHERE keyID=?", [$keyID]);
 			Zotero_DB::query("DELETE FROM zotero_master.`keys` WHERE keyID=?", [$keyID]);
 			jsonResponse(['ok' => true]);
-
-		// ── All users (for group member picker) ───────────────────
-		case 'users':
-			$rows = Zotero_DB::query("SELECT userID, username FROM zotero_master.users ORDER BY username");
-			jsonResponse($rows ?: []);
 
 		default:
 			jsonResponse(['error' => 'Unknown action.'], 400);
@@ -683,10 +660,13 @@ let selectedGroupType = 'PublicOpen';
 async function api(action, opts = {}) {
 	const params = new URLSearchParams({action, ...opts.params});
 	const url = `${API}?${params}`;
-	const fetchOpts = {method: opts.method || 'GET'};
+	const fetchOpts = {
+		method: opts.method || 'GET',
+		headers: {'X-Requested-With': 'XMLHttpRequest'}
+	};
 	if (opts.body) {
 		fetchOpts.method = 'POST';
-		fetchOpts.headers = {'Content-Type': 'application/json'};
+		fetchOpts.headers['Content-Type'] = 'application/json';
 		fetchOpts.body = JSON.stringify(opts.body);
 	}
 	const res = await fetch(url, fetchOpts);
@@ -820,7 +800,7 @@ async function createGroup() {
 async function deleteGroup(groupID, name) {
 	if (!confirm(`Delete group "${name}"? All group library data will be permanently lost.`)) return;
 	try {
-		await api('group.delete', {params: {groupID}});
+		await api('group.delete', {method: 'POST', params: {groupID}});
 		toast('Group deleted');
 		loadGroups();
 	} catch(e) { toast(e.message, 'error'); }
@@ -829,7 +809,7 @@ async function deleteGroup(groupID, name) {
 async function leaveGroup(groupID, name) {
 	if (!confirm(`Leave group "${name}"?`)) return;
 	try {
-		await api('group.leave', {params: {groupID}});
+		await api('group.leave', {method: 'POST', params: {groupID}});
 		toast('Left group');
 		loadGroups();
 	} catch(e) { toast(e.message, 'error'); }
@@ -947,7 +927,7 @@ async function createKey() {
 async function deleteKey(keyID, key) {
 	if (!confirm(`Delete key ${key}? Any client using this key will stop working.`)) return;
 	try {
-		await api('key.delete', {params: {keyID}});
+		await api('key.delete', {method: 'POST', params: {keyID}});
 		toast('Key deleted');
 		loadKeys();
 	} catch(e) { toast(e.message, 'error'); }

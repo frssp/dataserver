@@ -328,15 +328,14 @@ This means a later regenerate-from-template (`rm config.inc.php &&
 restart php-fpm`, or the migration flow above) will silently revert the
 super-password to whatever is still in `.env`. Two-source-of-truth bug.
 
-Workaround for now: whenever you change the super-password via the web
-admin, also update `ZOTERO_API_SUPER_PASSWORD` in `docker/.env` to the
-same value. Proper fix is one of:
-- entrypoint warns / refuses to overwrite when `.env` value disagrees
-  with the existing `config.inc.php`;
-- the `admin.passwd` handler writes both files (needs host `.env`
-  writable from the php-fpm container);
-- remove the regex-rewrite path entirely and require all super-password
-  changes to go through `.env` + restart.
+Mitigations in place:
+- `entrypoint.sh` compares the existing `config.inc.php` value against
+  `ZOTERO_API_SUPER_PASSWORD` on every boot and logs a WARNING on drift;
+- the `admin.passwd` response (surfaced in the admin UI) reminds the
+  operator to update `docker/.env` to the same value.
+
+Still required: whenever you change the super-password via the web
+admin, also update `ZOTERO_API_SUPER_PASSWORD` in `docker/.env`.
 
 ## Test Infrastructure
 - `misc/test_reset` — Shell script to reset all test DBs (GOLD MINE for understanding setup)
