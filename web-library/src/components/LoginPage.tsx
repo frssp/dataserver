@@ -49,6 +49,9 @@ export default function LoginPage({ onLogin }: Props) {
             {loading ? 'Logging in...' : 'Log In'}
           </button>
         </form>
+        <p className="login-register">
+          Don't have an account? <a href="/register.php">Create one</a>
+        </p>
       </div>
     </div>
   );
