@@ -446,24 +446,15 @@ tr:hover td { background: #f9fafb; }
 </head>
 <body>
 
-<nav class="site-nav">
-	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
-	<div class="nav-links">
-		<a href="/library/" class="nav-link">Web Library</a>
-		<div class="nav-item">
-			<button class="nav-trigger">Groups <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-			<div class="dropdown">
-				<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>
-				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
-			</div>
-		</div>
-		<a href="/manual.html" class="nav-link">User Guide</a>
-	</div>
-	<div class="nav-right">
-		<button class="nav-logout" onclick="showModal('modal-admin-passwd')">Change Password</button>
-		<button class="nav-logout" onclick="adminLogout()">Log Out</button>
-	</div>
-</nav>
+<nav id="zotero-nav"></nav>
+<script>
+window.ZOTERO_NAV = {
+	active: 'admin',
+	mode: 'admin',
+	onChangePassword: function () { showModal('modal-admin-passwd'); },
+	onLogout: function () { adminLogout(); }
+};
+</script>
 
 <div class="container">
 	<!-- Tabs -->
@@ -1049,5 +1040,6 @@ loadStats();
 loadUsers();
 loadGroups();
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

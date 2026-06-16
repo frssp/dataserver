@@ -451,26 +451,14 @@ textarea { height: 60px; resize: vertical; }
 <body>
 
 <!-- Unified Nav -->
-<nav class="site-nav">
-	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
-	<div class="nav-links">
-		<a href="/library/" class="nav-link">Web Library</a>
-		<div class="nav-item">
-			<button class="nav-trigger">Groups <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-			<div class="dropdown">
-				<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>
-				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
-			</div>
-		</div>
-		<a href="/account.php" class="nav-link active">Account</a>
-		<a href="/manual.html" class="nav-link">User Guide</a>
-	</div>
-	<div class="nav-right">
-		<a href="/admin.php" class="nav-admin">Admin</a>
-		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>
-		<button class="nav-logout" onclick="logout();return false;">Log Out</button>
-	</div>
-</nav>
+<nav id="zotero-nav"></nav>
+<script>
+window.ZOTERO_NAV = {
+	active: 'account',
+	username: <?= json_encode($currentUsername) ?>,
+	onLogout: function () { logout(); }
+};
+</script>
 
 <!-- Content -->
 <div class="content">
@@ -979,5 +967,6 @@ if (urlTab && document.getElementById('panel-' + urlTab)) {
 	showTab(urlTab);
 }
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

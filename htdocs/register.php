@@ -114,29 +114,7 @@ button:disabled { background: #d99; cursor: default; }
 </style>
 </head>
 <body>
-<nav class="site-nav">
-	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
-	<div class="nav-links">
-		<div class="nav-item">
-			<button class="nav-trigger">Groups <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-			<div class="dropdown">
-				<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>
-				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
-			</div>
-		</div>
-		<div class="nav-item">
-			<button class="nav-trigger">Log In <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-			<div class="dropdown">
-				<a href="/library/">Sign In<span class="d-desc">Access your library</span></a>
-				<a href="/register.php">Sign Up<span class="d-desc">Create a new account</span></a>
-			</div>
-		</div>
-		<a href="/manual.html" class="nav-link">User Guide</a>
-	</div>
-	<div class="nav-right">
-		<a href="/admin.php" class="nav-admin">Admin</a>
-	</div>
-</nav>
+<nav id="zotero-nav" data-active="login"></nav>
 <div class="main">
 	<div class="card">
 		<h1>Create your account</h1>
@@ -212,5 +190,6 @@ form.addEventListener('submit', async (e) => {
 	}
 });
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>
