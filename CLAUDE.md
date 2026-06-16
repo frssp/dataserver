@@ -55,18 +55,18 @@ A browser-based library viewer at `/library/`, built with Vite + React + TypeScr
 - Login page (username/password → API key)
 - 3-panel layout: Collection tree | Items table | Item detail
 - User library + Group libraries (with type-specific icons)
-- Collection tree with hierarchical folders
+- Collection tree with hierarchical folders (per-collection item counts; "My Library" shows the library total)
 - Tag filter panel
 - Sortable columns with configurable visible columns (saved to localStorage)
 - Item detail panel (Info/Notes/Tags tabs)
 - Search (title/creator/year)
-- Pagination
+- Pagination: total-item count and pager shown at the top (and bottom) of the list, configurable page size (50/100/200, persisted to localStorage); the list scrolls with the bottom pager pinned in place
 - Export to BibTeX/BibLaTeX/RIS/CSL JSON/CSV via context menu (requires translation server)
 
 ### Web UI Pages
 | URL | File | Purpose |
 |-----|------|---------|
-| `/` | `htdocs/home.html` | Landing page with links |
+| `/` | `htdocs/home.html` | Landing page: hero + intro, "What is Zotero", browser connector, getting-started cards, desktop-app download, admin contact |
 | `/library/` | `htdocs/library/` (React SPA) | Web library viewer |
 | `/account.php` | `htdocs/account.php` | User account (Settings/Groups/API Keys) |
 | `/admin.php` | `htdocs/admin.php` | Admin panel (Users/Groups/Keys/Status) |
