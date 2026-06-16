@@ -161,6 +161,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<h2><span class="step">3</span> 데스크톱 앱 동기화</h2>
 				<p>Zotero 데스크톱 앱이 zotero.org 대신 이 서버와 동기화하도록 설정합니다. 한 번만 하면 됩니다. <strong>Zotero 7 이상</strong>을 사용하세요.</p>
 
+				<div class="note warn"><strong>동기화 전에 백업하세요.</strong> 서버를 바꾸거나 처음 동기화하기 전에, 기존 라이브러리를 내보내 백업해 두는 것을 권합니다. Zotero에서 <span class="kbd">파일 File</span> → <span class="kbd">라이브러리 내보내기 Export Library…</span> → 형식으로 <strong>Zotero RDF</strong>를 선택해 저장하세요. 문제가 생겨도 그 파일로 복원할 수 있습니다.</div>
 				<h3>이 서버 주소</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">복사</button></div>
 
@@ -341,6 +342,7 @@ docker compose restart php-fpm</div>
 				<h2><span class="step">3</span> Sync the desktop app</h2>
 				<p>Point the Zotero desktop app at this server so it syncs here instead of zotero.org. This is a one-time setup. Use <strong>Zotero 7 or newer</strong>.</p>
 
+				<div class="note warn"><strong>Back up before you sync.</strong> Before switching servers or syncing for the first time, export your existing library as a backup — in Zotero: <span class="kbd">File</span> → <span class="kbd">Export Library…</span> → choose <strong>Zotero RDF</strong>. If anything goes wrong, you can restore from that file.</div>
 				<h3>This server's address</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">Copy</button></div>
 
