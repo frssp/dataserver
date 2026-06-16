@@ -327,10 +327,22 @@ a:hover { text-decoration: underline; }
 .site-nav .logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; margin-right: 32px; }
 .site-nav .logo .z { color: #c1302b; }
 .site-nav .logo .rest { color: #333; }
-.site-nav .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
-.site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
-.site-nav .nav-links a:hover { color: #111; text-decoration: none; }
-.site-nav .nav-links a.active { color: #c1302b; border-bottom-color: #c1302b; }
+.nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
+.nav-link, .nav-trigger { display: flex; align-items: center; gap: 6px; height: 56px; margin: 0; width: auto; padding: 0 16px; font-family: inherit; font-size: 14px; font-weight: 500; color: #444; text-decoration: none; background: none; border: 0; border-bottom: 3px solid transparent; cursor: pointer; transition: color .15s, border-color .15s; }
+.nav-link:hover, .nav-trigger:hover { color: #111; border-bottom-color: #c1302b; }
+.nav-link.active { color: #c1302b; border-bottom-color: #c1302b; }
+.caret { width: 11px; height: 11px; color: #aaa; transition: transform .18s ease, color .15s; }
+.nav-item:hover .caret, .nav-item:focus-within .caret { transform: rotate(180deg); color: #c1302b; }
+.nav-item { position: relative; }
+.dropdown { position: absolute; top: 100%; left: 0; min-width: 190px; background: #fff; border: 1px solid #ddd; border-top: 0; border-radius: 0 0 8px 8px; box-shadow: 0 6px 18px rgba(0,0,0,.10); padding: 6px 0; display: none; flex-direction: column; }
+.nav-item:hover .dropdown, .nav-item:focus-within .dropdown { display: flex; }
+.dropdown a { display: block; padding: 9px 16px; height: auto; font-size: 13px; color: #444; text-decoration: none; white-space: nowrap; border: 0; }
+.dropdown a .d-desc { display: block; font-size: 11px; color: #999; margin-top: 1px; }
+.dropdown a:hover { background: #f6f8fa; color: #c1302b; }
+.nav-admin { font-size: 12px; font-weight: 500; color: #aaa; text-decoration: none; padding: 5px 12px; border: 1px solid #e1e4e8; border-radius: 6px; }
+.nav-admin:hover { color: #666; border-color: #bbb; }
+.site-nav .nav-user { text-decoration: none; }
+.site-nav a.nav-user:hover { color: #c1302b; }
 .site-nav .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
 .site-nav .nav-user { font-size: 14px; font-weight: 500; color: #333; }
 .site-nav .nav-logout { font-size: 12px; color: #999; cursor: pointer; background: none; border: 1px solid #ddd; padding: 4px 12px; border-radius: 4px; }
@@ -442,13 +454,19 @@ textarea { height: 60px; resize: vertical; }
 <nav class="site-nav">
 	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
 	<div class="nav-links">
-		<a href="/library/">Web Library</a>
-		<a href="/account.php" class="active">Account</a>
-		<a href="/admin.php">Admin</a>
-		<a href="/manual.html">Guide</a>
+		<a href="/library/" class="nav-link">Web Library</a>
+		<div class="nav-item">
+			<button class="nav-trigger">Groups <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+			<div class="dropdown">
+				<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>
+				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
+			</div>
+		</div>
+		<a href="/manual.html" class="nav-link">User Guide</a>
 	</div>
 	<div class="nav-right">
-		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>
+		<a href="/admin.php" class="nav-admin">Admin</a>
+		<a href="/account.php" class="nav-user"><?= htmlspecialchars($currentUsername) ?></a>
 		<button class="nav-logout" onclick="logout();return false;">Log Out</button>
 	</div>
 </nav>

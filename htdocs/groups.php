@@ -56,7 +56,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
 .nav-link, .nav-trigger { display: flex; align-items: center; gap: 5px; height: 56px; padding: 0 16px; font-family: inherit; font-size: 14px; font-weight: 500; color: #444; text-decoration: none; background: none; border: 0; border-bottom: 3px solid transparent; cursor: pointer; transition: color .15s, border-color .15s; }
 .nav-link:hover, .nav-trigger:hover, .nav-trigger.active { color: #111; border-bottom-color: #c1302b; }
-.caret { font-size: 10px; color: #999; }
+.caret { width: 11px; height: 11px; color: #aaa; transition: transform .18s ease, color .15s; }
+.nav-item:hover .caret, .nav-item:focus-within .caret { transform: rotate(180deg); color: #c1302b; }
 .nav-item { position: relative; }
 .dropdown { position: absolute; top: 100%; left: 0; min-width: 190px; background: #fff; border: 1px solid #ddd; border-top: 0; border-radius: 0 0 8px 8px; box-shadow: 0 6px 18px rgba(0,0,0,.10); padding: 6px 0; display: none; flex-direction: column; }
 .nav-item:hover .dropdown, .nav-item:focus-within .dropdown { display: flex; }
@@ -99,14 +100,14 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
 	<div class="nav-links">
 		<div class="nav-item">
-			<button class="nav-trigger active">Groups <span class="caret">&#9662;</span></button>
+			<button class="nav-trigger active">Groups <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 			<div class="dropdown">
 				<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>
 				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
 			</div>
 		</div>
 		<div class="nav-item">
-			<button class="nav-trigger">Log In <span class="caret">&#9662;</span></button>
+			<button class="nav-trigger">Log In <svg class="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
 			<div class="dropdown">
 				<a href="/library/">Sign In<span class="d-desc">Access your library</span></a>
 				<a href="/register.php">Sign Up<span class="d-desc">Create a new account</span></a>
