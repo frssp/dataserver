@@ -2,7 +2,7 @@
 
 Drop a screenshot of **this server's Web Library** here as:
 
-    weblibrary.png
+    zotero.png
 
 It is shown in the hero section of `htdocs/home.html`. Until the file
 exists, the hero image hides itself (via `onerror`) so the landing page
