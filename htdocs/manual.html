@@ -77,7 +77,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 		<h4 data-lang="ko">목차</h4>
 		<h4 data-lang="en">Contents</h4>
 		<nav data-lang="ko">
-			<a href="#start">1. 계정 만들기</a>
+			<a href="#basics">0. Zotero 기본 사용법</a>
+				<a href="#start">1. 계정 만들기</a>
 			<a href="#weblib">2. 웹 라이브러리</a>
 			<a href="#client">3. 데스크톱 앱 동기화</a>
 			<a href="#groups">4. 그룹 라이브러리</a>
@@ -86,7 +87,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 			<a href="#admin">관리자용</a>
 		</nav>
 		<nav data-lang="en">
-			<a href="#start">1. Create an account</a>
+			<a href="#basics">0. New to Zotero?</a>
+				<a href="#start">1. Create an account</a>
 			<a href="#weblib">2. Web Library</a>
 			<a href="#client">3. Desktop app sync</a>
 			<a href="#groups">4. Group libraries</a>
@@ -109,6 +111,17 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 			<div class="note warn">
 				<strong>메타데이터 전용 동기화.</strong> 이 서버는 <strong>참고문헌 항목·컬렉션·태그·노트·저장된 검색</strong>만 동기화합니다. <strong>첨부 파일이나 PDF는 동기화하지 않습니다.</strong> 파일은 추가한 그 기기에만 남습니다.
 			</div>
+
+			<section id="basics">
+				<h2><span class="step">0</span> Zotero가 처음이라면</h2>
+				<p>Zotero를 처음 쓴다면, 이 사내 서버를 설정하기 전에 Zotero 자체의 기본 사용법을 먼저 익히는 것을 권합니다. 아래 두 가지면 충분합니다.</p>
+				<ul>
+					<li><strong>공식 사이트 둘러보기</strong> — <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>에서 Zotero가 무엇이고 무엇을 할 수 있는지 살펴보세요. (사이트 접속은 됩니다.)</li>
+					<li><strong>입문 영상 보기</strong> — 짧은 소개 영상으로 전체 사용 흐름을 익히세요.</li>
+				</ul>
+				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">입문 영상 보기 (YouTube) →</a></p>
+				<div class="note">기본기를 익혔다면, 아래 <a href="#start">1. 계정 만들기</a>부터 이 사내 서버 설정을 시작하세요.</div>
+			</section>
 
 			<section id="start">
 				<h2><span class="step">1</span> 계정 만들기</h2>
@@ -278,6 +291,17 @@ docker compose restart php-fpm</div>
 			<div class="note warn">
 				<strong>Metadata-only sync.</strong> This server syncs your <strong>references, collections, tags, notes, and saved searches</strong>. It does <strong>not</strong> sync attached files or PDFs — those stay on the device where you added them.
 			</div>
+
+			<section id="basics">
+				<h2><span class="step">0</span> New to Zotero?</h2>
+				<p>If you've never used Zotero before, it's worth learning the basics of Zotero itself before setting up this server. These two resources are enough to get started:</p>
+				<ul>
+					<li><strong>Explore the official site</strong> — see what Zotero is and what it does at <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>. (The site itself is reachable.)</li>
+					<li><strong>Watch a quick intro</strong> — a short video walks through the overall workflow.</li>
+				</ul>
+				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">Watch the intro video (YouTube) →</a></p>
+				<div class="note">Once you're comfortable with the basics, start the server setup at <a href="#start">1. Create an account</a> below.</div>
+			</section>
 
 			<section id="start">
 				<h2><span class="step">1</span> Create an account</h2>
