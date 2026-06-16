@@ -42,6 +42,7 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Load collections and tags when library changes
   useEffect(() => {
@@ -84,6 +85,9 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
       setTotalResults(result.totalResults);
     } catch (err) {
       console.error('Failed to load items:', err);
+      // A public viewer hitting a members-only group gets 403 — show a notice
+      // instead of empty panels.
+      if (publicMode && String(err).includes('403')) setAccessDenied(true);
       setItems([]);
       setTotalResults(0);
     } finally {
@@ -133,6 +137,12 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
   return (
     <div className="library-view">
       <SearchBar onSearch={handleSearch} username={userInfo?.username} onLogout={onLogout} publicMode={publicMode} />
+      {accessDenied ? (
+        <div className="access-denied">
+          <h2>This group library is private</h2>
+          <p>It’s restricted to members. If you’re a member, <a href="/library/">sign in</a> to view it.</p>
+        </div>
+      ) : (
       <div className="library-body">
         <div className="left-panel">
           <CollectionTree
@@ -181,6 +191,7 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
           <ItemDetail item={selectedItem} />
         </div>
       </div>
+      )}
     </div>
   );
 }

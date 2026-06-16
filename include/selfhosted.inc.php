@@ -58,35 +58,45 @@ function createUserAccount($username, $password, $email, $keyName = 'Web Library
 	$hash = password_hash($password, PASSWORD_BCRYPT);
 
 	Zotero_DB::beginTransaction();
+	try {
+		// www user first (auto-increment supplies the userID). A UNIQUE index
+		// on username turns a concurrent duplicate signup into a caught error
+		// instead of a second account slipping past the SELECT check above.
+		Zotero_DB::query(
+			"INSERT INTO $wwwDB.users (username, password, email, active, dateAdded, dateModified, slug) VALUES (?, ?, ?, 1, NOW(), NOW(), ?)",
+			[$username, $hash, $email, $username]
+		);
+		$userID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
 
-	// www user first (auto-increment supplies the userID)
-	Zotero_DB::query(
-		"INSERT INTO $wwwDB.users (username, password, email, active, dateAdded, dateModified, slug) VALUES (?, ?, ?, 1, NOW(), NOW(), ?)",
-		[$username, $hash, $email, $username]
-	);
-	$userID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+		// library
+		Zotero_DB::query("INSERT INTO zotero_master.libraries (libraryType, lastUpdated, version, shardID, hasData) VALUES ('user', NOW(), 0, 1, 0)");
+		$libraryID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
 
-	// library
-	Zotero_DB::query("INSERT INTO zotero_master.libraries (libraryType, lastUpdated, version, shardID, hasData) VALUES ('user', NOW(), 0, 1, 0)");
-	$libraryID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+		// master user
+		Zotero_DB::query("INSERT INTO zotero_master.users (userID, libraryID, username) VALUES (?, ?, ?)", [$userID, $libraryID, $username]);
 
-	// master user
-	Zotero_DB::query("INSERT INTO zotero_master.users (userID, libraryID, username) VALUES (?, ?, ?)", [$userID, $libraryID, $username]);
+		// shard library
+		$shardID = Zotero_Shards::getByLibraryID($libraryID);
+		Zotero_DB::query(
+			"INSERT INTO shardLibraries (libraryID, libraryType, lastUpdated, version, storageUsage) VALUES (?, 'user', NOW(), 1, 0)",
+			[$libraryID], $shardID
+		);
 
-	// shard library
-	$shardID = Zotero_Shards::getByLibraryID($libraryID);
-	Zotero_DB::query(
-		"INSERT INTO shardLibraries (libraryID, libraryType, lastUpdated, version, storageUsage) VALUES (?, 'user', NOW(), 1, 0)",
-		[$libraryID], $shardID
-	);
+		// API key
+		$key = generateAPIKey();
+		Zotero_DB::query("INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, ?, NOW(), NOW())", [$key, $userID, $keyName]);
+		$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
+		addDefaultKeyPermissions($keyID, $libraryID);
 
-	// API key
-	$key = generateAPIKey();
-	Zotero_DB::query("INSERT INTO zotero_master.`keys` (`key`, userID, name, dateAdded, lastUsed) VALUES (?, ?, ?, NOW(), NOW())", [$key, $userID, $keyName]);
-	$keyID = Zotero_DB::valueQuery("SELECT LAST_INSERT_ID()");
-	addDefaultKeyPermissions($keyID, $libraryID);
-
-	Zotero_DB::commit();
+		Zotero_DB::commit();
+	}
+	catch (Exception $e) {
+		Zotero_DB::rollback();
+		if (stripos($e->getMessage(), 'Duplicate entry') !== false) {
+			throw new Exception("Username '$username' is already taken.", 409);
+		}
+		throw $e;
+	}
 
 	return ['userID' => (int)$userID, 'libraryID' => (int)$libraryID, 'apiKey' => $key];
 }
