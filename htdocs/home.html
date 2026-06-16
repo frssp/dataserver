@@ -18,22 +18,33 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 .site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
 .site-nav .nav-links a:hover { color: #111; border-bottom-color: #c1302b; }
 
-.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px 20px; }
-.hero { text-align: center; max-width: 500px; }
-.hero h1 { font-size: 28px; font-weight: 300; color: #333; margin-bottom: 8px; }
-.hero p { font-size: 15px; color: #666; margin-bottom: 32px; line-height: 1.6; }
+.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 20px; }
+.hero { text-align: center; width: 100%; max-width: 560px; }
+.hero h1 { font-size: 30px; font-weight: 300; color: #333; margin-bottom: 8px; }
+.hero .sub { font-size: 15px; color: #666; margin-bottom: 32px; line-height: 1.6; }
 
-.links { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
-.links a {
-    display: block; padding: 16px 32px; border-radius: 8px; text-decoration: none;
-    font-size: 15px; font-weight: 500; transition: all .15s;
-}
-.link-library { background: #c1302b; color: #fff; border: 1px solid #c1302b; }
-.link-library:hover { background: #a52924; }
-.link-account { background: #fff; color: #333; border: 1px solid #ddd; }
-.link-account:hover { background: #f0f0f0; }
-.link-admin { background: #fff; color: #333; border: 1px solid #ddd; }
-.link-admin:hover { background: #f0f0f0; }
+/* ── Tier 1: primary action ──────────────────────────────────────── */
+.primary-action { display: flex; align-items: center; justify-content: space-between; gap: 16px; text-decoration: none; background: #c1302b; color: #fff; border-radius: 12px; padding: 22px 28px; box-shadow: 0 4px 14px rgba(193,48,43,.25); transition: transform .15s, box-shadow .15s; text-align: left; }
+.primary-action:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(193,48,43,.34); }
+.primary-action .pa-text { display: flex; flex-direction: column; }
+.primary-action .pa-title { font-size: 20px; font-weight: 600; }
+.primary-action .pa-desc { font-size: 13px; opacity: .85; margin-top: 2px; }
+.primary-action .pa-arrow { font-size: 26px; line-height: 1; }
+
+/* ── Tier 2: onboarding tiles ────────────────────────────────────── */
+.secondary { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+.tile { display: block; text-decoration: none; background: #fff; border: 1px solid #e1e4e8; border-radius: 10px; padding: 18px; text-align: left; transition: border-color .15s, transform .15s, box-shadow .15s; }
+.tile:hover { border-color: #c1302b; transform: translateY(-2px); box-shadow: 0 3px 12px rgba(0,0,0,.07); }
+.tile .t-title { font-size: 15px; font-weight: 600; color: #24292e; }
+.tile .t-desc { font-size: 12.5px; color: #777; margin-top: 3px; line-height: 1.4; }
+
+/* ── Tier 3: utility links ───────────────────────────────────────── */
+.utility { margin-top: 24px; font-size: 13px; color: #aaa; }
+.utility a { color: #666; text-decoration: none; font-weight: 500; }
+.utility a:hover { color: #c1302b; }
+.utility .sep { margin: 0 10px; color: #d0d0d0; }
+
+@media (max-width: 480px) { .secondary { grid-template-columns: 1fr; } }
 
 .footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
 </style>
@@ -52,13 +63,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 <div class="main">
     <div class="hero">
         <h1>Self-Hosted Zotero Server</h1>
-        <p>Your private research library sync server.<br>Manage your account, groups, and API keys.</p>
-        <div class="links">
-            <a href="/library/" class="links a link-library">Web Library</a>
-            <a href="/register.php" class="links a link-account">Create Account</a>
-            <a href="/manual.html" class="links a link-account">User Guide</a>
-            <a href="/account.php" class="links a link-account">My Account</a>
-            <a href="/admin.php" class="links a link-admin">Admin Panel</a>
+        <p class="sub">Your private research library sync server.</p>
+
+        <!-- Tier 1 — the main destination -->
+        <a href="/library/" class="primary-action">
+            <span class="pa-text">
+                <span class="pa-title">Web Library</span>
+                <span class="pa-desc">Browse and export your references in the browser</span>
+            </span>
+            <span class="pa-arrow">&rarr;</span>
+        </a>
+
+        <!-- Tier 2 — getting started -->
+        <div class="secondary">
+            <a href="/register.php" class="tile">
+                <div class="t-title">Create Account</div>
+                <div class="t-desc">New here? Sign up to start syncing.</div>
+            </a>
+            <a href="/manual.html" class="tile">
+                <div class="t-title">User Guide</div>
+                <div class="t-desc">Set up the desktop app &amp; web library.</div>
+            </a>
+        </div>
+
+        <!-- Tier 3 — utility / admin -->
+        <div class="utility">
+            <a href="/account.php">My Account</a>
+            <span class="sep">&middot;</span>
+            <a href="/admin.php">Admin</a>
         </div>
     </div>
 </div>
