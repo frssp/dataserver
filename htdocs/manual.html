@@ -30,11 +30,13 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Got
 .content h1 { font-size: 32px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 6px; }
 .content .lede { color: #666; font-size: 15px; margin-bottom: 8px; }
 .content section { background: #fff; border: 1px solid #ebedf0; border-radius: 14px; padding: 28px 32px; margin-top: 18px; box-shadow: 0 1px 2px rgba(20,30,50,.04), 0 10px 28px rgba(20,30,50,.05); scroll-margin-top: 72px; }
-.content h2 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
-.content h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: #fdecea; color: #c1302b; font-size: 14px; font-weight: 700; border: 1px solid #f7d5d2; flex: none; }
+.content h2 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.content h2 .step { color: #c1302b; font-weight: 700; flex: none; }
+.content h2 .step::after { content: "."; }
 .content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
-.content h3.substep-h3 { display: flex; align-items: center; gap: 9px; }
-.content h3 .substep { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 7px; background: #fdecea; color: #c1302b; font-size: 12px; font-weight: 700; border: 1px solid #f7d5d2; flex: none; }
+.content h3.substep-h3 { display: flex; align-items: center; gap: 7px; }
+.content h3 .substep { color: #c1302b; font-weight: 700; flex: none; }
+.content h3 .substep::after { content: "."; }
 .content p { margin-bottom: 12px; }
 .content ol, .content ul { margin: 0 0 14px 22px; }
 .content li { margin-bottom: 7px; }
@@ -65,7 +67,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 .shot.missing .shot-missing { display: flex; }
 .shot-missing code { background: #fff; }
 .shot figcaption { font-size: 12.5px; color: #777; margin-top: 18px; text-align: center; }
-.shot figcaption .cap-num { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 6px; background: #fdecea; color: #c1302b; font-size: 11px; font-weight: 700; border: 1px solid #f7d5d2; margin-right: 6px; vertical-align: middle; }
+.shot figcaption .cap-num { color: #c1302b; font-weight: 700; margin-right: 5px; }
+.shot figcaption .cap-num::after { content: "."; }
 .url-box { background: #24292e; color: #e1e4e8; padding: 12px 16px; border-radius: 8px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 14px; margin: 8px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .url-box .copy { background: #444c56; color: #fff; border: 0; border-radius: 5px; padding: 5px 12px; font-size: 12px; cursor: pointer; flex: none; }
 .url-box .copy:hover { background: #586069; }
