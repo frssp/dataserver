@@ -33,6 +33,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Got
 .content h2 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
 .content h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; border-radius: 9px; background: #fdecea; color: #c1302b; font-size: 14px; font-weight: 700; border: 1px solid #f7d5d2; flex: none; }
 .content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.content h3.substep-h3 { display: flex; align-items: center; gap: 9px; }
+.content h3 .substep { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; border-radius: 7px; background: #fdecea; color: #c1302b; font-size: 12px; font-weight: 700; border: 1px solid #f7d5d2; flex: none; }
 .content p { margin-bottom: 12px; }
 .content ol, .content ul { margin: 0 0 14px 22px; }
 .content li { margin-bottom: 7px; }
@@ -166,7 +168,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<h3>이 서버 주소</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">복사</button></div>
 
-				<h3>① 서버 주소 설정</h3>
+				<h3 class="substep-h3"><span class="substep">1</span>서버 주소 설정</h3>
 				<ol>
 					<li>Zotero에서 <span class="kbd">편집 Edit</span> → <span class="kbd">설정 Settings</span> 을 엽니다. (macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>)</li>
 					<li><strong>고급 Advanced</strong> 탭 → <strong>환경설정 편집기 Config Editor</strong> 로 들어가 경고에 동의합니다.</li>
@@ -194,7 +196,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				</div>
 				<p>변경 후 Zotero를 재시작합니다.</p>
 
-				<h3>② 로그인</h3>
+				<h3 class="substep-h3"><span class="substep">2</span>로그인</h3>
 				<ol>
 					<li><span class="kbd">설정 Settings</span> → <strong>동기화 Sync</strong> 를 엽니다.</li>
 					<li><strong>로그인(Sign In / Link Account)</strong> 을 클릭하면 브라우저에 로그인 페이지가 열립니다.</li>
@@ -346,7 +348,7 @@ docker compose restart php-fpm</div>
 				<h3>This server's address</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">Copy</button></div>
 
-				<h3>Step A — Point Zotero at this server</h3>
+				<h3 class="substep-h3"><span class="substep">A</span>Point Zotero at this server</h3>
 				<ol>
 					<li>In Zotero, open <span class="kbd">Edit</span> → <span class="kbd">Settings</span> (on macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>).</li>
 					<li>Go to the <strong>Advanced</strong> tab → <strong>Config Editor</strong>, and accept the warning.</li>
@@ -374,7 +376,7 @@ docker compose restart php-fpm</div>
 				</div>
 				<p>Restart Zotero after changing these.</p>
 
-				<h3>Step B — Sign in</h3>
+				<h3 class="substep-h3"><span class="substep">B</span>Sign in</h3>
 				<ol>
 					<li>Open <span class="kbd">Settings</span> → <strong>Sync</strong>.</li>
 					<li>Click <strong>Sign In</strong> / <strong>Link Account</strong>. Zotero opens a login page in your browser.</li>
