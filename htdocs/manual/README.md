@@ -12,9 +12,10 @@ Until a file exists, a dashed placeholder is shown; once uploaded it becomes the
 |-----------------------------------------|-----------------------------------------------------------------------------|
 | `config-editor-api-url.png`             | 3-① 환경설정 편집기에서 `api.url`(끝 슬래시 권장)을 설정한 화면              |
 | `config-editor-streaming-enabled.png`    | 3-① 환경설정 편집기에서 `streaming.enabled = false`를 설정한 화면           |
-| `sync-signin.png`                        | 3-② Zotero 데스크톱 앱 설정 → 동기화의 로그인(Sign In / Link Account) 화면  |
+| `sync-signin.png`                        | 3-② Zotero 데스크톱 앱 설정 → 동기화의 로그인(Sign In / Link Account) 패널  |
+| `sync-signin-web.png`                    | 3-② 클릭 시 브라우저에 열리는 로그인 폼(사용자명·비밀번호)                  |
 
-> 슬롯은 필요할 때 더 추가할 수 있습니다. 현재 3-①(2장)과 3-②(1장)가 연결되어 있습니다.
+> 슬롯은 필요할 때 더 추가할 수 있습니다. 현재 3-①(2장)과 3-②(2장)가 연결되어 있습니다.
 
 ## 팁 / Tips
 
