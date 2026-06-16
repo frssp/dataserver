@@ -239,6 +239,16 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>그룹에 추가되려면 그룹 소유자나 서버 관리자에게 요청하세요.</li>
 				</ul>
 				<p>내가 속한 그룹은 <a href="/account.php">Account</a> 페이지에서 확인할 수 있습니다.</p>
+					<h3>그룹 만들기</h3>
+					<p><a href="/account.php">Account</a> 페이지의 <strong>Groups</strong> 탭에서 직접 그룹을 만들 수 있습니다.</p>
+					<ol>
+						<li><strong>그룹 이름</strong>을 입력합니다.</li>
+						<li><strong>공개 범위</strong>를 선택합니다 — <em>Public</em>(누구나 온라인에서 열람) 또는 <em>Private Membership</em>(초대된 멤버만 열람·참여).</li>
+						<li><strong>라이브러리 편집 권한</strong>을 정합니다 — 모든 멤버(All Members) 또는 관리자만(Admins Only).</li>
+						<li>필요하면 <strong>설명</strong>을 적고 <strong>Create Group</strong>을 누릅니다.</li>
+						<li>생성 후 그룹의 <strong>멤버 관리</strong>에서 다른 사용자를 추가하면, 그 사람의 라이브러리에도 이 그룹이 나타납니다.</li>
+					</ol>
+					<div class="note">그룹을 만든 사람이 소유자가 됩니다. 멤버 추가·역할 변경·그룹 삭제도 같은 Groups 탭에서 할 수 있습니다.</div>
 			</section>
 
 			<section id="apikeys">
@@ -419,6 +429,16 @@ docker compose restart php-fpm</div>
 					<li>To be added to a group, ask the group owner or an administrator.</li>
 				</ul>
 				<p>You can review the groups you belong to on your <a href="/account.php">Account</a> page.</p>
+					<h3>Create a group</h3>
+					<p>You can create a group yourself from the <strong>Groups</strong> tab on your <a href="/account.php">Account</a> page.</p>
+					<ol>
+						<li>Enter a <strong>group name</strong>.</li>
+						<li>Choose the <strong>membership type</strong> — <em>Public</em> (anyone can view it online) or <em>Private Membership</em> (only invited members can view and join).</li>
+						<li>Set <strong>library editing</strong> — All Members or Admins Only.</li>
+						<li>Add an optional <strong>description</strong>, then click <strong>Create Group</strong>.</li>
+						<li>After it's created, add other users from the group's <strong>member management</strong>; the group then appears in their libraries too.</li>
+					</ol>
+					<div class="note">Whoever creates the group becomes its owner. You can add members, change roles, and delete the group from the same Groups tab.</div>
 			</section>
 
 			<section id="apikeys">
