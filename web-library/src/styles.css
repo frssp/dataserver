@@ -783,6 +783,52 @@ a.nav-user:hover { color: #c1302b; }
   font-size: 12px;
 }
 
+/* ── Items Toolbar (top) ─────────────────────────────────── */
+.items-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.items-count {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.items-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination.toolbar-pag {
+  border-top: none;
+  padding: 0;
+  background: none;
+}
+
+.page-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.page-size select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
 /* ── Item Detail ─────────────────────────────────────────── */
 .item-detail {
   padding: 0;

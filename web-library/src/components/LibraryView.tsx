@@ -13,7 +13,8 @@ interface Props {
   publicGroup?: { id: number; name: string };
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE_OPTIONS = [50, 100, 200];
+const DEFAULT_PAGE_SIZE = 50;
 
 export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) {
   const publicMode = !!publicGroup;
@@ -41,7 +42,15 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
   const [sortField, setSortField] = useState('title');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    const saved = parseInt(localStorage.getItem('zotero_page_size') || '', 10);
+    return PAGE_SIZE_OPTIONS.includes(saved) ? saved : DEFAULT_PAGE_SIZE;
+  });
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('zotero_page_size', String(pageSize));
+  }, [pageSize]);
   const [accessDenied, setAccessDenied] = useState(false);
 
   // Load collections and tags when library changes
@@ -67,8 +76,8 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
     setLoading(true);
     try {
       const params: Record<string, string> = {
-        limit: String(PAGE_SIZE),
-        start: String((page - 1) * PAGE_SIZE),
+        limit: String(pageSize),
+        start: String((page - 1) * pageSize),
         sort: sortField,
         direction: sortDirection,
         itemType: '-attachment || note',
@@ -93,7 +102,7 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
     } finally {
       setLoading(false);
     }
-  }, [library.type, library.id, page, sortField, sortDirection, selectedCollection, searchQuery, selectedTags]);
+  }, [library.type, library.id, page, pageSize, sortField, sortDirection, selectedCollection, searchQuery, selectedTags]);
 
   useEffect(() => {
     loadItems();
@@ -132,6 +141,12 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
     setLibrary(lib);
   };
 
+  const handlePageSize = (size: number) => {
+    setPageSize(size);
+    setPage(1);
+  };
+
+  const totalPages = Math.max(1, Math.ceil(totalResults / pageSize));
   const selectedItem = items.find((i) => i.key === selectedItemKey) || null;
 
   return (
@@ -173,11 +188,33 @@ export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) 
             )}
             {searchQuery && <span className="breadcrumb-search">Search: "{searchQuery}"</span>}
           </div>
+          <div className="items-toolbar">
+            <span className="items-count">
+              {totalResults.toLocaleString()} item{totalResults === 1 ? '' : 's'}
+            </span>
+            <div className="items-toolbar-right">
+              {totalPages > 1 && (
+                <div className="pagination toolbar-pag">
+                  <button disabled={page <= 1} onClick={() => setPage(page - 1)}>‹ Prev</button>
+                  <span className="page-info">{page} / {totalPages}</span>
+                  <button disabled={page >= totalPages} onClick={() => setPage(page + 1)}>Next ›</button>
+                </div>
+              )}
+              <label className="page-size">
+                Per page
+                <select value={pageSize} onChange={(e) => handlePageSize(Number(e.target.value))}>
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </div>
           <ItemsTable
             items={items}
             totalResults={totalResults}
             page={page}
-            pageSize={PAGE_SIZE}
+            pageSize={pageSize}
             sortField={sortField}
             sortDirection={sortDirection}
             selectedItemKey={selectedItemKey}
