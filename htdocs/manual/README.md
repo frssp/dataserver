@@ -8,9 +8,10 @@ Until a file exists, a dashed placeholder is shown; once uploaded it becomes the
 
 ## 기대하는 파일명 / Expected filenames
 
-| 파일명 (filename)   | 내용 (what to capture)                                                                  |
-|---------------------|-----------------------------------------------------------------------------------------|
-| `config-editor.png` | 3-① 환경설정 편집기에서 `api.url`(끝 슬래시 포함)과 `streaming.enabled=false`가 설정된 화면 |
+| 파일명 (filename)                       | 내용 (what to capture)                                                      |
+|-----------------------------------------|-----------------------------------------------------------------------------|
+| `config-editor-api-url.png`             | 3-① 환경설정 편집기에서 `api.url`(끝 슬래시 포함)을 설정한 화면              |
+| `config-editor-steaming-enabled.png`    | 3-① 환경설정 편집기에서 `streaming.enabled = false`를 설정한 화면           |
 
 > 슬롯은 필요할 때 더 추가할 수 있습니다(예: 동기화 로그인 화면). 지금은 3-①만 연결되어 있습니다.
 

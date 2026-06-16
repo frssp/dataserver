@@ -64,6 +64,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 .cta.secondary, .content a.cta.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
 .cta.secondary:hover, .content a.cta.secondary:hover { background: #f0f0f0; color: #111; }
 /* Screenshot slots — show a dashed placeholder until the PNG is uploaded */
+.shots { display: flex; flex-wrap: wrap; gap: 16px; margin: 16px 0; }
+.shots .shot { flex: 1 1 300px; margin: 0; }
 .shot { margin: 16px 0; }
 .shot img { display: none; max-width: 100%; border: 1px solid #d1d5da; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
 .shot.loaded img { display: block; }
@@ -184,11 +186,18 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					</tbody>
 				</table>
 				<div class="note warn"><strong>끝 슬래시(/) 주의.</strong> API 주소가 <code>/</code>로 끝나지 않으면 동기화 요청이 실패합니다.</div>
-				<figure class="shot">
-					<img src="/manual/config-editor.png" alt="환경설정 편집기에 두 값이 설정된 화면" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
-					<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor.png</code></div>
-					<figcaption>환경설정 편집기에서 <code>api.url</code>(끝 슬래시 포함)과 <code>streaming.enabled = false</code> 를 설정한 모습</figcaption>
-				</figure>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/config-editor-api-url.png" alt="환경설정 편집기에서 api.url 설정" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-api-url.png</code></div>
+						<figcaption><code>api.url</code> 값을 설정한 모습 (끝 슬래시 포함)</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/config-editor-steaming-enabled.png" alt="환경설정 편집기에서 streaming.enabled 설정" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-steaming-enabled.png</code></div>
+						<figcaption><code>streaming.enabled = false</code> 로 설정한 모습</figcaption>
+					</figure>
+				</div>
 				<p>변경 후 Zotero를 재시작합니다.</p>
 
 				<h3>② 로그인</h3>
@@ -322,11 +331,18 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					</tbody>
 				</table>
 				<div class="note warn"><strong>Trailing slash matters.</strong> The API URL must end in <code>/</code> or sync requests will fail.</div>
-				<figure class="shot">
-					<img src="/manual/config-editor.png" alt="Config Editor with both preferences set" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
-					<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor.png</code></div>
-					<figcaption>Config Editor with <code>api.url</code> (trailing slash included) and <code>streaming.enabled = false</code> set</figcaption>
-				</figure>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/config-editor-api-url.png" alt="Setting api.url in the Config Editor" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-api-url.png</code></div>
+						<figcaption>Setting <code>api.url</code> (trailing slash included)</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/config-editor-steaming-enabled.png" alt="Setting streaming.enabled in the Config Editor" loading="lazy" onload="this.closest('.shot').classList.add('loaded')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-steaming-enabled.png</code></div>
+						<figcaption>Setting <code>streaming.enabled = false</code></figcaption>
+					</figure>
+				</div>
 				<p>Restart Zotero after changing these.</p>
 
 				<h3>Step B — Sign in</h3>
