@@ -23,6 +23,7 @@ a { color: inherit; }
 
 .hero-shot { flex: 1.4 1 520px; min-width: 320px; }
 .hero-shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid #e2e4ea; box-shadow: 0 12px 40px rgba(40,50,70,.16); display: block; }
+.hero-shot .shot-placeholder { aspect-ratio: 16 / 10; border: 1px dashed #cfd3dc; border-radius: 10px; background: #fbfbfd; color: #9aa0ab; font-size: 14px; align-items: center; justify-content: center; text-align: center; padding: 16px; }
 
 /* ── About ────────────────────────────────────────────────── */
 .about { background: #fff; border-top: 1px solid #e8eaef; border-bottom: 1px solid #e8eaef; }
@@ -65,9 +66,10 @@ a { color: inherit; }
     </div>
     <div class="hero-shot">
         <!-- Drop a screenshot of this server's Web Library at htdocs/images/zotero.png.
-             Until it exists, the image hides itself so the layout stays clean. -->
+             If the file is missing, the labelled placeholder below is shown instead. -->
         <img src="/images/zotero.png" alt="Web Library screenshot"
-             onerror="this.parentNode.style.display='none'">
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="shot-placeholder" style="display:none">Web Library preview</div>
     </div>
 </div>
 
