@@ -89,6 +89,7 @@ interface Props {
   collections: ZoteroCollection[];
   library: LibraryContext;
   userInfo?: UserInfo;
+  libraryItemCount?: number | null;
   publicMode?: boolean;
   selectedCollection: string | null;
   onSelectCollection: (key: string | null) => void;
@@ -190,6 +191,7 @@ export default function CollectionTree({
   collections,
   library,
   userInfo,
+  libraryItemCount,
   publicMode,
   selectedCollection,
   onSelectCollection,
@@ -252,6 +254,7 @@ export default function CollectionTree({
         <span className="tree-toggle" />
         <span className="tree-icon"><LibraryIcon /></span>
         <span className="tree-name">My Library</span>
+        {libraryItemCount != null && <span className="tree-count">{libraryItemCount.toLocaleString()}</span>}
         <DotsButton onClick={(e) => { e.stopPropagation(); handleExportClick('user', userInfo.userID, null, e); }} />
       </div>
 

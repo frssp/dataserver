@@ -27,28 +27,34 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Got
 .toc a:hover { color: #c1302b; }
 
 /* ── Content ──────────────────────────────────────────────────────── */
-.content h1 { font-size: 30px; font-weight: 300; margin-bottom: 6px; }
+.content h1 { font-size: 32px; font-weight: 650; letter-spacing: -.02em; margin-bottom: 6px; }
 .content .lede { color: #666; font-size: 15px; margin-bottom: 8px; }
-.content section { background: #fff; border: 1px solid #e1e4e8; border-radius: 10px; padding: 26px 30px; margin-top: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.05); scroll-margin-top: 72px; }
-.content h2 { font-size: 20px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
-.content h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #c1302b; color: #fff; font-size: 14px; font-weight: 700; flex: none; }
+.content section { background: #fff; border: 1px solid #ebedf0; border-radius: 14px; padding: 28px 32px; margin-top: 18px; box-shadow: 0 1px 2px rgba(20,30,50,.04), 0 10px 28px rgba(20,30,50,.05); scroll-margin-top: 72px; }
+.content h2 { font-size: 19px; font-weight: 600; letter-spacing: -.01em; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+.content h2 .step { color: #c1302b; font-weight: 700; flex: none; }
+.content h2 .step::after { content: "."; }
 .content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.content h3.substep-h3 { display: flex; align-items: center; gap: 7px; }
+.content h3 .substep { color: #c1302b; font-weight: 700; flex: none; }
+.content h3 .substep::after { content: "."; }
 .content p { margin-bottom: 12px; }
 .content ol, .content ul { margin: 0 0 14px 22px; }
 .content li { margin-bottom: 7px; }
 .content a { color: #c1302b; }
 code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; padding: 1px 6px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 13px; color: #b1262c; word-break: break-all; }
 .kbd { background: #fafbfc; border: 1px solid #d1d5da; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: inherit; color: #444; white-space: nowrap; }
-.note { background: #f1f8ff; border: 1px solid #c8e1ff; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin: 14px 0; }
+.note { background: #f4f8fd; border: 1px solid #d8e6f5; border-radius: 10px; padding: 13px 16px; font-size: 14px; margin: 14px 0; }
 .note.warn { background: #fff8e6; border-color: #ffe2a8; }
 .note.warn strong { color: #8a6100; }
+.note.backup-note { background: #fff4e6; border-color: #ffcf8f; }
 .note strong { color: #0356b6; }
 .note code { background: #fff; }
 .pref-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
 .pref-table th, .pref-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #e1e4e8; vertical-align: top; }
 .pref-table th { background: #f6f8fa; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #586069; }
 /* CTA buttons — more specific than `.content a` so the white/dark text wins */
-.cta, .content a.cta { display: inline-block; margin-top: 4px; padding: 9px 18px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; }
+.cta, .content a.cta { display: inline-block; margin-top: 4px; padding: 10px 20px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 9px; font-weight: 500; font-size: 14px; box-shadow: 0 2px 8px rgba(193,48,43,.18); transition: background .15s, box-shadow .15s, transform .15s; }
+.cta:hover, .content a.cta:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(193,48,43,.26); }
 .cta:hover, .content a.cta:hover { background: #a52924; color: #fff; }
 .cta.secondary, .content a.cta.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
 .cta.secondary:hover, .content a.cta.secondary:hover { background: #f0f0f0; color: #111; }
@@ -56,16 +62,20 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 .shots { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
 .shots .shot { margin: 0; }
 .shot { margin: 16px 0; }
-.shot img { display: block; max-width: 100%; border: 1px solid #d1d5da; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.shot img { display: block; max-width: 100%; border: 1px solid #e2e4ea; border-radius: 10px; box-shadow: 0 8px 22px rgba(40,50,70,.26); }
 .shot.missing img { display: none; }
 .shot-missing { display: none; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 24px 16px; border: 2px dashed #d0d7de; border-radius: 8px; background: #fafbfc; color: #8a929b; font-size: 13px; }
 .shot.missing .shot-missing { display: flex; }
 .shot-missing code { background: #fff; }
-.shot figcaption { font-size: 12.5px; color: #777; margin-top: 6px; text-align: center; }
+.shot figcaption { font-size: 12.5px; color: #777; margin-top: 18px; text-align: center; }
+.shot figcaption .cap-num { color: #c1302b; font-weight: 700; margin-right: 5px; }
+.shot figcaption .cap-num::after { content: "."; }
 .url-box { background: #24292e; color: #e1e4e8; padding: 12px 16px; border-radius: 8px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 14px; margin: 8px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .url-box .copy { background: #444c56; color: #fff; border: 0; border-radius: 5px; padding: 5px 12px; font-size: 12px; cursor: pointer; flex: none; }
 .url-box .copy:hover { background: #586069; }
 .footer { background: #404040; color: #999; padding: 18px 0; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
@@ -77,7 +87,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 		<h4 data-lang="ko">목차</h4>
 		<h4 data-lang="en">Contents</h4>
 		<nav data-lang="ko">
-			<a href="#start">1. 계정 만들기</a>
+			<a href="#basics">0. Zotero 기본 사용법</a>
+				<a href="#start">1. 계정 만들기</a>
 			<a href="#weblib">2. 웹 라이브러리</a>
 			<a href="#client">3. 데스크톱 앱 동기화</a>
 			<a href="#groups">4. 그룹 라이브러리</a>
@@ -86,7 +97,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 			<a href="#admin">관리자용</a>
 		</nav>
 		<nav data-lang="en">
-			<a href="#start">1. Create an account</a>
+			<a href="#basics">0. New to Zotero?</a>
+				<a href="#start">1. Create an account</a>
 			<a href="#weblib">2. Web Library</a>
 			<a href="#client">3. Desktop app sync</a>
 			<a href="#groups">4. Group libraries</a>
@@ -109,6 +121,19 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 			<div class="note warn">
 				<strong>메타데이터 전용 동기화.</strong> 이 서버는 <strong>참고문헌 항목·컬렉션·태그·노트·저장된 검색</strong>만 동기화합니다. <strong>첨부 파일이나 PDF는 동기화하지 않습니다.</strong> 파일은 추가한 그 기기에만 남습니다.
 			</div>
+
+			<div class="note warn backup-note"><strong>⚠️ 동기화 전에 백업하세요.</strong> 이 서버로 처음 동기화하기 전에, 기존 라이브러리를 <strong>Zotero RDF로 내보내 백업</strong>해 두는 것을 강력히 권장합니다. 방법은 아래 <a href="#client">3. 데스크톱 앱 동기화</a>를 참고하세요.</div>
+
+			<section id="basics">
+				<h2><span class="step">0</span> Zotero가 처음이라면</h2>
+				<p>Zotero를 처음 쓴다면, 이 사내 서버를 설정하기 전에 Zotero 자체의 기본 사용법을 먼저 익히는 것을 권합니다. 아래 두 가지면 충분합니다.</p>
+				<ul>
+					<li><strong>공식 사이트 둘러보기</strong> — <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>에서 Zotero가 무엇이고 무엇을 할 수 있는지 살펴보세요.</li>
+					<li><strong>입문 영상 보기</strong> — 짧은 소개 영상과 강의 재생목록으로 전체 사용 흐름을 익히세요.</li>
+				</ul>
+				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">입문 영상 (YouTube) →</a> <a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">강의 재생목록 (YouTube) →</a></p>
+				<div class="note">기본기를 익혔다면, 아래 <a href="#start">1. 계정 만들기</a>부터 이 사내 서버 설정을 시작하세요.</div>
+			</section>
 
 			<section id="start">
 				<h2><span class="step">1</span> 계정 만들기</h2>
@@ -146,12 +171,13 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 
 			<section id="client">
 				<h2><span class="step">3</span> 데스크톱 앱 동기화</h2>
-				<p>Zotero 데스크톱 앱이 zotero.org 대신 이 서버와 동기화하도록 설정합니다. 한 번만 하면 됩니다. <strong>Zotero 7 이상</strong>을 사용하세요.</p>
+				<p>Zotero 데스크톱 앱이 zotero.org 대신 이 서버와 동기화하도록 설정합니다. 한 번만 하면 됩니다. <strong>Zotero 7 이상</strong>에서 동작하며, 가급적 최신 버전을 권장합니다(브라우저 로그인은 최신 버전 기준 — 구버전은 아래 로그인 단계의 API 키 방식 사용).</p>
 
+				<div class="note warn"><strong>동기화 전에 백업하세요.</strong> 서버를 바꾸거나 처음 동기화하기 전에, 기존 라이브러리를 내보내 백업해 두는 것을 권합니다. Zotero에서 <span class="kbd">파일 File</span> → <span class="kbd">라이브러리 내보내기 Export Library…</span> → 형식으로 <strong>Zotero RDF</strong>를 선택해 저장하세요. 문제가 생겨도 그 파일로 복원할 수 있습니다.</div>
 				<h3>이 서버 주소</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">복사</button></div>
 
-				<h3>① 서버 주소 설정</h3>
+				<h3 class="substep-h3"><span class="substep">1</span>서버 주소 설정</h3>
 				<ol>
 					<li>Zotero에서 <span class="kbd">편집 Edit</span> → <span class="kbd">설정 Settings</span> 을 엽니다. (macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>)</li>
 					<li><strong>고급 Advanced</strong> 탭 → <strong>환경설정 편집기 Config Editor</strong> 로 들어가 경고에 동의합니다.</li>
@@ -179,7 +205,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				</div>
 				<p>변경 후 Zotero를 재시작합니다.</p>
 
-				<h3>② 로그인</h3>
+				<h3 class="substep-h3"><span class="substep">2</span>로그인</h3>
 				<ol>
 					<li><span class="kbd">설정 Settings</span> → <strong>동기화 Sync</strong> 를 엽니다.</li>
 					<li><strong>로그인(Sign In / Link Account)</strong> 을 클릭하면 브라우저에 로그인 페이지가 열립니다.</li>
@@ -190,12 +216,12 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<figure class="shot">
 						<img src="/manual/sync-signin.png" alt="Zotero 설정 → 동기화의 로그인 패널" onerror="this.closest('.shot').classList.add('missing')">
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin.png</code></div>
-						<figcaption>① Zotero 데스크톱 앱: 설정 → 동기화의 로그인(Sign In / Link Account) 버튼</figcaption>
+						<figcaption><span class="cap-num">1</span>Zotero 데스크톱 앱: 설정 → 동기화의 로그인(Sign In / Link Account) 버튼</figcaption>
 					</figure>
 					<figure class="shot">
 						<img src="/manual/sync-signin-web.png" alt="브라우저에 열리는 로그인 폼" onerror="this.closest('.shot').classList.add('missing')">
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin-web.png</code></div>
-						<figcaption>② 클릭하면 브라우저에 열리는 로그인 페이지 (사용자명·비밀번호 입력)</figcaption>
+						<figcaption><span class="cap-num">2</span>클릭하면 브라우저에 열리는 로그인 페이지 (사용자명·비밀번호 입력)</figcaption>
 					</figure>
 				</div>
 				<div class="note"><strong>브라우저 로그인이 안 열리면(또는 구버전이면):</strong> <a href="/account.php">Account</a> 페이지에서 API 키를 발급한 뒤, Zotero의 동기화 설정에 그 키를 직접 입력해도 됩니다.</div>
@@ -207,7 +233,6 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>다른 컴퓨터에서도 같은 설정을 하고 같은 계정으로 로그인하면 동일한 라이브러리를 사용할 수 있습니다.</li>
 				</ul>
 				<div class="note warn"><strong>파일은 동기화되지 않습니다.</strong> 첨부 파일·PDF는 업로드되지 않으니, 동기화 설정의 "파일 동기화(File Syncing)" 옵션은 꺼 두세요. 이 서버는 라이브러리(메타데이터) 동기화만 동작합니다.</div>
-				<div class="note warn"><strong>HTTP / HTTPS:</strong> 서버 주소가 평문 <code>http://</code>이면 클라이언트가 경고하거나 거부할 수 있습니다. 문제가 있으면 관리자에게 HTTPS 주소를 문의하세요.</div>
 			</section>
 
 			<section id="groups">
@@ -219,6 +244,16 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>그룹에 추가되려면 그룹 소유자나 서버 관리자에게 요청하세요.</li>
 				</ul>
 				<p>내가 속한 그룹은 <a href="/account.php">Account</a> 페이지에서 확인할 수 있습니다.</p>
+					<h3>그룹 만들기</h3>
+					<p><a href="/account.php">Account</a> 페이지의 <strong>Groups</strong> 탭에서 직접 그룹을 만들 수 있습니다.</p>
+					<ol>
+						<li><strong>그룹 이름</strong>을 입력합니다.</li>
+						<li><strong>공개 범위</strong>를 선택합니다 — <em>Public</em>(누구나 온라인에서 열람) 또는 <em>Private Membership</em>(초대된 멤버만 열람·참여).</li>
+						<li><strong>라이브러리 편집 권한</strong>을 정합니다 — 모든 멤버(All Members) 또는 관리자만(Admins Only).</li>
+						<li>필요하면 <strong>설명</strong>을 적고 <strong>Create Group</strong>을 누릅니다.</li>
+						<li>생성 후 그룹의 <strong>멤버 관리</strong>에서 다른 사용자를 추가하면, 그 사람의 라이브러리에도 이 그룹이 나타납니다.</li>
+					</ol>
+					<div class="note">그룹을 만든 사람이 소유자가 됩니다. 멤버 추가·역할 변경·그룹 삭제도 같은 Groups 탭에서 할 수 있습니다.</div>
 			</section>
 
 			<section id="apikeys">
@@ -242,7 +277,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<h3>로그인할 때 사용자명을 써요, 이메일을 써요?</h3>
 				<p>둘 다 됩니다. 가입 때 등록한 사용자명이나 이메일 중 무엇으로도 로그인할 수 있습니다.</p>
 				<h3>비밀번호를 잊어버렸어요.</h3>
-				<p>스스로 재설정하는 기능은 없습니다. 관리자에게 새 비밀번호 설정을 요청하세요.</p>
+				<p>스스로 재설정하는 기능은 없습니다. 관리자(사내 메신저 ID <strong>sungh20.kim</strong> · <a href="mailto:sungh20.kim@samsung.com">sungh20.kim@samsung.com</a>)에게 새 비밀번호 설정을 요청하세요.</p>
 				<h3>zotero.org 공식 계정을 그대로 쓸 수 있나요?</h3>
 				<p>아니요. 이 서버는 별도의 사내 서버입니다. 여기서 새로 가입하세요. zotero.org와는 독립적입니다.</p>
 			</section>
@@ -278,6 +313,19 @@ docker compose restart php-fpm</div>
 			<div class="note warn">
 				<strong>Metadata-only sync.</strong> This server syncs your <strong>references, collections, tags, notes, and saved searches</strong>. It does <strong>not</strong> sync attached files or PDFs — those stay on the device where you added them.
 			</div>
+
+			<div class="note warn backup-note"><strong>⚠️ Back up before you sync.</strong> Before your first sync to this server, we strongly recommend exporting your existing library as a <strong>Zotero RDF</strong> backup. See <a href="#client">3. Sync the desktop app</a> for how.</div>
+
+			<section id="basics">
+				<h2><span class="step">0</span> New to Zotero?</h2>
+				<p>If you've never used Zotero before, it's worth learning the basics of Zotero itself before setting up this server. These two resources are enough to get started:</p>
+				<ul>
+					<li><strong>Explore the official site</strong> — see what Zotero is and what it does at <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>.</li>
+					<li><strong>Watch a quick intro</strong> — a short video and a playlist walk through the overall workflow.</li>
+				</ul>
+				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">Intro video (YouTube) →</a> <a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">Video playlist (YouTube) →</a></p>
+				<div class="note">Once you're comfortable with the basics, start the server setup at <a href="#start">1. Create an account</a> below.</div>
+			</section>
 
 			<section id="start">
 				<h2><span class="step">1</span> Create an account</h2>
@@ -315,12 +363,13 @@ docker compose restart php-fpm</div>
 
 			<section id="client">
 				<h2><span class="step">3</span> Sync the desktop app</h2>
-				<p>Point the Zotero desktop app at this server so it syncs here instead of zotero.org. This is a one-time setup. Use <strong>Zotero 7 or newer</strong>.</p>
+				<p>Point the Zotero desktop app at this server so it syncs here instead of zotero.org. This is a one-time setup. Works on <strong>Zotero 7 or newer</strong>; the latest version is recommended (browser sign-in needs a recent version — older ones can use the API-key method in Step B).</p>
 
+				<div class="note warn"><strong>Back up before you sync.</strong> Before switching servers or syncing for the first time, export your existing library as a backup — in Zotero: <span class="kbd">File</span> → <span class="kbd">Export Library…</span> → choose <strong>Zotero RDF</strong>. If anything goes wrong, you can restore from that file.</div>
 				<h3>This server's address</h3>
 				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">Copy</button></div>
 
-				<h3>Step A — Point Zotero at this server</h3>
+				<h3 class="substep-h3"><span class="substep">A</span>Point Zotero at this server</h3>
 				<ol>
 					<li>In Zotero, open <span class="kbd">Edit</span> → <span class="kbd">Settings</span> (on macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>).</li>
 					<li>Go to the <strong>Advanced</strong> tab → <strong>Config Editor</strong>, and accept the warning.</li>
@@ -348,7 +397,7 @@ docker compose restart php-fpm</div>
 				</div>
 				<p>Restart Zotero after changing these.</p>
 
-				<h3>Step B — Sign in</h3>
+				<h3 class="substep-h3"><span class="substep">B</span>Sign in</h3>
 				<ol>
 					<li>Open <span class="kbd">Settings</span> → <strong>Sync</strong>.</li>
 					<li>Click <strong>Sign In</strong> / <strong>Link Account</strong>. Zotero opens a login page in your browser.</li>
@@ -359,12 +408,12 @@ docker compose restart php-fpm</div>
 					<figure class="shot">
 						<img src="/manual/sync-signin.png" alt="Zotero Settings → Sync sign-in panel" onerror="this.closest('.shot').classList.add('missing')">
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin.png</code></div>
-						<figcaption>① Zotero desktop app: the Sign In / Link Account button in Settings → Sync</figcaption>
+						<figcaption><span class="cap-num">1</span>Zotero desktop app: the Sign In / Link Account button in Settings → Sync</figcaption>
 					</figure>
 					<figure class="shot">
 						<img src="/manual/sync-signin-web.png" alt="The browser login form that opens" onerror="this.closest('.shot').classList.add('missing')">
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin-web.png</code></div>
-						<figcaption>② The login page that opens in your browser (enter username &amp; password)</figcaption>
+						<figcaption><span class="cap-num">2</span>The login page that opens in your browser (enter username &amp; password)</figcaption>
 					</figure>
 				</div>
 				<div class="note"><strong>If the browser sign-in doesn't appear (or on older versions):</strong> create an API key on the <a href="/account.php">Account</a> page and paste it directly into Zotero's sync settings.</div>
@@ -376,7 +425,6 @@ docker compose restart php-fpm</div>
 					<li>On another computer, repeat this setup and sign in with the same account to get the same library.</li>
 				</ul>
 				<div class="note warn"><strong>Files don't sync.</strong> Attachments and PDFs are not uploaded. Keep the "File Syncing" options in Sync settings turned off — only library/metadata sync works here.</div>
-				<div class="note warn"><strong>HTTP / HTTPS:</strong> if the address is plain <code>http://</code>, the client may warn or refuse. If you hit trouble, ask an administrator for an HTTPS address.</div>
 			</section>
 
 			<section id="groups">
@@ -388,6 +436,16 @@ docker compose restart php-fpm</div>
 					<li>To be added to a group, ask the group owner or an administrator.</li>
 				</ul>
 				<p>You can review the groups you belong to on your <a href="/account.php">Account</a> page.</p>
+					<h3>Create a group</h3>
+					<p>You can create a group yourself from the <strong>Groups</strong> tab on your <a href="/account.php">Account</a> page.</p>
+					<ol>
+						<li>Enter a <strong>group name</strong>.</li>
+						<li>Choose the <strong>membership type</strong> — <em>Public</em> (anyone can view it online) or <em>Private Membership</em> (only invited members can view and join).</li>
+						<li>Set <strong>library editing</strong> — All Members or Admins Only.</li>
+						<li>Add an optional <strong>description</strong>, then click <strong>Create Group</strong>.</li>
+						<li>After it's created, add other users from the group's <strong>member management</strong>; the group then appears in their libraries too.</li>
+					</ol>
+					<div class="note">Whoever creates the group becomes its owner. You can add members, change roles, and delete the group from the same Groups tab.</div>
 			</section>
 
 			<section id="apikeys">
@@ -411,7 +469,7 @@ docker compose restart php-fpm</div>
 				<h3>Do I sign in with my username or email?</h3>
 				<p>Either works. You can sign in with the username or the email you registered with.</p>
 				<h3>I forgot my password.</h3>
-				<p>There's no self-service reset. Ask an administrator to set a new password for you.</p>
+				<p>There's no self-service reset. Ask an administrator (internal messenger ID <strong>sungh20.kim</strong> · <a href="mailto:sungh20.kim@samsung.com">sungh20.kim@samsung.com</a>) to set a new password for you.</p>
 				<h3>Can I use my official zotero.org account?</h3>
 				<p>No. This is a separate, self-hosted server. Register an account here; it's independent of zotero.org.</p>
 			</section>
@@ -441,7 +499,7 @@ docker compose restart php-fpm</div>
 	</div>
 </div>
 
-<div class="footer">Zotero Self-Hosted Server</div>
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 
 <script>
 // ── 언어 전환 ──────────────────────────────────────────────────────

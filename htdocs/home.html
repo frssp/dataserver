@@ -8,34 +8,158 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #f5f6fa; color: #333; min-height: 100vh; display: flex; flex-direction: column; }
+a { color: inherit; }
 
+/* ── Hero ─────────────────────────────────────────────────── */
+.hero { flex: 1; max-width: 1100px; width: 100%; margin: 0 auto; padding: 56px 24px 40px; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
+.hero-text { flex: 1 1 320px; min-width: 280px; }
+.hero-text h1 { font-size: 34px; font-weight: 300; color: #2b2b2b; line-height: 1.25; margin-bottom: 16px; }
+.hero-text p { font-size: 16px; color: #666; line-height: 1.7; margin-bottom: 28px; }
+.hero-text .cta { display: inline-block; padding: 13px 30px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; box-shadow: 0 4px 14px rgba(193,48,43,.25); transition: transform .15s, box-shadow .15s; }
+.hero-text .cta:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(193,48,43,.34); }
+.hero-text .muted { display: block; margin-top: 20px; font-size: 14px; color: #555; }
+.hero-text .muted a { color: #c1302b; text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(193,48,43,.35); }
+.hero-text .muted a:hover { border-bottom-color: #c1302b; }
 
-/* ── Welcome body ─────────────────────────────────────────────────── */
-.main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 48px 20px; }
-.welcome { text-align: center; max-width: 560px; }
-.welcome h1 { font-size: 32px; font-weight: 300; color: #2b2b2b; margin-bottom: 12px; }
-.welcome p { font-size: 16px; color: #666; line-height: 1.7; margin-bottom: 28px; }
-.welcome .cta { display: inline-block; padding: 13px 30px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; box-shadow: 0 4px 14px rgba(193,48,43,.25); transition: transform .15s, box-shadow .15s; }
-.welcome .cta:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(193,48,43,.34); }
-.welcome .muted { display: block; margin-top: 18px; font-size: 13px; color: #aaa; }
-.welcome .muted a { color: #777; text-decoration: none; }
-.welcome .muted a:hover { color: #c1302b; }
+.hero-shot { flex: 1.4 1 520px; min-width: 320px; }
+.hero-shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid #e2e4ea; box-shadow: 0 12px 40px rgba(40,50,70,.16); display: block; }
+.hero-shot .shot-placeholder { aspect-ratio: 16 / 10; border: 1px dashed #cfd3dc; border-radius: 10px; background: #fbfbfd; color: #9aa0ab; font-size: 14px; align-items: center; justify-content: center; text-align: center; padding: 16px; }
+
+/* ── About ────────────────────────────────────────────────── */
+.about { background: #fff; border-top: 1px solid #e8eaef; border-bottom: 1px solid #e8eaef; }
+.about-inner { max-width: 760px; margin: 0 auto; padding: 40px 24px; text-align: center; }
+.about-inner h2 { font-size: 20px; font-weight: 500; color: #2b2b2b; margin-bottom: 12px; }
+.about-inner p { font-size: 15px; color: #666; line-height: 1.8; }
+.about-inner .about-link { display: inline-block; margin-top: 16px; color: #c1302b; text-decoration: none; font-weight: 500; font-size: 14px; }
+.about-inner .about-link:hover { text-decoration: underline; }
+
+/* ── Browser connector ────────────────────────────────────── */
+.connector { background: #faf7f7; border-bottom: 1px solid #e8eaef; }
+.connector-inner { max-width: 760px; margin: 0 auto; padding: 40px 24px; text-align: center; }
+.connector-inner h2 { font-size: 20px; font-weight: 500; color: #2b2b2b; margin-bottom: 12px; }
+.connector-inner p { font-size: 15px; color: #666; line-height: 1.8; margin-bottom: 22px; }
+.connector-cta { display: inline-block; padding: 11px 24px; background: #fff; border: 1px solid #d8b9b7; color: #c1302b; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 500; transition: background .15s, box-shadow .15s; }
+.connector-cta:hover { background: #fff5f4; box-shadow: 0 6px 18px rgba(193,48,43,.12); }
+
+/* ── Plugins ──────────────────────────────────────────────── */
+.plugins { background: #fff; border-bottom: 1px solid #e8eaef; }
+.plugins-inner { max-width: 760px; margin: 0 auto; padding: 40px 24px; text-align: center; }
+.plugins-inner h2 { font-size: 20px; font-weight: 500; color: #2b2b2b; margin-bottom: 12px; }
+.plugins-inner p { font-size: 15px; color: #666; line-height: 1.8; margin-bottom: 22px; }
+.plugins-more { margin-top: 20px; margin-bottom: 0; font-size: 13.5px; color: #888; }
+.plugins-more a { color: #c1302b; text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(193,48,43,.3); }
+.plugins-more a:hover { border-bottom-color: #c1302b; }
+
+/* ── Getting started cards ────────────────────────────────── */
+.start { max-width: 1000px; margin: 0 auto; padding: 44px 24px 56px; }
+.start h2 { font-size: 20px; font-weight: 500; color: #2b2b2b; text-align: center; margin-bottom: 28px; }
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.card { background: #fff; border: 1px solid #e6e8ee; border-radius: 10px; padding: 24px 22px; text-decoration: none; transition: transform .15s, box-shadow .15s, border-color .15s; display: block; }
+.card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(40,50,70,.10); border-color: #d8b9b7; }
+.card .num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #fbe9e8; color: #c1302b; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.card h3 { font-size: 16px; font-weight: 600; color: #2b2b2b; margin-bottom: 8px; }
+.card p { font-size: 13.5px; color: #6a6f7a; line-height: 1.65; }
+.card code { background: #f3f4f7; border: 1px solid #e6e8ee; border-radius: 4px; padding: 1px 5px; font-size: 12px; color: #c1302b; }
+.start-note { text-align: center; margin-top: 26px; font-size: 14px; color: #555; }
+.start-note a { color: #c1302b; text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(193,48,43,.35); }
+.start-note a:hover { border-bottom-color: #c1302b; }
 
 .footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
 <nav id="zotero-nav"></nav>
 
-<div class="main">
-    <div class="welcome">
-        <h1>Welcome</h1>
-        <p>Your self-hosted Zotero server.<br>Use the menu above to sign in, browse group libraries, or read the guide.</p>
+<div class="hero">
+    <div class="hero-text">
+        <h1>Your research library,<br>self-hosted.</h1>
+        <p>A private Zotero server for the team — sync your references, notes,
+           collections, and group libraries entirely on the internal network,
+           with no dependency on zotero.org.</p>
         <a href="/library/" class="cta">Open Web Library</a>
         <span class="muted">New here? <a href="/register.php">Create an account</a> &middot; <a href="/manual.html">Read the guide</a></span>
     </div>
+    <div class="hero-shot">
+        <!-- Drop a screenshot of this server's Web Library at htdocs/images/zotero.png.
+             If the file is missing, the labelled placeholder below is shown instead. -->
+        <img src="/images/zotero.png" alt="Web Library screenshot"
+             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+        <div class="shot-placeholder" style="display:none">Web Library preview</div>
+    </div>
 </div>
-<div class="footer">Zotero Self-Hosted Server</div>
+
+<div class="about">
+    <div class="about-inner">
+        <h2>What is Zotero?</h2>
+        <p>Zotero is a free, open-source reference manager that helps you collect,
+           organize, annotate, and cite research. This server hosts your Zotero
+           libraries internally, so your items and notes sync between the desktop
+           app and the web — without leaving the corporate network.</p>
+        <a class="about-link" href="https://www.zotero.org" target="_blank" rel="noopener">Learn more about Zotero at zotero.org &rarr;</a>
+    </div>
+</div>
+
+<div class="connector">
+    <div class="connector-inner">
+        <h2>Save from your browser</h2>
+        <p>Install the <strong>Zotero Connector</strong> browser extension to save
+           articles, PDFs, and web pages to your library with a single click —
+           right from your browser.</p>
+        <a class="connector-cta" href="https://microsoftedge.microsoft.com/addons/detail/zotero-connector/nmhdhpibnnopknkmonacoephklnflpho" target="_blank" rel="noopener">Get the Zotero Connector for Edge &rarr;</a>
+    </div>
+</div>
+
+<div class="plugins">
+    <div class="plugins-inner">
+        <h2>Extend Zotero with plugins</h2>
+        <p>Zotero supports community plugins that add features. Start with the
+           <strong>Zotero Add-ons</strong> manager — it lets you browse and install
+           plugins right inside Zotero.</p>
+        <a class="connector-cta" href="https://github.com/syt2/zotero-addons" target="_blank" rel="noopener">Get the Zotero Add-ons manager &rarr;</a>
+        <p class="plugins-more">Also recommended (optional):
+           <a href="https://github.com/retorquere/zotero-better-bibtex" target="_blank" rel="noopener">Better BibTeX</a>
+           &middot;
+           <a href="https://github.com/northword/zotero-format-metadata" target="_blank" rel="noopener">Format Metadata</a></p>
+    </div>
+</div>
+
+<div class="start">
+    <h2>Getting started</h2>
+    <div class="cards">
+        <a class="card" href="/register.php">
+            <span class="num">1</span>
+            <h3>Create an account</h3>
+            <p>Register to get your username and an API key for syncing the desktop
+               client and accessing the API.</p>
+        </a>
+        <a class="card" href="/manual.html">
+            <span class="num">2</span>
+            <h3>Connect the Zotero app</h3>
+            <p>Point desktop Zotero at this server by setting
+               <code>extensions.zotero.api.url</code>. Step-by-step instructions
+               are in the guide.</p>
+        </a>
+        <a class="card" href="/library/">
+            <span class="num">3</span>
+            <h3>Browse in your browser</h3>
+            <p>Open the Web Library to view, search, and export items, collections,
+               and tags — no desktop app required.</p>
+        </a>
+        <a class="card" href="/account.php">
+            <span class="num">4</span>
+            <h3>Create &amp; share a group library</h3>
+            <p>Set up a group library to collaborate — share references, notes, and
+               collections with your team.</p>
+        </a>
+    </div>
+    <p class="start-note">Don&rsquo;t have the desktop app yet?
+        <a href="https://www.zotero.org/download/" target="_blank" rel="noopener">Download Zotero &rarr;</a>
+        Then point it at this server (see <a href="/manual.html">the guide</a>).</p>
+</div>
+
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 <script src="/nav.js"></script>
 </body>
 </html>

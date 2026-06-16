@@ -594,11 +594,20 @@ a.nav-user:hover { color: #c1302b; }
 }
 
 /* ── Items Table ─────────────────────────────────────────── */
+.items-table-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
 .items-table-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .items-table {
@@ -781,6 +790,52 @@ a.nav-user:hover { color: #c1302b; }
 .page-info {
   color: var(--text-muted);
   font-size: 12px;
+}
+
+/* ── Items Toolbar (top) ─────────────────────────────────── */
+.items-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 5px 12px;
+  background: var(--bg-header);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.items-count {
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.items-toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pagination.toolbar-pag {
+  border-top: none;
+  padding: 0;
+  background: none;
+}
+
+.page-size {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-muted);
+}
+
+.page-size select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: #fff;
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 2px 4px;
+  cursor: pointer;
 }
 
 /* ── Item Detail ─────────────────────────────────────────── */

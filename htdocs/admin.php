@@ -498,6 +498,9 @@ tr:hover td { background: #f9fafb; }
 .member-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #f6f8fa; border: 1px solid var(--border); border-radius: 16px; font-size: 13px; }
 .member-chip .remove { cursor: pointer; color: var(--danger); font-weight: bold; font-size: 15px; line-height: 1; }
 .member-chip .remove:hover { color: #a71d2a; }
+.footer { background: #404040; color: #999; padding: 16px 0; margin-top: 40px; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
@@ -839,8 +842,10 @@ async function showUserInfo(userID) {
 }
 
 // ── Groups ────────────────────────────────────────────────────────
+let groupsCache = [];
 async function loadGroups() {
 	const groups = await api('group.list');
+	groupsCache = groups;
 	const tbody = document.getElementById('group-table');
 	if (!groups.length) {
 		tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No groups</td></tr>';
@@ -856,9 +861,9 @@ async function loadGroups() {
 			<td>${g.members}</td>
 			<td>${g.libraryEditing}</td>
 			<td class="btn-group">
-				<button class="btn btn-sm" onclick="editGroup(${g.groupID},'${esc(g.name)}','${g.type}','${g.libraryReading}','${g.libraryEditing}','${esc(g.description || '')}')">Settings</button>
-				<button class="btn btn-sm" onclick="showMembers(${g.groupID},'${esc(g.name)}')">Members</button>
-				<button class="btn btn-sm btn-danger" onclick="deleteGroup(${g.groupID},'${esc(g.name)}')">Delete</button>
+				<button class="btn btn-sm" onclick="editGroup(${g.groupID})">Settings</button>
+				<button class="btn btn-sm" onclick="showMembers(${g.groupID})">Members</button>
+				<button class="btn btn-sm btn-danger" onclick="deleteGroup(${g.groupID})">Delete</button>
 			</td>
 		</tr>`;
 	}).join('');
@@ -887,8 +892,9 @@ async function addGroup() {
 	} catch(e) { toast(e.message, 'error'); }
 }
 
-async function deleteGroup(groupID, name) {
-	if (!confirm(`Delete group "${name}"? All group data will be lost.`)) return;
+async function deleteGroup(groupID) {
+	const g = groupsCache.find(x => x.groupID == groupID); if (!g) return;
+	if (!confirm(`Delete group "${g.name}"? All group data will be lost.`)) return;
 	try {
 		await api('group.delete', {method: 'POST', params: {groupID}});
 		toast('Group deleted');
@@ -896,9 +902,10 @@ async function deleteGroup(groupID, name) {
 	} catch(e) { toast(e.message, 'error'); }
 }
 
-async function showMembers(groupID, name) {
+async function showMembers(groupID) {
+	const g = groupsCache.find(x => x.groupID == groupID); if (!g) return;
 	currentGroupID = groupID;
-	document.getElementById('members-group-name').textContent = name;
+	document.getElementById('members-group-name').textContent = g.name;
 	document.getElementById('add-member-username').value = '';
 	await refreshMembers();
 	showModal('modal-group-members');
@@ -939,13 +946,14 @@ async function removeMember(userID, username) {
 	} catch(e) { toast(e.message, 'error'); }
 }
 
-function editGroup(groupID, name, type, reading, editing, desc) {
+function editGroup(groupID) {
+	const g = groupsCache.find(x => x.groupID == groupID); if (!g) return;
 	document.getElementById('edit-grp-id').value = groupID;
-	document.getElementById('edit-grp-name').value = name;
-	document.getElementById('edit-grp-type').value = type;
-	document.getElementById('edit-grp-reading').value = reading;
-	document.getElementById('edit-grp-editing').value = editing;
-	document.getElementById('edit-grp-desc').value = desc;
+	document.getElementById('edit-grp-name').value = g.name;
+	document.getElementById('edit-grp-type').value = g.type;
+	document.getElementById('edit-grp-reading').value = g.libraryReading;
+	document.getElementById('edit-grp-editing').value = g.libraryEditing;
+	document.getElementById('edit-grp-desc').value = g.description || '';
 	showModal('modal-edit-group');
 }
 
@@ -1082,6 +1090,7 @@ loadStats();
 loadUsers();
 loadGroups();
 </script>
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 <script src="/nav.js"></script>
 </body>
 </html>
