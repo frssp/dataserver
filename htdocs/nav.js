@@ -82,14 +82,7 @@
     return '<a href="' + href + '" class="nav-link' + (active === key ? ' active' : '') + '">' + label + '</a>';
   }
 
-  var groupsMenu =
-    '<div class="nav-item">' +
-      '<button type="button" class="nav-trigger' + (active === 'groups' ? ' active' : '') + '">Groups ' + caret + '</button>' +
-      '<div class="dropdown">' +
-        '<a href="/groups.php">Group Search<span class="d-desc">Find public groups</span></a>' +
-        '<a href="/library/?view=groups">Group Library<span class="d-desc">Your group libraries</span></a>' +
-      '</div>' +
-    '</div>';
+  var groupsMenu = link('/groups.php', 'Groups', 'groups');
 
   var left, right;
 
