@@ -108,6 +108,7 @@ button:disabled { background: #d99; cursor: default; }
 		<a href="/library/">Web Library</a>
 		<a href="/account.php">Account</a>
 		<a href="/admin.php">Admin</a>
+		<a href="/manual.html">Guide</a>
 	</div>
 </nav>
 <div class="main">

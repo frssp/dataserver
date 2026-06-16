@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Guide — Zotero Self-Hosted</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; background: #f5f6fa; color: #24292e; line-height: 1.65; }
+
+/* ── Unified Nav ──────────────────────────────────────────────────── */
+.site-nav { background: #fff; border-bottom: 1px solid #ddd; padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 20; }
+.site-nav .logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; margin-right: 32px; }
+.site-nav .logo .z { color: #c1302b; }
+.site-nav .logo .rest { color: #333; }
+.site-nav .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
+.site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
+.site-nav .nav-links a:hover { color: #111; border-bottom-color: #c1302b; }
+.site-nav .nav-links a.active { color: #c1302b; border-bottom-color: #c1302b; }
+
+/* ── Layout ───────────────────────────────────────────────────────── */
+.wrap { max-width: 1040px; margin: 0 auto; padding: 32px 24px 80px; display: grid; grid-template-columns: 220px 1fr; gap: 40px; }
+@media (max-width: 800px) { .wrap { grid-template-columns: 1fr; } .toc { display: none; } }
+
+/* ── TOC ──────────────────────────────────────────────────────────── */
+.toc { position: sticky; top: 80px; align-self: start; font-size: 13px; }
+.toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #888; margin-bottom: 10px; }
+.toc a { display: block; color: #555; text-decoration: none; padding: 4px 0; border-left: 2px solid transparent; padding-left: 10px; margin-left: -2px; }
+.toc a:hover { color: #c1302b; }
+
+/* ── Content ──────────────────────────────────────────────────────── */
+.content h1 { font-size: 30px; font-weight: 300; margin-bottom: 6px; }
+.content .lede { color: #666; font-size: 15px; margin-bottom: 8px; }
+.content section { background: #fff; border: 1px solid #e1e4e8; border-radius: 10px; padding: 26px 30px; margin-top: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.05); scroll-margin-top: 72px; }
+.content h2 { font-size: 20px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.content h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #c1302b; color: #fff; font-size: 14px; font-weight: 700; flex: none; }
+.content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.content p { margin-bottom: 12px; }
+.content ol, .content ul { margin: 0 0 14px 22px; }
+.content li { margin-bottom: 7px; }
+.content a { color: #c1302b; }
+code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; padding: 1px 6px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 13px; color: #b1262c; word-break: break-all; }
+.kbd { background: #fafbfc; border: 1px solid #d1d5da; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: inherit; color: #444; }
+.note { background: #f1f8ff; border: 1px solid #c8e1ff; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin: 14px 0; }
+.note.warn { background: #fff8e6; border-color: #ffe2a8; }
+.note.warn strong { color: #8a6100; }
+.note strong { color: #0356b6; }
+.note code { background: #fff; }
+.pref-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+.pref-table th, .pref-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #e1e4e8; vertical-align: top; }
+.pref-table th { background: #f6f8fa; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #586069; }
+.cta { display: inline-block; margin-top: 4px; padding: 9px 18px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; }
+.cta:hover { background: #a52924; color: #fff; }
+.cta.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+.cta.secondary:hover { background: #f0f0f0; color: #111; }
+.url-box { background: #24292e; color: #e1e4e8; padding: 12px 16px; border-radius: 8px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 14px; margin: 8px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.url-box .copy { background: #444c56; color: #fff; border: 0; border-radius: 5px; padding: 5px 12px; font-size: 12px; cursor: pointer; flex: none; }
+.url-box .copy:hover { background: #586069; }
+.footer { background: #404040; color: #999; padding: 18px 0; text-align: center; font-size: 12px; }
+</style>
+</head>
+<body>
+<nav class="site-nav">
+	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
+	<div class="nav-links">
+		<a href="/library/">Web Library</a>
+		<a href="/account.php">Account</a>
+		<a href="/admin.php">Admin</a>
+		<a href="/register.php">Sign Up</a>
+		<a href="/manual.html" class="active">Guide</a>
+	</div>
+</nav>
+
+<div class="wrap">
+	<!-- ── Table of contents ──────────────────────────────────────── -->
+	<aside class="toc">
+		<h4>On this page</h4>
+		<a href="#start">1. Create an account</a>
+		<a href="#weblib">2. Web Library</a>
+		<a href="#client">3. Desktop client sync</a>
+		<a href="#groups">4. Group libraries</a>
+		<a href="#apikeys">5. API keys</a>
+		<a href="#faq">FAQ</a>
+		<a href="#admin">For administrators</a>
+	</aside>
+
+	<!-- ── Content ────────────────────────────────────────────────── -->
+	<main class="content">
+		<h1>User Guide</h1>
+		<p class="lede">How to use this self-hosted Zotero server — create an account, browse your library in the browser, and sync the Zotero desktop app.</p>
+
+		<div class="note warn">
+			<strong>Metadata-only sync.</strong> This server syncs your references, collections, tags, notes, and saved searches. It does <strong>not</strong> sync attached files or PDFs — those stay on the device where you added them.
+		</div>
+
+		<!-- 1 ───────────────────────────────────────────────────────── -->
+		<section id="start">
+			<h2><span class="step">1</span> Create an account</h2>
+			<p>You need a username and password before you can sign in anywhere. Anyone with access to this server can self-register.</p>
+			<ol>
+				<li>Open the sign-up page and fill in a username, email, and password.</li>
+				<li>Submit — your personal library and an API key are created automatically.</li>
+				<li>You'll be signed straight into the Web Library.</li>
+			</ol>
+			<p><a href="/register.php" class="cta">Create your account →</a></p>
+			<div class="note">Already registered? Just <a href="/library/">sign in to the Web Library</a> with the same username and password.</div>
+		</section>
+
+		<!-- 2 ───────────────────────────────────────────────────────── -->
+		<section id="weblib">
+			<h2><span class="step">2</span> Browse in the Web Library</h2>
+			<p>The Web Library is a read-and-browse view of your references in the browser — no install required.</p>
+			<p><a href="/library/" class="cta secondary">Open Web Library</a></p>
+			<h3>What you can do</h3>
+			<ul>
+				<li><strong>Three-panel layout</strong> — collections on the left, the item list in the middle, item details on the right.</li>
+				<li><strong>Switch libraries</strong> — your personal library and any group libraries you belong to.</li>
+				<li><strong>Filter &amp; search</strong> — narrow by tag, or search title / creator / year.</li>
+				<li><strong>Sort &amp; choose columns</strong> — click a column header to sort; pick which columns are visible (saved in your browser).</li>
+				<li><strong>Item details</strong> — Info, Notes, and Tags tabs for the selected item.</li>
+				<li><strong>Export</strong> — right-click an item or collection to export to BibTeX, BibLaTeX, RIS, CSL JSON, or CSV.</li>
+			</ul>
+			<div class="note">The Web Library is for viewing and exporting. To <em>add and edit</em> references, use the Zotero desktop app (next section), which syncs with this server.</div>
+		</section>
+
+		<!-- 3 ───────────────────────────────────────────────────────── -->
+		<section id="client">
+			<h2><span class="step">3</span> Sync the Zotero desktop app</h2>
+			<p>Point the Zotero desktop app at this server so it syncs here instead of zotero.org. This is a one-time setup. Use <strong>Zotero 7 or newer</strong>.</p>
+
+			<h3>This server's address</h3>
+			<div class="url-box"><span id="server-url">…</span><button class="copy" onclick="copyServer()">Copy</button></div>
+
+			<h3>Step A — Point Zotero at this server</h3>
+			<ol>
+				<li>In Zotero, open <span class="kbd">Edit</span> → <span class="kbd">Settings</span> (on macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>).</li>
+				<li>Go to the <strong>Advanced</strong> tab → <strong>Config Editor</strong>, and accept the warning.</li>
+				<li>Set these two preferences (use the search box to find each, double-click to edit):</li>
+			</ol>
+			<table class="pref-table">
+				<thead><tr><th>Preference</th><th>Value</th></tr></thead>
+				<tbody>
+					<tr><td><code>extensions.zotero.api.url</code></td><td><code id="pref-url">…</code> <span style="color:#888">(include the trailing slash)</span></td></tr>
+					<tr><td><code>extensions.zotero.streaming.enabled</code></td><td><code>false</code></td></tr>
+				</tbody>
+			</table>
+			<div class="note warn"><strong>Trailing slash matters.</strong> The API URL must end in <code>/</code> or sync requests will fail.</div>
+			<p>Restart Zotero after changing these.</p>
+
+			<h3>Step B — Sign in</h3>
+			<ol>
+				<li>Open <span class="kbd">Settings</span> → <strong>Sync</strong>.</li>
+				<li>Click <strong>Sign In</strong> / <strong>Link Account</strong>. Zotero opens a login page in your browser.</li>
+				<li>Enter the username and password you registered with, and confirm. The desktop app picks up your access automatically.</li>
+				<li>Back in <strong>Sync</strong>, your account now shows as linked. Click <strong>Sync</strong> (the green circular-arrows icon in the toolbar) to sync.</li>
+			</ol>
+
+			<h3>Day-to-day</h3>
+			<ul>
+				<li>Add, edit, and organize references in the desktop app as usual.</li>
+				<li>Press the <strong>Sync</strong> button (or let auto-sync run) to push changes to the server.</li>
+				<li>On another computer, repeat this setup and sign in with the same account to get the same library.</li>
+			</ul>
+			<div class="note warn"><strong>Files don't sync.</strong> Attachments and PDFs are not uploaded. Keep "File Syncing" options in the Sync settings turned off — only library/metadata sync works here.</div>
+		</section>
+
+		<!-- 4 ───────────────────────────────────────────────────────── -->
+		<section id="groups">
+			<h2><span class="step">4</span> Group libraries</h2>
+			<p>Group libraries let several people share one collection of references.</p>
+			<ul>
+				<li>Groups you're a member of appear automatically — in the desktop app's left pane and in the Web Library's library switcher.</li>
+				<li>Whether you can edit a group's library depends on your role (member / admin / owner) and the group's settings.</li>
+				<li>To be added to a group, ask the group owner or an administrator — see the next section.</li>
+			</ul>
+			<p>You can review the groups you belong to on your <a href="/account.php">Account</a> page.</p>
+		</section>
+
+		<!-- 5 ───────────────────────────────────────────────────────── -->
+		<section id="apikeys">
+			<h2><span class="step">5</span> API keys (advanced)</h2>
+			<p>An API key lets scripts or third-party tools read and write your library through the Zotero Web API. You normally don't need to touch this — signing into the desktop app and Web Library handles keys for you.</p>
+			<ul>
+				<li>View and create keys on your <a href="/account.php">Account</a> page, under <strong>API Keys</strong>.</li>
+				<li>Send the key with each request as a <code>Zotero-API-Key</code> header, e.g. <code>GET /users/&lt;id&gt;/items</code>.</li>
+				<li>Treat keys like passwords. Delete any key you no longer use.</li>
+			</ul>
+		</section>
+
+		<!-- FAQ ──────────────────────────────────────────────────────── -->
+		<section id="faq">
+			<h2>FAQ</h2>
+			<h3>My PDFs aren't showing up on another computer.</h3>
+			<p>That's expected — this server syncs metadata only. The reference entry syncs, but the attached file stays on the computer where you added it.</p>
+			<h3>Sync fails right after setup.</h3>
+			<p>Double-check <code>extensions.zotero.api.url</code> ends with a <code>/</code>, that <code>streaming.enabled</code> is <code>false</code>, and that you restarted Zotero. Make sure you can open this site in the same browser Zotero uses for sign-in.</p>
+			<h3>I forgot my password.</h3>
+			<p>There's no self-service reset. Ask an administrator to set a new password for you from the Admin panel.</p>
+			<h3>Can I use the official zotero.org account?</h3>
+			<p>No. This is a separate, self-hosted server. Register an account here; it's independent of zotero.org.</p>
+		</section>
+
+		<!-- Admin ─────────────────────────────────────────────────────── -->
+		<section id="admin">
+			<h2>For administrators</h2>
+			<p>Administrators manage the server from the <a href="/admin.php">Admin</a> panel (protected by the super-user credentials), where you can:</p>
+			<ul>
+				<li>Add, inspect, and delete users; reset user passwords.</li>
+				<li>Create and configure group libraries, and add/remove members.</li>
+				<li>Issue or revoke API keys for any user.</li>
+				<li>Check server status (user / group / item counts, schema version).</li>
+			</ul>
+			<p>Self-registration is open by default, so end users can create their own accounts via the <a href="/register.php">Sign Up</a> page without admin involvement.</p>
+		</section>
+	</main>
+</div>
+
+<div class="footer">Zotero Self-Hosted Server</div>
+
+<script>
+// Show this server's actual address so the client-setup examples are accurate.
+var origin = window.location.origin;
+var apiUrl = origin + '/';
+document.getElementById('server-url').textContent = apiUrl;
+document.getElementById('pref-url').textContent = apiUrl;
+
+function copyServer() {
+	navigator.clipboard.writeText(apiUrl).then(function () {
+		var btn = document.querySelector('.url-box .copy');
+		var old = btn.textContent;
+		btn.textContent = 'Copied!';
+		setTimeout(function () { btn.textContent = old; }, 1500);
+	});
+}
+
+// Smooth-scroll TOC links
+document.querySelectorAll('.toc a').forEach(function (a) {
+	a.addEventListener('click', function (e) {
+		var target = document.querySelector(a.getAttribute('href'));
+		if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+	});
+});
+</script>
+</body>
+</html>

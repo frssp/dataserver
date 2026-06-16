@@ -445,6 +445,7 @@ textarea { height: 60px; resize: vertical; }
 		<a href="/library/">Web Library</a>
 		<a href="/account.php" class="active">Account</a>
 		<a href="/admin.php">Admin</a>
+		<a href="/manual.html">Guide</a>
 	</div>
 	<div class="nav-right">
 		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>

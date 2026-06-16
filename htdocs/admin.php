@@ -442,6 +442,7 @@ tr:hover td { background: #f9fafb; }
 		<a href="/library/">Web Library</a>
 		<a href="/account.php">Account</a>
 		<a href="/admin.php" class="active">Admin</a>
+		<a href="/manual.html">Guide</a>
 	</div>
 	<div class="nav-right">
 		<button class="nav-logout" onclick="showModal('modal-admin-passwd')">Change Password</button>
