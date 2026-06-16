@@ -462,11 +462,12 @@ textarea { height: 60px; resize: vertical; }
 				<a href="/library/">Group Library<span class="d-desc">Browse in the web library</span></a>
 			</div>
 		</div>
+		<a href="/account.php" class="nav-link active">Account</a>
 		<a href="/manual.html" class="nav-link">User Guide</a>
 	</div>
 	<div class="nav-right">
 		<a href="/admin.php" class="nav-admin">Admin</a>
-		<a href="/account.php" class="nav-user"><?= htmlspecialchars($currentUsername) ?></a>
+		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>
 		<button class="nav-logout" onclick="logout();return false;">Log Out</button>
 	</div>
 </nav>

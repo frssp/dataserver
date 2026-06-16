@@ -40,6 +40,7 @@ export default function SearchBar({ onSearch, username, onLogout, publicMode }: 
             <a href="/library/">Group Library<span className="d-desc">Browse in the web library</span></a>
           </div>
         </div>
+        {!publicMode && <a href="/account.php">Account</a>}
         <a href="/manual.html">User Guide</a>
       </div>
       <form className="nav-search" onSubmit={handleSubmit}>
@@ -61,7 +62,7 @@ export default function SearchBar({ onSearch, username, onLogout, publicMode }: 
         ) : (
           <>
             <a href="/admin.php" className="nav-admin">Admin</a>
-            <a href="/account.php" className="nav-user">{username}</a>
+            <span className="nav-user">{username}</span>
             <button className="nav-logout" onClick={onLogout}>Log Out</button>
           </>
         )}
