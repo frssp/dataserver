@@ -251,6 +251,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<p>정상입니다. 이 서버는 메타데이터만 동기화합니다. 참고문헌 항목은 동기화되지만, 첨부 파일은 추가한 컴퓨터에만 남습니다.</p>
 				<h3>설정 직후 동기화가 실패해요.</h3>
 				<p><code>extensions.zotero.api.url</code>이 위 예시 주소와 같은지, <code>streaming.enabled</code>가 <code>false</code>인지, Zotero를 재시작했는지 확인하세요. 그리고 Zotero가 로그인에 쓰는 브라우저에서 이 사이트가 열리는지 확인하세요.</p>
+				<h3>클라이언트에서 로그인을 누르면 <code>localhost</code> 페이지가 열려요.</h3>
+				<p>서버 설정 문제입니다. 클라이언트가 여는 로그인 주소는 서버가 알려주는 값(<code>ZOTERO_BASE_URL</code>)이라서, 이 값이 기본값 <code>http://localhost:8080/</code>로 남아 있으면 localhost가 열립니다. <strong>관리자</strong>가 <code>docker/.env</code>의 <code>ZOTERO_BASE_URL</code>을 클라이언트에서 접속 가능한 실제 주소(끝에 <code>/</code> 포함, 예: <code>http://서버IP:8080/</code>)로 바꾼 뒤 설정을 재생성해야 합니다. (아래 관리자용 참고)</p>
 				<h3>로그인할 때 사용자명을 써요, 이메일을 써요?</h3>
 				<p>둘 다 됩니다. 가입 때 등록한 사용자명이나 이메일 중 무엇으로도 로그인할 수 있습니다.</p>
 				<h3>비밀번호를 잊어버렸어요.</h3>
@@ -269,6 +271,16 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>서버 상태 확인(사용자·그룹·항목 수, 스키마 버전)</li>
 				</ul>
 				<p>자체 가입(Sign Up)이 기본적으로 열려 있어, 사용자는 관리자 없이도 <a href="/register.php">가입 페이지</a>에서 직접 계정을 만들 수 있습니다.</p>
+				<h3>로그인 주소 설정 (<code>ZOTERO_BASE_URL</code>)</h3>
+				<p>클라이언트가 로그인 시 여는 주소는 서버의 <code>ZOTERO_BASE_URL</code>에서 나옵니다. 기본값(<code>http://localhost:8080/</code>)이면 다른 PC의 클라이언트가 자기 localhost를 열어 실패합니다. <code>docker/.env</code>에서 클라이언트가 접속 가능한 실제 주소(<strong>끝 슬래시 포함</strong>)로 바꾼 뒤 설정을 재생성하세요:</p>
+				<div class="url-box" style="display:block;white-space:pre-wrap"># docker/.env
+ZOTERO_BASE_URL=http://&lt;서버주소&gt;:8080/
+
+# 적용 (docker/ 디렉터리에서)
+docker compose up -d php-fpm
+docker compose exec php-fpm rm -f include/config/config.inc.php
+docker compose restart php-fpm</div>
+				<p style="font-size:13px;color:#666">확인: <code>docker compose exec php-fpm grep BASE_URI include/config/config.inc.php</code> 결과가 실제 주소로 나오면 됩니다.</p>
 			</section>
 		</main>
 
@@ -401,6 +413,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<p>That's expected — this server syncs metadata only. The reference entry syncs, but the attached file stays on the computer where you added it.</p>
 				<h3>Sync fails right after setup.</h3>
 				<p>Double-check <code>extensions.zotero.api.url</code> matches the address above, that <code>streaming.enabled</code> is <code>false</code>, and that you restarted Zotero. Make sure you can open this site in the same browser Zotero uses for sign-in.</p>
+				<h3>Clicking sign-in in the client opens a <code>localhost</code> page.</h3>
+				<p>That's a server-side setting. The login URL the client opens comes from the server (<code>ZOTERO_BASE_URL</code>); if it's left at the default <code>http://localhost:8080/</code>, the client opens localhost. An <strong>administrator</strong> needs to set <code>ZOTERO_BASE_URL</code> in <code>docker/.env</code> to the real address clients can reach (with a trailing <code>/</code>, e.g. <code>http://server-ip:8080/</code>) and regenerate the config. (See the admin section below.)</p>
 				<h3>Do I sign in with my username or email?</h3>
 				<p>Either works. You can sign in with the username or the email you registered with.</p>
 				<h3>I forgot my password.</h3>
@@ -419,6 +433,16 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>Check server status (user / group / item counts, schema version).</li>
 				</ul>
 				<p>Self-registration is open by default, so end users can create their own accounts via the <a href="/register.php">Sign Up</a> page without admin involvement.</p>
+				<h3>Login address (<code>ZOTERO_BASE_URL</code>)</h3>
+				<p>The URL the client opens at sign-in comes from the server's <code>ZOTERO_BASE_URL</code>. If it's left at the default (<code>http://localhost:8080/</code>), clients on other machines open their own localhost and fail. Set it in <code>docker/.env</code> to the real address clients can reach (<strong>with a trailing slash</strong>) and regenerate the config:</p>
+				<div class="url-box" style="display:block;white-space:pre-wrap"># docker/.env
+ZOTERO_BASE_URL=http://&lt;server-address&gt;:8080/
+
+# apply (from the docker/ directory)
+docker compose up -d php-fpm
+docker compose exec php-fpm rm -f include/config/config.inc.php
+docker compose restart php-fpm</div>
+				<p style="font-size:13px;color:#666">Verify: <code>docker compose exec php-fpm grep BASE_URI include/config/config.inc.php</code> should show the real address.</p>
 			</section>
 		</main>
 	</div>
