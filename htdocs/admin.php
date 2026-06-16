@@ -498,6 +498,9 @@ tr:hover td { background: #f9fafb; }
 .member-chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; background: #f6f8fa; border: 1px solid var(--border); border-radius: 16px; font-size: 13px; }
 .member-chip .remove { cursor: pointer; color: var(--danger); font-weight: bold; font-size: 15px; line-height: 1; }
 .member-chip .remove:hover { color: #a71d2a; }
+.footer { background: #404040; color: #999; padding: 16px 0; margin-top: 40px; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
@@ -1087,6 +1090,7 @@ loadStats();
 loadUsers();
 loadGroups();
 </script>
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 <script src="/nav.js"></script>
 </body>
 </html>

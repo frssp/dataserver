@@ -92,6 +92,9 @@ button:disabled { background: #d99; cursor: default; }
 .alt { text-align: center; font-size: 13px; color: #666; margin-top: 18px; }
 .alt a { color: #c1302b; text-decoration: none; font-weight: 500; }
 .alt a:hover { text-decoration: underline; }
+.footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
@@ -171,6 +174,7 @@ form.addEventListener('submit', async (e) => {
 	}
 });
 </script>
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 <script src="/nav.js"></script>
 </body>
 </html>
