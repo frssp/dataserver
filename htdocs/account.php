@@ -399,6 +399,8 @@ textarea { height: 60px; resize: vertical; }
 
 /* ── Footer ──────────────────────────────────────────────────────── */
 .footer { background: #404040; color: #999; padding: 16px 0; margin-top: 40px; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 .footer a { color: #ccc; margin: 0 6px; }
 </style>
 </head>
@@ -531,7 +533,7 @@ window.ZOTERO_NAV = { active: 'account' };
 
 <!-- Footer -->
 <div class="footer">
-	Self-Hosted Zotero Server
+	Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a>
 </div>
 
 <!-- ══ Modals ══════════════════════════════════════════════════════ -->

@@ -74,6 +74,8 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 .empty { text-align: center; color: #999; padding: 48px 20px; background: #fff; border: 1px dashed #d0d7de; border-radius: 10px; }
 
 .footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
+.footer a { color: #cfd2d8; text-decoration: none; border-bottom: 1px solid rgba(207,210,216,.35); }
+.footer a:hover { color: #fff; border-bottom-color: #fff; }
 </style>
 </head>
 <body>
@@ -88,7 +90,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 	<div class="count" id="count"></div>
 	<div id="results"></div>
 </div>
-<div class="footer">Zotero Self-Hosted Server</div>
+<div class="footer">Zotero Self-Hosted Server &nbsp;&middot;&nbsp; Need help? <a href="mailto:sungh20.kim@samsung.com">Contact the administrator</a></div>
 
 <script>
 let allGroups = [];
