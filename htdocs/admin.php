@@ -12,25 +12,37 @@ require_once("header.inc.php");
 Zotero_DB::commitReadSnapshot();
 Zotero_DB::readOnly(false);
 
-// ── Auth ──────────────────────────────────────────────────────────────
-$realm = 'Zotero Admin';
-if (
-	!isset($_SERVER['PHP_AUTH_USER']) ||
-	$_SERVER['PHP_AUTH_USER'] !== Z_CONFIG::$API_SUPER_USERNAME ||
-	$_SERVER['PHP_AUTH_PW'] !== Z_CONFIG::$API_SUPER_PASSWORD
-) {
-	header('WWW-Authenticate: Basic realm="' . $realm . '"');
-	header('HTTP/1.0 401 Unauthorized');
-	echo 'Authentication required.';
-	exit;
-}
-
 require_once("selfhosted.inc.php");
+
+// ── Auth (super-user web form + PHP session — no HTTP Basic popup) ──────
+if (session_status() === PHP_SESSION_NONE) session_start();
+$adminAuthed = !empty($_SESSION['zotero_admin']);
 
 // ── API Handler ───────────────────────────────────────────────────────
 if (isset($_GET['action'])) {
 	$action = $_GET['action'];
 	$wwwDB = wwwDB();
+
+	// Login / logout don't require an existing session
+	if ($action === 'login') {
+		requireAjaxPost();
+		$input = json_decode(file_get_contents('php://input'), true);
+		if (($input['username'] ?? '') === Z_CONFIG::$API_SUPER_USERNAME
+				&& ($input['password'] ?? '') === Z_CONFIG::$API_SUPER_PASSWORD) {
+			$_SESSION['zotero_admin'] = true;
+			jsonResponse(['ok' => true]);
+		}
+		jsonResponse(['error' => 'Invalid username or password.'], 401);
+	}
+	if ($action === 'logout') {
+		requireAjaxPost();
+		$_SESSION = [];
+		session_destroy();
+		jsonResponse(['ok' => true]);
+	}
+
+	// Everything else requires an authenticated admin session
+	if (!$adminAuthed) jsonResponse(['error' => 'Not authenticated.'], 401);
 
 	// All other actions modify state and must be CSRF-protected
 	$readActions = ['status', 'user.list', 'user.info', 'group.list', 'group.members', 'key.list'];
@@ -319,6 +331,69 @@ if (isset($_GET['action'])) {
 }
 
 // ── HTML UI ───────────────────────────────────────────────────────────
+// No admin session → show a web login form (no HTTP Basic popup).
+if (!$adminAuthed):
+?>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login — Zotero</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:#f5f6fa; color:#333; min-height:100vh; }
+.login-wrap { display:flex; align-items:center; justify-content:center; padding:60px 20px; }
+.card { width:380px; max-width:100%; background:#fff; padding:28px 32px; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,.08); }
+.card h1 { font-size:20px; font-weight:400; margin-bottom:6px; }
+.card .sub { color:#666; font-size:13px; margin-bottom:18px; }
+label { display:block; font-size:13px; font-weight:600; margin:12px 0 4px; }
+input { width:100%; box-sizing:border-box; padding:9px 11px; border:1px solid #ccc; border-radius:4px; font-size:14px; }
+input:focus { outline:none; border-color:#c1302b; box-shadow:0 0 0 3px rgba(193,48,43,.12); }
+button { margin-top:20px; width:100%; padding:11px; background:#c1302b; color:#fff; border:0; border-radius:4px; font-size:14px; font-weight:600; cursor:pointer; }
+button:hover { background:#a8222d; }
+.msg { display:none; padding:9px 12px; border-radius:4px; font-size:13px; margin-bottom:14px; background:#fee; border:1px solid #f99; color:#900; }
+</style>
+</head>
+<body>
+<nav id="zotero-nav"></nav>
+<div class="login-wrap">
+	<div class="card">
+		<h1>Admin Login</h1>
+		<p class="sub">Sign in with the super-user credentials.</p>
+		<div class="msg" id="msg"></div>
+		<form id="form" autocomplete="on">
+			<label for="u">Username</label>
+			<input id="u" autocomplete="username" autofocus>
+			<label for="p">Password</label>
+			<input id="p" type="password" autocomplete="current-password">
+			<button type="submit">Sign In</button>
+		</form>
+	</div>
+</div>
+<script>
+document.getElementById('form').addEventListener('submit', async function (e) {
+	e.preventDefault();
+	const msg = document.getElementById('msg');
+	try {
+		const res = await fetch('admin.php?action=login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+			body: JSON.stringify({ username: document.getElementById('u').value, password: document.getElementById('p').value })
+		});
+		const data = await res.json();
+		if (res.ok) { window.location.reload(); }
+		else { msg.textContent = data.error || 'Login failed'; msg.style.display = 'block'; }
+	} catch (err) { msg.textContent = 'Login failed'; msg.style.display = 'block'; }
+});
+</script>
+<script src="/nav.js"></script>
+</body>
+</html>
+<?php
+exit;
+endif;
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -1000,13 +1075,8 @@ function esc(s) {
 
 // ── Admin Logout ──────────────────────────────────────────────
 function adminLogout() {
-	const xhr = new XMLHttpRequest();
-	xhr.open('GET', 'admin.php', true);
-	xhr.setRequestHeader('Authorization', 'Basic ' + btoa('_logout:_logout'));
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4) window.location.href = '/';
-	};
-	xhr.send();
+	fetch('admin.php?action=logout', { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+		.finally(() => { window.location.href = '/'; });
 }
 
 // ── Admin Password ────────────────────────────────────────────
@@ -1021,17 +1091,8 @@ async function changeAdminPassword() {
 		closeModal('modal-admin-passwd');
 		['admin-current-pw','admin-new-pw','admin-confirm-pw'].forEach(id => document.getElementById(id).value = '');
 		if (res.warning) alert(res.warning);
-		toast('Admin password updated. Reloading...');
-		// Clear cached Basic Auth and force re-login with new password
-		setTimeout(() => {
-			const xhr = new XMLHttpRequest();
-			xhr.open('GET', 'admin.php', true);
-			xhr.setRequestHeader('Authorization', 'Basic ' + btoa('_logout:_logout'));
-			xhr.onreadystatechange = function() {
-				if (xhr.readyState === 4) window.location.reload();
-			};
-			xhr.send();
-		}, 1500);
+		// Session stays valid; no re-login needed with the new password.
+		toast('Admin password updated.');
 	} catch(e) { toast(e.message, 'error'); }
 }
 
