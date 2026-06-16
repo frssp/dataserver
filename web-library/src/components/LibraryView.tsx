@@ -8,18 +8,20 @@ import ItemDetail from './ItemDetail';
 import TagFilter from './TagFilter';
 
 interface Props {
-  userInfo: UserInfo;
-  onLogout: () => void;
+  userInfo?: UserInfo;
+  onLogout?: () => void;
+  publicGroup?: { id: number; name: string };
 }
 
 const PAGE_SIZE = 50;
 
-export default function LibraryView({ userInfo, onLogout }: Props) {
-  const [library, setLibrary] = useState<LibraryContext>({
-    type: 'user',
-    id: userInfo.userID,
-    name: 'My Library',
-  });
+export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) {
+  const publicMode = !!publicGroup;
+  const [library, setLibrary] = useState<LibraryContext>(
+    publicGroup
+      ? { type: 'group', id: publicGroup.id, name: publicGroup.name }
+      : { type: 'user', id: userInfo!.userID, name: 'My Library' },
+  );
 
   const [collections, setCollections] = useState<ZoteroCollection[]>([]);
   const [items, setItems] = useState<ZoteroItem[]>([]);
@@ -123,13 +125,14 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
 
   return (
     <div className="library-view">
-      <SearchBar onSearch={handleSearch} username={userInfo.username} onLogout={onLogout} />
+      <SearchBar onSearch={handleSearch} username={userInfo?.username} onLogout={onLogout} publicMode={publicMode} />
       <div className="library-body">
         <div className="left-panel">
           <CollectionTree
             collections={collections}
             library={library}
             userInfo={userInfo}
+            publicMode={publicMode}
             selectedCollection={selectedCollection}
             onSelectCollection={handleSelectCollection}
             onChangeLibrary={handleChangeLibrary}

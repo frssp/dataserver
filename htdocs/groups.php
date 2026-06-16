@@ -160,7 +160,7 @@ function render(list) {
 	results.innerHTML = list.map(g => {
 		const canRead = g.libraryReading === 'all';
 		const view = canRead
-			? `<a class="gc-view" href="/library/">View library →</a>`
+			? `<a class="gc-view" href="/library/?group=${g.groupID}&name=${encodeURIComponent(g.name)}">View library →</a>`
 			: `<span class="gc-view disabled">Members only</span>`;
 		return `<div class="group-card">
 			<div class="gc-top">

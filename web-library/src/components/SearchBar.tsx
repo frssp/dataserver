@@ -2,11 +2,12 @@ import { useState } from 'react';
 
 interface Props {
   onSearch: (query: string) => void;
-  username: string;
-  onLogout: () => void;
+  username?: string;
+  onLogout?: () => void;
+  publicMode?: boolean;
 }
 
-export default function SearchBar({ onSearch, username, onLogout }: Props) {
+export default function SearchBar({ onSearch, username, onLogout, publicMode }: Props) {
   const [query, setQuery] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -55,9 +56,15 @@ export default function SearchBar({ onSearch, username, onLogout }: Props) {
         )}
       </form>
       <div className="nav-right">
-        <a href="/admin.php" className="nav-admin">Admin</a>
-        <a href="/account.php" className="nav-user">{username}</a>
-        <button className="nav-logout" onClick={onLogout}>Log Out</button>
+        {publicMode ? (
+          <a href="/library/" className="nav-admin">Sign in</a>
+        ) : (
+          <>
+            <a href="/admin.php" className="nav-admin">Admin</a>
+            <a href="/account.php" className="nav-user">{username}</a>
+            <button className="nav-logout" onClick={onLogout}>Log Out</button>
+          </>
+        )}
       </div>
     </nav>
   );
