@@ -17,10 +17,17 @@ const PAGE_SIZE = 50;
 
 export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) {
   const publicMode = !!publicGroup;
+  // "?view=groups" (from the Group Library nav item) starts focused on the
+  // user's first group library instead of My Library.
+  const wantGroups =
+    !publicMode && new URLSearchParams(window.location.search).get('view') === 'groups';
+  const firstGroup = userInfo?.groups?.[0];
   const [library, setLibrary] = useState<LibraryContext>(
     publicGroup
       ? { type: 'group', id: publicGroup.id, name: publicGroup.name }
-      : { type: 'user', id: userInfo!.userID, name: 'My Library' },
+      : wantGroups && firstGroup
+        ? { type: 'group', id: firstGroup.groupID, name: firstGroup.name }
+        : { type: 'user', id: userInfo!.userID, name: 'My Library' },
   );
 
   const [collections, setCollections] = useState<ZoteroCollection[]>([]);

@@ -37,7 +37,7 @@ export default function SearchBar({ onSearch, username, onLogout, publicMode }: 
           </button>
           <div className="dropdown">
             <a href="/groups.php">Group Search<span className="d-desc">Find public groups</span></a>
-            <a href="/library/">Group Library<span className="d-desc">Your group libraries</span></a>
+            <a href="/library/?view=groups">Group Library<span className="d-desc">Your group libraries</span></a>
           </div>
         </div>
         {!publicMode && <a href="/account.php">Account</a>}
