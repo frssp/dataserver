@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import DOMPurify from 'dompurify';
+import { RichText } from '../utils/richText';
 import type { ZoteroItem } from '../types/zotero';
 
 interface Props {
@@ -96,7 +97,9 @@ export default function ItemDetail({ item }: Props) {
                 <div key={field.key} className="detail-row">
                   <span className="detail-label">{field.label}</span>
                   <span className="detail-value">
-                    {field.key === 'DOI' ? (
+                    {field.key === 'title' ? (
+                      <RichText value={String(val)} />
+                    ) : field.key === 'DOI' ? (
                       <a href={`https://doi.org/${val}`} target="_blank" rel="noreferrer">
                         {val}
                       </a>

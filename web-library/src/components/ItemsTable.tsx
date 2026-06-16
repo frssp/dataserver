@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import ItemTypeIcon from './ItemTypeIcon';
+import { RichText } from '../utils/richText';
 import type { ZoteroItem } from '../types/zotero';
 
 interface Column {
@@ -174,7 +175,7 @@ export default function ItemsTable({
                 <td className="item-title">
                   <span className="item-title-content">
                     <ItemTypeIcon itemType={item.data.itemType} />
-                    {item.data.title || '(Untitled)'}
+                    <RichText value={item.data.title || '(Untitled)'} />
                   </span>
                 </td>
                 {visibleColumns.map((col) => (
