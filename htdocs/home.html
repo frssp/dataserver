@@ -17,11 +17,11 @@ a { color: inherit; }
 .hero-text p { font-size: 16px; color: #666; line-height: 1.7; margin-bottom: 28px; }
 .hero-text .cta { display: inline-block; padding: 13px 30px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 8px; font-size: 15px; font-weight: 500; box-shadow: 0 4px 14px rgba(193,48,43,.25); transition: transform .15s, box-shadow .15s; }
 .hero-text .cta:hover { transform: translateY(-2px); box-shadow: 0 7px 22px rgba(193,48,43,.34); }
-.hero-text .muted { display: block; margin-top: 18px; font-size: 13px; color: #aaa; }
-.hero-text .muted a { color: #777; text-decoration: none; }
-.hero-text .muted a:hover { color: #c1302b; }
+.hero-text .muted { display: block; margin-top: 20px; font-size: 14px; color: #555; }
+.hero-text .muted a { color: #c1302b; text-decoration: none; font-weight: 500; border-bottom: 1px solid rgba(193,48,43,.35); }
+.hero-text .muted a:hover { border-bottom-color: #c1302b; }
 
-.hero-shot { flex: 1 1 420px; min-width: 300px; }
+.hero-shot { flex: 1.4 1 520px; min-width: 320px; }
 .hero-shot img { width: 100%; height: auto; border-radius: 10px; border: 1px solid #e2e4ea; box-shadow: 0 12px 40px rgba(40,50,70,.16); display: block; }
 
 /* ── About ────────────────────────────────────────────────── */
@@ -29,6 +29,8 @@ a { color: inherit; }
 .about-inner { max-width: 760px; margin: 0 auto; padding: 40px 24px; text-align: center; }
 .about-inner h2 { font-size: 20px; font-weight: 500; color: #2b2b2b; margin-bottom: 12px; }
 .about-inner p { font-size: 15px; color: #666; line-height: 1.8; }
+.about-inner .about-link { display: inline-block; margin-top: 16px; color: #c1302b; text-decoration: none; font-weight: 500; font-size: 14px; }
+.about-inner .about-link:hover { text-decoration: underline; }
 
 /* ── Getting started cards ────────────────────────────────── */
 .start { max-width: 1000px; margin: 0 auto; padding: 44px 24px 56px; }
@@ -71,17 +73,18 @@ a { color: inherit; }
            organize, annotate, and cite research. This server hosts your Zotero
            libraries internally, so your items and notes sync between the desktop
            app and the web — without leaving the corporate network.</p>
+        <a class="about-link" href="https://www.zotero.org" target="_blank" rel="noopener">Learn more about Zotero at zotero.org &rarr;</a>
     </div>
 </div>
 
 <div class="start">
     <h2>Getting started</h2>
     <div class="cards">
-        <a class="card" href="/library/">
+        <a class="card" href="/register.php">
             <span class="num">1</span>
-            <h3>Browse in your browser</h3>
-            <p>Open the Web Library to view, search, and export items, collections,
-               and tags — including any group libraries you belong to.</p>
+            <h3>Create an account</h3>
+            <p>Register to get your username and an API key for syncing the desktop
+               client and accessing the API.</p>
         </a>
         <a class="card" href="/manual.html">
             <span class="num">2</span>
@@ -90,11 +93,17 @@ a { color: inherit; }
                <code>extensions.zotero.api.url</code>. Step-by-step instructions
                are in the guide.</p>
         </a>
-        <a class="card" href="/register.php">
+        <a class="card" href="/library/">
             <span class="num">3</span>
-            <h3>Create an account</h3>
-            <p>Register to get your username and an API key for syncing the desktop
-               client and accessing the API.</p>
+            <h3>Browse in your browser</h3>
+            <p>Open the Web Library to view, search, and export items, collections,
+               and tags — no desktop app required.</p>
+        </a>
+        <a class="card" href="/account.php">
+            <span class="num">4</span>
+            <h3>Create &amp; share a group library</h3>
+            <p>Set up a group library to collaborate — share references, notes, and
+               collections with your team.</p>
         </a>
     </div>
 </div>
