@@ -8,52 +8,31 @@
 set_include_path(dirname(__DIR__) . "/include");
 require_once("header.inc.php");
 
-// ── Auth ──────────────────────────────────────────────────────────────
-$realm = 'Zotero Account';
-$currentUserID = null;
-$currentUsername = null;
-
-// Handle logout: if ?action=logout, always return 401 to clear cached credentials
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-	header('WWW-Authenticate: Basic realm="' . $realm . '"');
-	header('HTTP/1.0 401 Unauthorized');
-	echo 'Logged out. <a href="account.php">Log in again</a>';
-	exit;
-}
-
-if (!isset($_SERVER['PHP_AUTH_USER']) || !isset($_SERVER['PHP_AUTH_PW'])) {
-	header('WWW-Authenticate: Basic realm="' . $realm . '"');
-	header('HTTP/1.0 401 Unauthorized');
-	echo 'Please log in with your Zotero username and password.';
-	exit;
-}
-
 // Standalone page — disable API read-only mode set by header.inc.php
-// Auth may trigger DB writes (user auto-creation in Password.inc.php)
 Zotero_DB::commitReadSnapshot();
 Zotero_DB::readOnly(false);
 
-$authResult = Zotero_Users::authenticate('password', [
-	'username' => $_SERVER['PHP_AUTH_USER'],
-	'password' => $_SERVER['PHP_AUTH_PW']
-]);
-
-if (!$authResult) {
-	header('WWW-Authenticate: Basic realm="' . $realm . '"');
-	header('HTTP/1.0 401 Unauthorized');
-	echo 'Invalid username or password.';
-	exit;
-}
-
-$currentUserID = (int) $authResult;
-$currentUsername = Zotero_Users::getUsername($currentUserID, true);
-
 require_once("selfhosted.inc.php");
+
+// Auth: the page is a shell; data actions authenticate with the API key
+// (from localStorage, sent as the Zotero-API-Key header) the same way the
+// web library does — no HTTP Basic popup. The client redirects to the web
+// library login when no key is present.
+function accountUserIDFromKey() {
+	$apiKey = $_SERVER['HTTP_ZOTERO_API_KEY'] ?? '';
+	if (!$apiKey) return null;
+	$uid = Zotero_DB::valueQuery("SELECT userID FROM zotero_master.`keys` WHERE `key`=?", $apiKey);
+	return $uid ? (int) $uid : null;
+}
 
 // ── API Handler ───────────────────────────────────────────────────────
 if (isset($_GET['action'])) {
 	$action = $_GET['action'];
 	$wwwDB = wwwDB();
+
+	$currentUserID = accountUserIDFromKey();
+	if (!$currentUserID) jsonResponse(['error' => 'Not authenticated. Please sign in.'], 401);
+	$currentUsername = Zotero_Users::getUsername($currentUserID, true);
 
 	// All other actions modify state and must be CSRF-protected
 	$readActions = ['profile', 'group.list', 'group.members', 'key.list'];
@@ -322,19 +301,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 a { color: #38c; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-/* ── Unified Nav (zotero.org style) ──────────────────────────────── */
-.site-nav { background: #fff; border-bottom: 1px solid #ddd; padding: 0 24px; display: flex; align-items: center; height: 56px; }
-.site-nav .logo { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 26px; font-weight: 300; letter-spacing: -0.5px; text-decoration: none; margin-right: 32px; }
-.site-nav .logo .z { color: #c1302b; }
-.site-nav .logo .rest { color: #333; }
-.site-nav .nav-links { display: flex; align-items: center; gap: 0; flex: 1; }
-.site-nav .nav-links a { display: flex; align-items: center; padding: 0 16px; height: 56px; color: #444; font-size: 14px; font-weight: 500; text-decoration: none; border-bottom: 3px solid transparent; transition: color .15s, border-color .15s; }
-.site-nav .nav-links a:hover { color: #111; text-decoration: none; }
-.site-nav .nav-links a.active { color: #c1302b; border-bottom-color: #c1302b; }
-.site-nav .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
-.site-nav .nav-user { font-size: 14px; font-weight: 500; color: #333; }
-.site-nav .nav-logout { font-size: 12px; color: #999; cursor: pointer; background: none; border: 1px solid #ddd; padding: 4px 12px; border-radius: 4px; }
-.site-nav .nav-logout:hover { color: #333; border-color: #999; }
 
 /* ── Content ─────────────────────────────────────────────────────── */
 .content { max-width: 980px; margin: 0 auto; padding: 20px; }
@@ -439,18 +405,10 @@ textarea { height: 60px; resize: vertical; }
 <body>
 
 <!-- Unified Nav -->
-<nav class="site-nav">
-	<a href="/" class="logo"><span class="z">z</span><span class="rest">otero</span></a>
-	<div class="nav-links">
-		<a href="/library/">Web Library</a>
-		<a href="/account.php" class="active">Account</a>
-		<a href="/admin.php">Admin</a>
-	</div>
-	<div class="nav-right">
-		<span class="nav-user"><?= htmlspecialchars($currentUsername) ?></span>
-		<button class="nav-logout" onclick="logout();return false;">Log Out</button>
-	</div>
-</nav>
+<nav id="zotero-nav"></nav>
+<script>
+window.ZOTERO_NAV = { active: 'account' };
+</script>
 
 <!-- Content -->
 <div class="content">
@@ -652,7 +610,7 @@ textarea { height: 60px; resize: vertical; }
 
 <script>
 const API = 'account.php';
-const currentUserID = <?= $currentUserID ?>;
+const currentUserID = (JSON.parse(localStorage.getItem('zotero_user_info') || '{}').userID) || 0;
 let currentGroupID = null;
 let myRoleInCurrentGroup = null;
 let selectedGroupType = 'PublicOpen';
@@ -662,7 +620,10 @@ async function api(action, opts = {}) {
 	const url = `${API}?${params}`;
 	const fetchOpts = {
 		method: opts.method || 'GET',
-		headers: {'X-Requested-With': 'XMLHttpRequest'}
+		headers: {
+			'X-Requested-With': 'XMLHttpRequest',
+			'Zotero-API-Key': localStorage.getItem('zotero_api_key') || ''
+		}
 	};
 	if (opts.body) {
 		fetchOpts.method = 'POST';
@@ -670,6 +631,7 @@ async function api(action, opts = {}) {
 		fetchOpts.body = JSON.stringify(opts.body);
 	}
 	const res = await fetch(url, fetchOpts);
+	if (res.status === 401) { window.location.href = '/library/'; throw new Error('Not authenticated'); }
 	const data = await res.json();
 	if (!res.ok) throw new Error(data.error || 'Request failed');
 	return data;
@@ -935,29 +897,27 @@ async function deleteKey(keyID, key) {
 
 // ── Logout ────────────────────────────────────────────────────────
 function logout() {
-	// Hit the logout endpoint which always returns 401 to clear cached Basic Auth
-	const xhr = new XMLHttpRequest();
-	xhr.open('GET', 'account.php?action=logout', true);
-	xhr.setRequestHeader('Authorization', 'Basic ' + btoa('_logout:_logout'));
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === 4) {
-			// Redirect to the logout page directly — browser will prompt for login
-			window.location.href = 'account.php?action=logout';
-		}
-	};
-	xhr.send();
+	localStorage.removeItem('zotero_api_key');
+	localStorage.removeItem('zotero_user_info');
+	window.location.href = '/';
 }
 
 // ── Init ──────────────────────────────────────────────────────────
-loadProfile();
-loadGroups();
-loadKeys();
+// API-key (web library) session required; bounce to the login otherwise.
+if (!localStorage.getItem('zotero_api_key')) {
+	window.location.href = '/library/';
+} else {
+	loadProfile();
+	loadGroups();
+	loadKeys();
 
-// Auto-switch tab based on URL param
-const urlTab = new URLSearchParams(location.search).get('tab');
-if (urlTab && document.getElementById('panel-' + urlTab)) {
-	showTab(urlTab);
+	// Auto-switch tab based on URL param
+	const urlTab = new URLSearchParams(location.search).get('tab');
+	if (urlTab && document.getElementById('panel-' + urlTab)) {
+		showTab(urlTab);
+	}
 }
 </script>
+<script src="/nav.js"></script>
 </body>
 </html>

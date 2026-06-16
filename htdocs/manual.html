@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사용 안내 — Zotero Self-Hosted</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", Helvetica, Arial, sans-serif; background: #f5f6fa; color: #24292e; line-height: 1.7; word-break: keep-all; }
+
+
+/* ── Layout ───────────────────────────────────────────────────────── */
+.wrap { max-width: 1040px; margin: 0 auto; padding: 24px 24px 80px; display: grid; grid-template-columns: 230px 1fr; gap: 40px; }
+@media (max-width: 800px) { .wrap { grid-template-columns: 1fr; } .toc { display: none; } }
+.content-col { min-width: 0; }
+
+/* ── Language toggle ──────────────────────────────────────────────── */
+.lang-toggle { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+.lang-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid #d1d5da; background: #fff; color: #555; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color .15s, border-color .15s; }
+.lang-btn:hover { color: #c1302b; border-color: #c1302b; }
+
+/* ── TOC ──────────────────────────────────────────────────────────── */
+.toc { position: sticky; top: 80px; align-self: start; font-size: 13px; }
+.toc h4 { font-size: 11px; text-transform: uppercase; letter-spacing: .6px; color: #888; margin-bottom: 10px; }
+.toc a { display: block; color: #555; text-decoration: none; padding: 4px 0; border-left: 2px solid transparent; padding-left: 10px; margin-left: -2px; }
+.toc a:hover { color: #c1302b; }
+
+/* ── Content ──────────────────────────────────────────────────────── */
+.content h1 { font-size: 30px; font-weight: 300; margin-bottom: 6px; }
+.content .lede { color: #666; font-size: 15px; margin-bottom: 8px; }
+.content section { background: #fff; border: 1px solid #e1e4e8; border-radius: 10px; padding: 26px 30px; margin-top: 24px; box-shadow: 0 1px 3px rgba(0,0,0,.05); scroll-margin-top: 72px; }
+.content h2 { font-size: 20px; font-weight: 600; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+.content h2 .step { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #c1302b; color: #fff; font-size: 14px; font-weight: 700; flex: none; }
+.content h3 { font-size: 15px; font-weight: 600; margin: 20px 0 8px; }
+.content p { margin-bottom: 12px; }
+.content ol, .content ul { margin: 0 0 14px 22px; }
+.content li { margin-bottom: 7px; }
+.content a { color: #c1302b; }
+code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; padding: 1px 6px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 13px; color: #b1262c; word-break: break-all; }
+.kbd { background: #fafbfc; border: 1px solid #d1d5da; border-bottom-width: 2px; border-radius: 4px; padding: 1px 6px; font-size: 12px; font-family: inherit; color: #444; white-space: nowrap; }
+.note { background: #f1f8ff; border: 1px solid #c8e1ff; border-radius: 8px; padding: 12px 16px; font-size: 14px; margin: 14px 0; }
+.note.warn { background: #fff8e6; border-color: #ffe2a8; }
+.note.warn strong { color: #8a6100; }
+.note strong { color: #0356b6; }
+.note code { background: #fff; }
+.pref-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+.pref-table th, .pref-table td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #e1e4e8; vertical-align: top; }
+.pref-table th { background: #f6f8fa; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #586069; }
+/* CTA buttons — more specific than `.content a` so the white/dark text wins */
+.cta, .content a.cta { display: inline-block; margin-top: 4px; padding: 9px 18px; background: #c1302b; color: #fff; text-decoration: none; border-radius: 6px; font-weight: 500; font-size: 14px; }
+.cta:hover, .content a.cta:hover { background: #a52924; color: #fff; }
+.cta.secondary, .content a.cta.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
+.cta.secondary:hover, .content a.cta.secondary:hover { background: #f0f0f0; color: #111; }
+/* Screenshot slots — show a dashed placeholder until the PNG is uploaded */
+.shots { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
+.shots .shot { margin: 0; }
+.shot { margin: 16px 0; }
+.shot img { display: block; max-width: 100%; border: 1px solid #d1d5da; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+.shot.missing img { display: none; }
+.shot-missing { display: none; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 24px 16px; border: 2px dashed #d0d7de; border-radius: 8px; background: #fafbfc; color: #8a929b; font-size: 13px; }
+.shot.missing .shot-missing { display: flex; }
+.shot-missing code { background: #fff; }
+.shot figcaption { font-size: 12.5px; color: #777; margin-top: 6px; text-align: center; }
+.url-box { background: #24292e; color: #e1e4e8; padding: 12px 16px; border-radius: 8px; font-family: "SF Mono", "Fira Code", ui-monospace, monospace; font-size: 14px; margin: 8px 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.url-box .copy { background: #444c56; color: #fff; border: 0; border-radius: 5px; padding: 5px 12px; font-size: 12px; cursor: pointer; flex: none; }
+.url-box .copy:hover { background: #586069; }
+.footer { background: #404040; color: #999; padding: 18px 0; text-align: center; font-size: 12px; }
+</style>
+</head>
+<body>
+<nav id="zotero-nav" data-active="guide"></nav>
+
+<div class="wrap">
+	<!-- ── 목차 ────────────────────────────────────────────────────── -->
+	<aside class="toc">
+		<h4 data-lang="ko">목차</h4>
+		<h4 data-lang="en">Contents</h4>
+		<nav data-lang="ko">
+			<a href="#start">1. 계정 만들기</a>
+			<a href="#weblib">2. 웹 라이브러리</a>
+			<a href="#client">3. 데스크톱 앱 동기화</a>
+			<a href="#groups">4. 그룹 라이브러리</a>
+			<a href="#apikeys">5. API 키</a>
+			<a href="#faq">자주 묻는 질문</a>
+			<a href="#admin">관리자용</a>
+		</nav>
+		<nav data-lang="en">
+			<a href="#start">1. Create an account</a>
+			<a href="#weblib">2. Web Library</a>
+			<a href="#client">3. Desktop app sync</a>
+			<a href="#groups">4. Group libraries</a>
+			<a href="#apikeys">5. API keys</a>
+			<a href="#faq">FAQ</a>
+			<a href="#admin">For administrators</a>
+		</nav>
+	</aside>
+
+	<div class="content-col">
+		<div class="lang-toggle">
+			<button id="lang-btn" class="lang-btn" onclick="toggleLang()"></button>
+		</div>
+
+		<!-- ══════════════ 한국어 ══════════════ -->
+		<main class="content" data-lang="ko">
+			<h1>사용 안내</h1>
+			<p class="lede">사내 Zotero 서버 사용법입니다 — 계정을 만들고, 브라우저에서 라이브러리를 보고, Zotero 데스크톱 앱을 동기화하는 방법을 안내합니다.</p>
+
+			<div class="note warn">
+				<strong>메타데이터 전용 동기화.</strong> 이 서버는 <strong>참고문헌 항목·컬렉션·태그·노트·저장된 검색</strong>만 동기화합니다. <strong>첨부 파일이나 PDF는 동기화하지 않습니다.</strong> 파일은 추가한 그 기기에만 남습니다.
+			</div>
+
+			<section id="start">
+				<h2><span class="step">1</span> 계정 만들기</h2>
+				<p>어디서든 로그인하려면 먼저 사용자명과 비밀번호가 필요합니다. 이 서버에 접속할 수 있는 사람은 누구나 직접 가입할 수 있습니다.</p>
+				<ol>
+					<li>가입 페이지(Sign Up)에서 <strong>사용자명·이메일·비밀번호</strong>를 입력합니다.</li>
+					<li>제출하면 개인 라이브러리와 API 키가 자동으로 만들어집니다.</li>
+					<li>가입 직후 웹 라이브러리(Web Library)에 바로 로그인됩니다.</li>
+				</ol>
+				<div class="note"><strong>입력 규칙:</strong> 사용자명은 3~32자(영문·숫자·<code>. _ -</code>), 비밀번호는 <strong>8자 이상</strong>, 이메일은 올바른 형식이어야 합니다.</div>
+				<p><a href="/register.php" class="cta">계정 만들기 →</a></p>
+				<p style="font-size:14px;color:#666">이미 가입했다면 같은 사용자명과 비밀번호로 <a href="/library/">웹 라이브러리에 로그인</a>하면 됩니다.</p>
+			</section>
+
+			<section id="weblib">
+				<h2><span class="step">2</span> 웹 라이브러리에서 보기</h2>
+				<p>웹 라이브러리는 브라우저에서 참고문헌을 보고 내보내는 화면입니다. 설치가 필요 없습니다.</p>
+				<p><a href="/library/" class="cta secondary">웹 라이브러리 열기</a></p>
+				<h3>할 수 있는 것</h3>
+				<ul>
+					<li><strong>3분할 화면</strong> — 왼쪽 컬렉션, 가운데 항목 목록, 오른쪽 항목 상세.</li>
+					<li><strong>라이브러리 전환</strong> — 내 개인 라이브러리와 내가 속한 그룹 라이브러리.</li>
+					<li><strong>필터·검색</strong> — 태그로 좁히거나 제목·저자·연도로 검색.</li>
+					<li><strong>정렬·열 선택</strong> — 열 머리글 클릭으로 정렬, 표시할 열 선택(브라우저에 저장됨).</li>
+					<li><strong>항목 상세</strong> — 선택한 항목의 정보(Info)·노트(Notes)·태그(Tags) 탭.</li>
+					<li><strong>내보내기</strong> — 항목이나 컬렉션을 우클릭해 BibTeX·BibLaTeX·RIS·CSL JSON·CSV로 내보내기.</li>
+				</ul>
+				<h3>로그인 / 로그아웃</h3>
+				<ul>
+					<li>로그인할 때 ID 칸에는 <strong>사용자명 또는 이메일</strong> 중 아무거나 사용할 수 있습니다.</li>
+					<li>계정을 바꾸려면 로그아웃 후 다시 로그인하세요. (인증 정보는 이 브라우저에만 저장됩니다.)</li>
+				</ul>
+				<div class="note">웹 라이브러리는 <em>보기·내보내기</em> 용도입니다. 참고문헌을 <em>추가·편집</em>하려면 이 서버와 동기화되는 Zotero 데스크톱 앱(아래 3번)을 사용하세요.</div>
+			</section>
+
+			<section id="client">
+				<h2><span class="step">3</span> 데스크톱 앱 동기화</h2>
+				<p>Zotero 데스크톱 앱이 zotero.org 대신 이 서버와 동기화하도록 설정합니다. 한 번만 하면 됩니다. <strong>Zotero 7 이상</strong>을 사용하세요.</p>
+
+				<h3>이 서버 주소</h3>
+				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">복사</button></div>
+
+				<h3>① 서버 주소 설정</h3>
+				<ol>
+					<li>Zotero에서 <span class="kbd">편집 Edit</span> → <span class="kbd">설정 Settings</span> 을 엽니다. (macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>)</li>
+					<li><strong>고급 Advanced</strong> 탭 → <strong>환경설정 편집기 Config Editor</strong> 로 들어가 경고에 동의합니다.</li>
+					<li>아래 두 항목을 설정합니다. (검색창에 이름을 붙여넣고, 더블클릭해서 값을 변경)</li>
+				</ol>
+				<table class="pref-table">
+					<thead><tr><th>환경설정 이름 (Preference)</th><th>값 (Value)</th></tr></thead>
+					<tbody>
+						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← 끝에 <code>/</code> 포함 권장</span></td></tr>
+						<tr><td><code>extensions.zotero.streaming.enabled</code></td><td><code>false</code></td></tr>
+					</tbody>
+				</table>
+				<div class="note"><strong>끝 슬래시(/) 권장.</strong> 예시처럼 주소 끝에 <code>/</code>를 붙이는 것을 권장합니다. (Zotero 7 클라이언트는 슬래시가 없어도 대개 동작하지만, 예시와 똑같이 맞춰 두면 더 안전합니다.)</div>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/config-editor-api-url.png" alt="환경설정 편집기에서 api.url 설정" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-api-url.png</code></div>
+						<figcaption><code>api.url</code> 값을 설정한 모습 (끝 슬래시 포함)</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/config-editor-streaming-enabled.png" alt="환경설정 편집기에서 streaming.enabled 설정" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-streaming-enabled.png</code></div>
+						<figcaption><code>streaming.enabled = false</code> 로 설정한 모습</figcaption>
+					</figure>
+				</div>
+				<p>변경 후 Zotero를 재시작합니다.</p>
+
+				<h3>② 로그인</h3>
+				<ol>
+					<li><span class="kbd">설정 Settings</span> → <strong>동기화 Sync</strong> 를 엽니다.</li>
+					<li><strong>로그인(Sign In / Link Account)</strong> 을 클릭하면 브라우저에 로그인 페이지가 열립니다.</li>
+					<li>가입할 때 쓴 <strong>사용자명(또는 이메일)과 비밀번호</strong>를 입력하고 확인합니다. 데스크톱 앱이 접근 권한을 자동으로 받아옵니다.</li>
+					<li>다시 <strong>동기화 Sync</strong> 화면에 계정이 연결되어 표시됩니다. 도구 모음의 <strong>동기화 버튼</strong>(초록색 회전 화살표)을 눌러 동기화합니다.</li>
+				</ol>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/sync-signin.png" alt="Zotero 설정 → 동기화의 로그인 패널" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin.png</code></div>
+						<figcaption>① Zotero 데스크톱 앱: 설정 → 동기화의 로그인(Sign In / Link Account) 버튼</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/sync-signin-web.png" alt="브라우저에 열리는 로그인 폼" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin-web.png</code></div>
+						<figcaption>② 클릭하면 브라우저에 열리는 로그인 페이지 (사용자명·비밀번호 입력)</figcaption>
+					</figure>
+				</div>
+				<div class="note"><strong>브라우저 로그인이 안 열리면(또는 구버전이면):</strong> <a href="/account.php">Account</a> 페이지에서 API 키를 발급한 뒤, Zotero의 동기화 설정에 그 키를 직접 입력해도 됩니다.</div>
+
+				<h3>평소 사용</h3>
+				<ul>
+					<li>데스크톱 앱에서 평소처럼 참고문헌을 추가·편집·정리합니다.</li>
+					<li><strong>동기화 버튼</strong>을 누르면(또는 자동 동기화로) 변경 내용이 서버에 반영됩니다.</li>
+					<li>다른 컴퓨터에서도 같은 설정을 하고 같은 계정으로 로그인하면 동일한 라이브러리를 사용할 수 있습니다.</li>
+				</ul>
+				<div class="note warn"><strong>파일은 동기화되지 않습니다.</strong> 첨부 파일·PDF는 업로드되지 않으니, 동기화 설정의 "파일 동기화(File Syncing)" 옵션은 꺼 두세요. 이 서버는 라이브러리(메타데이터) 동기화만 동작합니다.</div>
+				<div class="note warn"><strong>HTTP / HTTPS:</strong> 서버 주소가 평문 <code>http://</code>이면 클라이언트가 경고하거나 거부할 수 있습니다. 문제가 있으면 관리자에게 HTTPS 주소를 문의하세요.</div>
+			</section>
+
+			<section id="groups">
+				<h2><span class="step">4</span> 그룹 라이브러리</h2>
+				<p>그룹 라이브러리는 여러 사람이 하나의 참고문헌 모음을 함께 쓰는 공간입니다.</p>
+				<ul>
+					<li>내가 속한 그룹은 자동으로 나타납니다 — 데스크톱 앱 왼쪽 창과 웹 라이브러리의 라이브러리 전환 목록에 표시됩니다.</li>
+					<li>그룹 라이브러리를 편집할 수 있는지는 내 역할(멤버/관리자/소유자)과 그룹 설정에 따라 다릅니다.</li>
+					<li>그룹에 추가되려면 그룹 소유자나 서버 관리자에게 요청하세요.</li>
+				</ul>
+				<p>내가 속한 그룹은 <a href="/account.php">Account</a> 페이지에서 확인할 수 있습니다.</p>
+			</section>
+
+			<section id="apikeys">
+				<h2><span class="step">5</span> API 키 <span style="font-size:13px;color:#aaa;font-weight:400">고급</span></h2>
+				<p>API 키는 스크립트나 외부 도구가 Zotero Web API로 라이브러리를 읽고 쓸 수 있게 해줍니다. 데스크톱 앱과 웹 라이브러리 로그인은 키를 자동으로 처리하므로 평소엔 신경 쓸 필요가 없습니다.</p>
+				<ul>
+					<li><a href="/account.php">Account</a> 페이지의 <strong>API Keys</strong>에서 키를 보거나 새로 만들 수 있습니다.</li>
+					<li>요청마다 <code>Zotero-API-Key</code> 헤더로 키를 보냅니다. 예: <code>GET /users/&lt;id&gt;/items</code></li>
+					<li>키는 비밀번호처럼 다루세요. 더 이상 쓰지 않는 키는 삭제합니다.</li>
+				</ul>
+			</section>
+
+			<section id="faq">
+				<h2>자주 묻는 질문</h2>
+				<h3>다른 컴퓨터에서 PDF가 안 보여요.</h3>
+				<p>정상입니다. 이 서버는 메타데이터만 동기화합니다. 참고문헌 항목은 동기화되지만, 첨부 파일은 추가한 컴퓨터에만 남습니다.</p>
+				<h3>설정 직후 동기화가 실패해요.</h3>
+				<p><code>extensions.zotero.api.url</code>이 위 예시 주소와 같은지, <code>streaming.enabled</code>가 <code>false</code>인지, Zotero를 재시작했는지 확인하세요. 그리고 Zotero가 로그인에 쓰는 브라우저에서 이 사이트가 열리는지 확인하세요.</p>
+				<h3>클라이언트에서 로그인을 누르면 <code>localhost</code> 페이지가 열려요.</h3>
+				<p>서버 설정 문제입니다. 클라이언트가 여는 로그인 주소는 서버가 알려주는 값(<code>ZOTERO_BASE_URL</code>)이라서, 이 값이 기본값 <code>http://localhost:8080/</code>로 남아 있으면 localhost가 열립니다. <strong>관리자</strong>가 <code>docker/.env</code>의 <code>ZOTERO_BASE_URL</code>을 클라이언트에서 접속 가능한 실제 주소(끝에 <code>/</code> 포함, 예: <code>http://서버IP:8080/</code>)로 바꾼 뒤 설정을 재생성해야 합니다. (아래 관리자용 참고)</p>
+				<h3>로그인할 때 사용자명을 써요, 이메일을 써요?</h3>
+				<p>둘 다 됩니다. 가입 때 등록한 사용자명이나 이메일 중 무엇으로도 로그인할 수 있습니다.</p>
+				<h3>비밀번호를 잊어버렸어요.</h3>
+				<p>스스로 재설정하는 기능은 없습니다. 관리자에게 새 비밀번호 설정을 요청하세요.</p>
+				<h3>zotero.org 공식 계정을 그대로 쓸 수 있나요?</h3>
+				<p>아니요. 이 서버는 별도의 사내 서버입니다. 여기서 새로 가입하세요. zotero.org와는 독립적입니다.</p>
+			</section>
+
+			<section id="admin">
+				<h2>관리자용</h2>
+				<p>관리자는 <a href="/admin.php">Admin</a> 패널(슈퍼유저 인증으로 보호됨)에서 서버를 관리합니다.</p>
+				<ul>
+					<li>사용자 추가·조회·삭제, 사용자 비밀번호 재설정</li>
+					<li>그룹 라이브러리 생성·설정, 멤버 추가·삭제</li>
+					<li>임의 사용자의 API 키 발급·삭제</li>
+					<li>서버 상태 확인(사용자·그룹·항목 수, 스키마 버전)</li>
+				</ul>
+				<p>자체 가입(Sign Up)이 기본적으로 열려 있어, 사용자는 관리자 없이도 <a href="/register.php">가입 페이지</a>에서 직접 계정을 만들 수 있습니다.</p>
+				<h3>로그인 주소 설정 (<code>ZOTERO_BASE_URL</code>)</h3>
+				<p>클라이언트가 로그인 시 여는 주소는 서버의 <code>ZOTERO_BASE_URL</code>에서 나옵니다. 기본값(<code>http://localhost:8080/</code>)이면 다른 PC의 클라이언트가 자기 localhost를 열어 실패합니다. <code>docker/.env</code>에서 클라이언트가 접속 가능한 실제 주소(<strong>끝 슬래시 포함</strong>)로 바꾼 뒤 설정을 재생성하세요:</p>
+				<div class="url-box" style="display:block;white-space:pre-wrap"># docker/.env
+ZOTERO_BASE_URL=http://&lt;서버주소&gt;:8080/
+
+# 적용 (docker/ 디렉터리에서)
+docker compose up -d php-fpm
+docker compose exec php-fpm rm -f include/config/config.inc.php
+docker compose restart php-fpm</div>
+				<p style="font-size:13px;color:#666">확인: <code>docker compose exec php-fpm grep BASE_URI include/config/config.inc.php</code> 결과가 실제 주소로 나오면 됩니다.</p>
+			</section>
+		</main>
+
+		<!-- ══════════════ English ══════════════ -->
+		<main class="content" data-lang="en">
+			<h1>User Guide</h1>
+			<p class="lede">How to use this self-hosted Zotero server — create an account, browse your library in the browser, and sync the Zotero desktop app.</p>
+
+			<div class="note warn">
+				<strong>Metadata-only sync.</strong> This server syncs your <strong>references, collections, tags, notes, and saved searches</strong>. It does <strong>not</strong> sync attached files or PDFs — those stay on the device where you added them.
+			</div>
+
+			<section id="start">
+				<h2><span class="step">1</span> Create an account</h2>
+				<p>You need a username and password before you can sign in anywhere. Anyone with access to this server can self-register.</p>
+				<ol>
+					<li>Open the sign-up page and fill in a <strong>username, email, and password</strong>.</li>
+					<li>Submit — your personal library and an API key are created automatically.</li>
+					<li>You'll be signed straight into the Web Library.</li>
+				</ol>
+				<div class="note"><strong>Rules:</strong> username 3–32 chars (letters, digits, <code>. _ -</code>), password at least <strong>8 characters</strong>, and a valid email address.</div>
+				<p><a href="/register.php" class="cta">Create your account →</a></p>
+				<p style="font-size:14px;color:#666">Already registered? Just <a href="/library/">sign in to the Web Library</a> with the same username and password.</p>
+			</section>
+
+			<section id="weblib">
+				<h2><span class="step">2</span> Browse in the Web Library</h2>
+				<p>The Web Library is a read-and-browse view of your references in the browser — no install required.</p>
+				<p><a href="/library/" class="cta secondary">Open Web Library</a></p>
+				<h3>What you can do</h3>
+				<ul>
+					<li><strong>Three-panel layout</strong> — collections on the left, the item list in the middle, item details on the right.</li>
+					<li><strong>Switch libraries</strong> — your personal library and any group libraries you belong to.</li>
+					<li><strong>Filter &amp; search</strong> — narrow by tag, or search title / creator / year.</li>
+					<li><strong>Sort &amp; choose columns</strong> — click a column header to sort; pick which columns are visible (saved in your browser).</li>
+					<li><strong>Item details</strong> — Info, Notes, and Tags tabs for the selected item.</li>
+					<li><strong>Export</strong> — right-click an item or collection to export to BibTeX, BibLaTeX, RIS, CSL JSON, or CSV.</li>
+				</ul>
+				<h3>Sign in / sign out</h3>
+				<ul>
+					<li>You can sign in with either your <strong>username or your email</strong>.</li>
+					<li>To switch accounts, sign out and sign back in. (Your credentials are stored only in this browser.)</li>
+				</ul>
+				<div class="note">The Web Library is for viewing and exporting. To <em>add and edit</em> references, use the Zotero desktop app (next section), which syncs with this server.</div>
+			</section>
+
+			<section id="client">
+				<h2><span class="step">3</span> Sync the desktop app</h2>
+				<p>Point the Zotero desktop app at this server so it syncs here instead of zotero.org. This is a one-time setup. Use <strong>Zotero 7 or newer</strong>.</p>
+
+				<h3>This server's address</h3>
+				<div class="url-box"><span class="server-url">…</span><button class="copy" onclick="copyServer(this)">Copy</button></div>
+
+				<h3>Step A — Point Zotero at this server</h3>
+				<ol>
+					<li>In Zotero, open <span class="kbd">Edit</span> → <span class="kbd">Settings</span> (on macOS: <span class="kbd">Zotero</span> → <span class="kbd">Settings</span>).</li>
+					<li>Go to the <strong>Advanced</strong> tab → <strong>Config Editor</strong>, and accept the warning.</li>
+					<li>Set these two preferences (use the search box to find each, double-click to edit):</li>
+				</ol>
+				<table class="pref-table">
+					<thead><tr><th>Preference</th><th>Value</th></tr></thead>
+					<tbody>
+						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← trailing <code>/</code> recommended</span></td></tr>
+						<tr><td><code>extensions.zotero.streaming.enabled</code></td><td><code>false</code></td></tr>
+					</tbody>
+				</table>
+				<div class="note"><strong>Trailing slash recommended.</strong> Add the <code>/</code> at the end to match the example. (Zotero 7 usually works without it, but matching the example exactly is safest.)</div>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/config-editor-api-url.png" alt="Setting api.url in the Config Editor" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-api-url.png</code></div>
+						<figcaption>Setting <code>api.url</code> (trailing slash included)</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/config-editor-streaming-enabled.png" alt="Setting streaming.enabled in the Config Editor" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-streaming-enabled.png</code></div>
+						<figcaption>Setting <code>streaming.enabled = false</code></figcaption>
+					</figure>
+				</div>
+				<p>Restart Zotero after changing these.</p>
+
+				<h3>Step B — Sign in</h3>
+				<ol>
+					<li>Open <span class="kbd">Settings</span> → <strong>Sync</strong>.</li>
+					<li>Click <strong>Sign In</strong> / <strong>Link Account</strong>. Zotero opens a login page in your browser.</li>
+					<li>Enter the <strong>username (or email) and password</strong> you registered with, and confirm. The desktop app picks up your access automatically.</li>
+					<li>Back in <strong>Sync</strong>, your account shows as linked. Click the <strong>Sync</strong> button (green circular arrows) in the toolbar to sync.</li>
+				</ol>
+				<div class="shots">
+					<figure class="shot">
+						<img src="/manual/sync-signin.png" alt="Zotero Settings → Sync sign-in panel" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin.png</code></div>
+						<figcaption>① Zotero desktop app: the Sign In / Link Account button in Settings → Sync</figcaption>
+					</figure>
+					<figure class="shot">
+						<img src="/manual/sync-signin-web.png" alt="The browser login form that opens" onerror="this.closest('.shot').classList.add('missing')">
+						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin-web.png</code></div>
+						<figcaption>② The login page that opens in your browser (enter username &amp; password)</figcaption>
+					</figure>
+				</div>
+				<div class="note"><strong>If the browser sign-in doesn't appear (or on older versions):</strong> create an API key on the <a href="/account.php">Account</a> page and paste it directly into Zotero's sync settings.</div>
+
+				<h3>Day-to-day</h3>
+				<ul>
+					<li>Add, edit, and organize references in the desktop app as usual.</li>
+					<li>Press the <strong>Sync</strong> button (or let auto-sync run) to push changes to the server.</li>
+					<li>On another computer, repeat this setup and sign in with the same account to get the same library.</li>
+				</ul>
+				<div class="note warn"><strong>Files don't sync.</strong> Attachments and PDFs are not uploaded. Keep the "File Syncing" options in Sync settings turned off — only library/metadata sync works here.</div>
+				<div class="note warn"><strong>HTTP / HTTPS:</strong> if the address is plain <code>http://</code>, the client may warn or refuse. If you hit trouble, ask an administrator for an HTTPS address.</div>
+			</section>
+
+			<section id="groups">
+				<h2><span class="step">4</span> Group libraries</h2>
+				<p>Group libraries let several people share one collection of references.</p>
+				<ul>
+					<li>Groups you're a member of appear automatically — in the desktop app's left pane and in the Web Library's library switcher.</li>
+					<li>Whether you can edit a group's library depends on your role (member / admin / owner) and the group's settings.</li>
+					<li>To be added to a group, ask the group owner or an administrator.</li>
+				</ul>
+				<p>You can review the groups you belong to on your <a href="/account.php">Account</a> page.</p>
+			</section>
+
+			<section id="apikeys">
+				<h2><span class="step">5</span> API keys <span style="font-size:13px;color:#aaa;font-weight:400">advanced</span></h2>
+				<p>An API key lets scripts or third-party tools read and write your library through the Zotero Web API. You normally don't need this — the desktop app and Web Library handle keys for you.</p>
+				<ul>
+					<li>View and create keys on your <a href="/account.php">Account</a> page, under <strong>API Keys</strong>.</li>
+					<li>Send the key with each request as a <code>Zotero-API-Key</code> header, e.g. <code>GET /users/&lt;id&gt;/items</code>.</li>
+					<li>Treat keys like passwords. Delete any key you no longer use.</li>
+				</ul>
+			</section>
+
+			<section id="faq">
+				<h2>FAQ</h2>
+				<h3>My PDFs aren't showing up on another computer.</h3>
+				<p>That's expected — this server syncs metadata only. The reference entry syncs, but the attached file stays on the computer where you added it.</p>
+				<h3>Sync fails right after setup.</h3>
+				<p>Double-check <code>extensions.zotero.api.url</code> matches the address above, that <code>streaming.enabled</code> is <code>false</code>, and that you restarted Zotero. Make sure you can open this site in the same browser Zotero uses for sign-in.</p>
+				<h3>Clicking sign-in in the client opens a <code>localhost</code> page.</h3>
+				<p>That's a server-side setting. The login URL the client opens comes from the server (<code>ZOTERO_BASE_URL</code>); if it's left at the default <code>http://localhost:8080/</code>, the client opens localhost. An <strong>administrator</strong> needs to set <code>ZOTERO_BASE_URL</code> in <code>docker/.env</code> to the real address clients can reach (with a trailing <code>/</code>, e.g. <code>http://server-ip:8080/</code>) and regenerate the config. (See the admin section below.)</p>
+				<h3>Do I sign in with my username or email?</h3>
+				<p>Either works. You can sign in with the username or the email you registered with.</p>
+				<h3>I forgot my password.</h3>
+				<p>There's no self-service reset. Ask an administrator to set a new password for you.</p>
+				<h3>Can I use my official zotero.org account?</h3>
+				<p>No. This is a separate, self-hosted server. Register an account here; it's independent of zotero.org.</p>
+			</section>
+
+			<section id="admin">
+				<h2>For administrators</h2>
+				<p>Administrators manage the server from the <a href="/admin.php">Admin</a> panel (protected by the super-user credentials), where you can:</p>
+				<ul>
+					<li>Add, inspect, and delete users; reset user passwords.</li>
+					<li>Create and configure group libraries, and add/remove members.</li>
+					<li>Issue or revoke API keys for any user.</li>
+					<li>Check server status (user / group / item counts, schema version).</li>
+				</ul>
+				<p>Self-registration is open by default, so end users can create their own accounts via the <a href="/register.php">Sign Up</a> page without admin involvement.</p>
+				<h3>Login address (<code>ZOTERO_BASE_URL</code>)</h3>
+				<p>The URL the client opens at sign-in comes from the server's <code>ZOTERO_BASE_URL</code>. If it's left at the default (<code>http://localhost:8080/</code>), clients on other machines open their own localhost and fail. Set it in <code>docker/.env</code> to the real address clients can reach (<strong>with a trailing slash</strong>) and regenerate the config:</p>
+				<div class="url-box" style="display:block;white-space:pre-wrap"># docker/.env
+ZOTERO_BASE_URL=http://&lt;server-address&gt;:8080/
+
+# apply (from the docker/ directory)
+docker compose up -d php-fpm
+docker compose exec php-fpm rm -f include/config/config.inc.php
+docker compose restart php-fpm</div>
+				<p style="font-size:13px;color:#666">Verify: <code>docker compose exec php-fpm grep BASE_URI include/config/config.inc.php</code> should show the real address.</p>
+			</section>
+		</main>
+	</div>
+</div>
+
+<div class="footer">Zotero Self-Hosted Server</div>
+
+<script>
+// ── 언어 전환 ──────────────────────────────────────────────────────
+var currentLang = 'ko';
+function setLang(lang) {
+	currentLang = lang;
+	document.documentElement.lang = lang;
+	document.querySelectorAll('[data-lang]').forEach(function (el) {
+		el.style.display = el.getAttribute('data-lang') === lang ? '' : 'none';
+	});
+	// The button shows the language you'll switch TO (the opposite one).
+	var btn = document.getElementById('lang-btn');
+	btn.textContent = lang === 'ko' ? 'EN' : '한';
+	btn.title = lang === 'ko' ? 'View in English' : '한국어로 보기';
+	try { localStorage.setItem('manual_lang', lang); } catch (e) {}
+}
+function toggleLang() { setLang(currentLang === 'ko' ? 'en' : 'ko'); }
+
+// ── 서버 주소 자동 채움 ────────────────────────────────────────────
+var apiUrl = window.location.origin + '/';
+document.querySelectorAll('.server-url, .pref-url').forEach(function (el) {
+	el.textContent = apiUrl;
+});
+
+function copyServer(btn) {
+	navigator.clipboard.writeText(apiUrl).then(function () {
+		var old = btn.textContent;
+		btn.textContent = btn.textContent === 'Copy' ? 'Copied!' : '복사됨!';
+		setTimeout(function () { btn.textContent = old; }, 1500);
+	});
+}
+
+// ── 목차 부드러운 스크롤 ───────────────────────────────────────────
+document.querySelectorAll('.toc a').forEach(function (a) {
+	a.addEventListener('click', function (e) {
+		var target = document.querySelector(a.getAttribute('href'));
+		if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth' }); }
+	});
+});
+
+// ── 초기 언어 (저장된 값 우선, 기본 한국어) ────────────────────────
+var saved = 'ko';
+try { saved = localStorage.getItem('manual_lang') || 'ko'; } catch (e) {}
+setLang(saved);
+</script>
+<script src="/nav.js"></script>
+</body>
+</html>

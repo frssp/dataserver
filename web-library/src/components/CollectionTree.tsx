@@ -77,7 +77,8 @@ function getExportUrl(
   apiKey: string,
 ): string {
   const prefix = libType === 'user' ? `/users/${libId}` : `/groups/${libId}`;
-  const params = new URLSearchParams({ format, key: apiKey, limit: '10000' });
+  const params = new URLSearchParams({ format, limit: '10000' });
+  if (apiKey) params.set('key', apiKey); // anonymous (public group) export omits the key
   if (collectionKey) {
     return `${prefix}/items?collectionKey=${collectionKey}&${params}`;
   }
@@ -87,7 +88,8 @@ function getExportUrl(
 interface Props {
   collections: ZoteroCollection[];
   library: LibraryContext;
-  userInfo: UserInfo;
+  userInfo?: UserInfo;
+  publicMode?: boolean;
   selectedCollection: string | null;
   onSelectCollection: (key: string | null) => void;
   onChangeLibrary: (lib: LibraryContext) => void;
@@ -188,6 +190,7 @@ export default function CollectionTree({
   collections,
   library,
   userInfo,
+  publicMode,
   selectedCollection,
   onSelectCollection,
   onChangeLibrary,
@@ -196,7 +199,7 @@ export default function CollectionTree({
   const [groupsExpanded, setGroupsExpanded] = useState(true);
   const [menu, setMenu] = useState<{ x: number; y: number; libType: 'user' | 'group'; libId: number; collectionKey: string | null } | null>(null);
 
-  const apiKey = userInfo.apiKey;
+  const apiKey = userInfo?.apiKey ?? '';
 
   const handleExportClick = (libType: 'user' | 'group', libId: number, collectionKey: string | null, e: React.MouseEvent) => {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
@@ -213,6 +216,31 @@ export default function CollectionTree({
 
   return (
     <div className="collection-tree">
+      {publicMode ? (
+        <>
+          {/* Public group library root */}
+          <div
+            className={`tree-item library-root ${!selectedCollection ? 'selected' : ''}`}
+            onClick={() => onSelectCollection(null)}
+          >
+            <span className="tree-toggle" />
+            <span className="tree-icon"><LibraryIcon /></span>
+            <span className="tree-name">{library.name}</span>
+            <DotsButton onClick={(e) => { e.stopPropagation(); handleExportClick('group', library.id, null, e); }} />
+          </div>
+          {tree.map((node) => (
+            <TreeItem
+              key={node.collection.key}
+              node={node}
+              depth={1}
+              selectedKey={selectedCollection}
+              onSelect={onSelectCollection}
+              onExport={(colKey, e) => handleExportClick('group', library.id, colKey, e)}
+            />
+          ))}
+        </>
+      ) : userInfo ? (
+        <>
       {/* My Library */}
       <div
         className={`tree-item library-root ${library.type === 'user' && !selectedCollection ? 'selected' : ''}`}
@@ -283,6 +311,8 @@ export default function CollectionTree({
             ))}
         </>
       )}
+        </>
+      ) : null}
 
       {/* Context Menu */}
       {menu && (

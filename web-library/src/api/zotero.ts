@@ -23,9 +23,10 @@ function clearAuth() {
 }
 
 function authHeaders(): Record<string, string> {
+  // No key → anonymous request. The server allows anonymous reads of public
+  // group libraries (libraryReading='all'), which powers the public group view.
   const apiKey = getApiKey();
-  if (!apiKey) throw new Error('Not authenticated');
-  return { 'Zotero-API-Key': apiKey };
+  return apiKey ? { 'Zotero-API-Key': apiKey } : {};
 }
 
 async function apiFetch<T>(path: string, params: Record<string, string> = {}): Promise<T> {

@@ -8,18 +8,27 @@ import ItemDetail from './ItemDetail';
 import TagFilter from './TagFilter';
 
 interface Props {
-  userInfo: UserInfo;
-  onLogout: () => void;
+  userInfo?: UserInfo;
+  onLogout?: () => void;
+  publicGroup?: { id: number; name: string };
 }
 
 const PAGE_SIZE = 50;
 
-export default function LibraryView({ userInfo, onLogout }: Props) {
-  const [library, setLibrary] = useState<LibraryContext>({
-    type: 'user',
-    id: userInfo.userID,
-    name: 'My Library',
-  });
+export default function LibraryView({ userInfo, onLogout, publicGroup }: Props) {
+  const publicMode = !!publicGroup;
+  // "?view=groups" (from the Group Library nav item) starts focused on the
+  // user's first group library instead of My Library.
+  const wantGroups =
+    !publicMode && new URLSearchParams(window.location.search).get('view') === 'groups';
+  const firstGroup = userInfo?.groups?.[0];
+  const [library, setLibrary] = useState<LibraryContext>(
+    publicGroup
+      ? { type: 'group', id: publicGroup.id, name: publicGroup.name }
+      : wantGroups && firstGroup
+        ? { type: 'group', id: firstGroup.groupID, name: firstGroup.name }
+        : { type: 'user', id: userInfo!.userID, name: 'My Library' },
+  );
 
   const [collections, setCollections] = useState<ZoteroCollection[]>([]);
   const [items, setItems] = useState<ZoteroItem[]>([]);
@@ -33,6 +42,7 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [accessDenied, setAccessDenied] = useState(false);
 
   // Load collections and tags when library changes
   useEffect(() => {
@@ -75,6 +85,9 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
       setTotalResults(result.totalResults);
     } catch (err) {
       console.error('Failed to load items:', err);
+      // A public viewer hitting a members-only group gets 403 — show a notice
+      // instead of empty panels.
+      if (publicMode && String(err).includes('403')) setAccessDenied(true);
       setItems([]);
       setTotalResults(0);
     } finally {
@@ -123,13 +136,20 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
 
   return (
     <div className="library-view">
-      <SearchBar onSearch={handleSearch} username={userInfo.username} onLogout={onLogout} />
+      <SearchBar onSearch={handleSearch} username={userInfo?.username} onLogout={onLogout} publicMode={publicMode} />
+      {accessDenied ? (
+        <div className="access-denied">
+          <h2>This group library is private</h2>
+          <p>It’s restricted to members. If you’re a member, <a href="/library/">sign in</a> to view it.</p>
+        </div>
+      ) : (
       <div className="library-body">
         <div className="left-panel">
           <CollectionTree
             collections={collections}
             library={library}
             userInfo={userInfo}
+            publicMode={publicMode}
             selectedCollection={selectedCollection}
             onSelectCollection={handleSelectCollection}
             onChangeLibrary={handleChangeLibrary}
@@ -171,6 +191,7 @@ export default function LibraryView({ userInfo, onLogout }: Props) {
           <ItemDetail item={selectedItem} />
         </div>
       </div>
+      )}
     </div>
   );
 }
