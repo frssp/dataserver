@@ -594,11 +594,20 @@ a.nav-user:hover { color: #c1302b; }
 }
 
 /* ── Items Table ─────────────────────────────────────────── */
+.items-table-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
 .items-table-container {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  min-height: 0;
 }
 
 .items-table {

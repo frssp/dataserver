@@ -101,7 +101,8 @@ export default function ItemsTable({
   const colSpan = 1 + visibleColumns.length;
 
   return (
-    <div className="items-table-container">
+    <div className="items-table-wrapper">
+      <div className="items-table-container">
       <table className="items-table">
         <thead>
           <tr>
@@ -187,6 +188,7 @@ export default function ItemsTable({
           )}
         </tbody>
       </table>
+      </div>
 
       {totalPages > 1 && (
         <div className="pagination">
