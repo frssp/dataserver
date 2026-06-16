@@ -788,7 +788,7 @@ async function showMembers(groupID) {
 	document.getElementById('members-group-name').textContent = g.name;
 	document.getElementById('add-member-name').value = '';
 	document.getElementById('members-add-section').style.display =
-		(myRole === 'owner' || myRole === 'admin') ? 'block' : 'none';
+		(g.role === 'owner' || g.role === 'admin') ? 'block' : 'none';
 	await refreshMembers();
 	showModal('modal-members');
 }
