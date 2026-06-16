@@ -225,6 +225,38 @@ a:hover {
   border-bottom-color: #c1302b;
 }
 
+/* Grouped nav: dropdown trigger + menu (matches the PHP pages) */
+.nav-item { position: relative; }
+.nav-trigger {
+  display: flex; align-items: center; gap: 6px; height: 56px; padding: 0 16px;
+  font-family: inherit; font-size: 14px; font-weight: 500; color: #444;
+  background: none; border: 0; border-bottom: 3px solid transparent;
+  cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.nav-trigger:hover { color: #111; }
+.caret { width: 11px; height: 11px; color: #aaa; transition: transform 0.18s ease, color 0.15s; }
+.nav-item:hover .caret, .nav-item:focus-within .caret { transform: rotate(180deg); color: #c1302b; }
+.dropdown {
+  position: absolute; top: 100%; left: 0; min-width: 190px;
+  background: #fff; border: 1px solid var(--border); border-top: 0;
+  border-radius: 0 0 8px 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+  padding: 6px 0; display: none; flex-direction: column; z-index: 50;
+}
+.nav-item:hover .dropdown, .nav-item:focus-within .dropdown { display: flex; }
+.dropdown a {
+  display: block; height: auto; padding: 9px 16px; font-size: 13px;
+  color: #444; border-bottom: 0; white-space: nowrap;
+}
+.dropdown a .d-desc { display: block; font-size: 11px; color: #999; margin-top: 1px; }
+.dropdown a:hover { background: #f6f8fa; color: #c1302b; }
+.nav-admin {
+  font-size: 12px; font-weight: 500; color: #aaa; text-decoration: none;
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 6px;
+}
+.nav-admin:hover { color: #666; border-color: #bbb; }
+a.nav-user { text-decoration: none; }
+a.nav-user:hover { color: #c1302b; }
+
 .nav-search {
   display: flex;
   position: relative;

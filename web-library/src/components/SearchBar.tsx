@@ -27,8 +27,19 @@ export default function SearchBar({ onSearch, username, onLogout }: Props) {
       </a>
       <div className="nav-links">
         <a href="/library/" className="active">Web Library</a>
-        <a href="/account.php">Account</a>
-        <a href="/admin.php">Admin</a>
+        <div className="nav-item">
+          <button type="button" className="nav-trigger">
+            Groups
+            <svg className="caret" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+              <path d="M3 4.5 6 7.5 9 4.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          <div className="dropdown">
+            <a href="/groups.php">Group Search<span className="d-desc">Find a group library</span></a>
+            <a href="/library/">Group Library<span className="d-desc">Browse in the web library</span></a>
+          </div>
+        </div>
+        <a href="/manual.html">User Guide</a>
       </div>
       <form className="nav-search" onSubmit={handleSubmit}>
         <input
@@ -44,7 +55,8 @@ export default function SearchBar({ onSearch, username, onLogout }: Props) {
         )}
       </form>
       <div className="nav-right">
-        <span className="nav-user">{username}</span>
+        <a href="/admin.php" className="nav-admin">Admin</a>
+        <a href="/account.php" className="nav-user">{username}</a>
         <button className="nav-logout" onClick={onLogout}>Log Out</button>
       </div>
     </nav>
