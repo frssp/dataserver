@@ -181,11 +181,11 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<table class="pref-table">
 					<thead><tr><th>환경설정 이름 (Preference)</th><th>값 (Value)</th></tr></thead>
 					<tbody>
-						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← 반드시 끝에 <code>/</code> 포함</span></td></tr>
+						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← 끝에 <code>/</code> 포함 권장</span></td></tr>
 						<tr><td><code>extensions.zotero.streaming.enabled</code></td><td><code>false</code></td></tr>
 					</tbody>
 				</table>
-				<div class="note warn"><strong>끝 슬래시(/) 주의.</strong> API 주소가 <code>/</code>로 끝나지 않으면 동기화 요청이 실패합니다.</div>
+				<div class="note"><strong>끝 슬래시(/) 권장.</strong> 예시처럼 주소 끝에 <code>/</code>를 붙이는 것을 권장합니다. (Zotero 7 클라이언트는 슬래시가 없어도 대개 동작하지만, 예시와 똑같이 맞춰 두면 더 안전합니다.)</div>
 				<div class="shots">
 					<figure class="shot">
 						<img src="/manual/config-editor-api-url.png" alt="환경설정 편집기에서 api.url 설정" onerror="this.closest('.shot').classList.add('missing')">
@@ -207,6 +207,11 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>가입할 때 쓴 <strong>사용자명(또는 이메일)과 비밀번호</strong>를 입력하고 확인합니다. 데스크톱 앱이 접근 권한을 자동으로 받아옵니다.</li>
 					<li>다시 <strong>동기화 Sync</strong> 화면에 계정이 연결되어 표시됩니다. 도구 모음의 <strong>동기화 버튼</strong>(초록색 회전 화살표)을 눌러 동기화합니다.</li>
 				</ol>
+				<figure class="shot">
+					<img src="/manual/sync-signin.png" alt="Zotero 설정 → 동기화의 로그인 화면" onerror="this.closest('.shot').classList.add('missing')">
+					<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin.png</code></div>
+					<figcaption>Zotero 데스크톱 앱: 설정 → 동기화의 로그인(Sign In / Link Account) 버튼과 연결 완료 상태</figcaption>
+				</figure>
 				<div class="note"><strong>브라우저 로그인이 안 열리면(또는 구버전이면):</strong> <a href="/account.php">Account</a> 페이지에서 API 키를 발급한 뒤, Zotero의 동기화 설정에 그 키를 직접 입력해도 됩니다.</div>
 
 				<h3>평소 사용</h3>
@@ -245,7 +250,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<h3>다른 컴퓨터에서 PDF가 안 보여요.</h3>
 				<p>정상입니다. 이 서버는 메타데이터만 동기화합니다. 참고문헌 항목은 동기화되지만, 첨부 파일은 추가한 컴퓨터에만 남습니다.</p>
 				<h3>설정 직후 동기화가 실패해요.</h3>
-				<p><code>extensions.zotero.api.url</code>이 <code>/</code>로 끝나는지, <code>streaming.enabled</code>가 <code>false</code>인지, Zotero를 재시작했는지 확인하세요. 그리고 Zotero가 로그인에 쓰는 브라우저에서 이 사이트가 열리는지 확인하세요.</p>
+				<p><code>extensions.zotero.api.url</code>이 위 예시 주소와 같은지, <code>streaming.enabled</code>가 <code>false</code>인지, Zotero를 재시작했는지 확인하세요. 그리고 Zotero가 로그인에 쓰는 브라우저에서 이 사이트가 열리는지 확인하세요.</p>
 				<h3>로그인할 때 사용자명을 써요, 이메일을 써요?</h3>
 				<p>둘 다 됩니다. 가입 때 등록한 사용자명이나 이메일 중 무엇으로도 로그인할 수 있습니다.</p>
 				<h3>비밀번호를 잊어버렸어요.</h3>
@@ -326,11 +331,11 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<table class="pref-table">
 					<thead><tr><th>Preference</th><th>Value</th></tr></thead>
 					<tbody>
-						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← must end with <code>/</code></span></td></tr>
+						<tr><td><code>extensions.zotero.api.url</code></td><td><code class="pref-url">…</code> <span style="color:#8a6100">← trailing <code>/</code> recommended</span></td></tr>
 						<tr><td><code>extensions.zotero.streaming.enabled</code></td><td><code>false</code></td></tr>
 					</tbody>
 				</table>
-				<div class="note warn"><strong>Trailing slash matters.</strong> The API URL must end in <code>/</code> or sync requests will fail.</div>
+				<div class="note"><strong>Trailing slash recommended.</strong> Add the <code>/</code> at the end to match the example. (Zotero 7 usually works without it, but matching the example exactly is safest.)</div>
 				<div class="shots">
 					<figure class="shot">
 						<img src="/manual/config-editor-api-url.png" alt="Setting api.url in the Config Editor" onerror="this.closest('.shot').classList.add('missing')">
@@ -352,6 +357,11 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>Enter the <strong>username (or email) and password</strong> you registered with, and confirm. The desktop app picks up your access automatically.</li>
 					<li>Back in <strong>Sync</strong>, your account shows as linked. Click the <strong>Sync</strong> button (green circular arrows) in the toolbar to sync.</li>
 				</ol>
+				<figure class="shot">
+					<img src="/manual/sync-signin.png" alt="Zotero Settings → Sync sign-in screen" onerror="this.closest('.shot').classList.add('missing')">
+					<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin.png</code></div>
+					<figcaption>Zotero desktop app: the Sign In / Link Account button in Settings → Sync, and the linked state</figcaption>
+				</figure>
 				<div class="note"><strong>If the browser sign-in doesn't appear (or on older versions):</strong> create an API key on the <a href="/account.php">Account</a> page and paste it directly into Zotero's sync settings.</div>
 
 				<h3>Day-to-day</h3>
@@ -390,7 +400,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<h3>My PDFs aren't showing up on another computer.</h3>
 				<p>That's expected — this server syncs metadata only. The reference entry syncs, but the attached file stays on the computer where you added it.</p>
 				<h3>Sync fails right after setup.</h3>
-				<p>Double-check <code>extensions.zotero.api.url</code> ends with a <code>/</code>, that <code>streaming.enabled</code> is <code>false</code>, and that you restarted Zotero. Make sure you can open this site in the same browser Zotero uses for sign-in.</p>
+				<p>Double-check <code>extensions.zotero.api.url</code> matches the address above, that <code>streaming.enabled</code> is <code>false</code>, and that you restarted Zotero. Make sure you can open this site in the same browser Zotero uses for sign-in.</p>
 				<h3>Do I sign in with my username or email?</h3>
 				<p>Either works. You can sign in with the username or the email you registered with.</p>
 				<h3>I forgot my password.</h3>
