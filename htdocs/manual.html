@@ -221,7 +221,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li>다른 컴퓨터에서도 같은 설정을 하고 같은 계정으로 로그인하면 동일한 라이브러리를 사용할 수 있습니다.</li>
 				</ul>
 				<div class="note warn"><strong>파일은 동기화되지 않습니다.</strong> 첨부 파일·PDF는 업로드되지 않으니, 동기화 설정의 "파일 동기화(File Syncing)" 옵션은 꺼 두세요. 이 서버는 라이브러리(메타데이터) 동기화만 동작합니다.</div>
-				<div class="note warn"><strong>HTTP / HTTPS:</strong> 서버 주소가 평문 <code>http://</code>이면 클라이언트가 경고하거나 거부할 수 있습니다. 문제가 있으면 관리자에게 HTTPS 주소를 문의하세요.</div>
+				<div class="note"><strong>HTTP 연결.</strong> 이 서버는 평문 <code>http://</code> 주소로 동기화가 정상 동작합니다. 위 예시 서버 주소를 그대로 사용하세요.</div>
 			</section>
 
 			<section id="groups">
@@ -402,7 +402,7 @@ docker compose restart php-fpm</div>
 					<li>On another computer, repeat this setup and sign in with the same account to get the same library.</li>
 				</ul>
 				<div class="note warn"><strong>Files don't sync.</strong> Attachments and PDFs are not uploaded. Keep the "File Syncing" options in Sync settings turned off — only library/metadata sync works here.</div>
-				<div class="note warn"><strong>HTTP / HTTPS:</strong> if the address is plain <code>http://</code>, the client may warn or refuse. If you hit trouble, ask an administrator for an HTTPS address.</div>
+				<div class="note"><strong>HTTP connection.</strong> This server syncs fine over a plain <code>http://</code> address — just use the server address shown above.</div>
 			</section>
 
 			<section id="groups">
