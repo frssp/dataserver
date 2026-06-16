@@ -86,8 +86,8 @@
     '<div class="nav-item">' +
       '<button type="button" class="nav-trigger' + (active === 'groups' ? ' active' : '') + '">Groups ' + caret + '</button>' +
       '<div class="dropdown">' +
-        '<a href="/groups.php">Group Search<span class="d-desc">Find a group library</span></a>' +
-        '<a href="/groups.php">Group Library<span class="d-desc">Open a group library</span></a>' +
+        '<a href="/groups.php">Group Search<span class="d-desc">Find public groups</span></a>' +
+        '<a href="/library/">Group Library<span class="d-desc">Your group libraries</span></a>' +
       '</div>' +
     '</div>';
 
