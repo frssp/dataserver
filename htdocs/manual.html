@@ -62,7 +62,9 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 .shots { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
 .shots .shot { margin: 0; }
 .shot { margin: 16px 0; }
-.shot img { display: block; max-width: 100%; border-radius: 10px; box-shadow: 0 8px 22px rgba(40,50,70,.26); clip-path: inset(1px round 10px); }
+.shot-frame { display: inline-block; max-width: 100%; line-height: 0; border-radius: 10px; box-shadow: 0 8px 22px rgba(40,50,70,.26); }
+.shot.missing .shot-frame { box-shadow: none; }
+.shot img { display: block; max-width: 100%; border-radius: 10px; clip-path: inset(1px round 10px); }
 .shot.missing img { display: none; }
 .shot-missing { display: none; align-items: center; justify-content: center; gap: 8px; text-align: center; padding: 24px 16px; border: 2px dashed #d0d7de; border-radius: 8px; background: #fafbfc; color: #8a929b; font-size: 13px; }
 .shot.missing .shot-missing { display: flex; }
@@ -193,12 +195,12 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				<div class="note"><strong>끝 슬래시(/) 권장.</strong> 예시처럼 주소 끝에 <code>/</code>를 붙이는 것을 권장합니다. (Zotero 7 클라이언트는 슬래시가 없어도 대개 동작하지만, 예시와 똑같이 맞춰 두면 더 안전합니다.)</div>
 				<div class="shots">
 					<figure class="shot">
-						<img src="/manual/config-editor-api-url.png" alt="환경설정 편집기에서 api.url 설정" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/config-editor-api-url.png" alt="환경설정 편집기에서 api.url 설정" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-api-url.png</code></div>
 						<figcaption><code>api.url</code> 값을 설정한 모습 (끝 슬래시 포함)</figcaption>
 					</figure>
 					<figure class="shot">
-						<img src="/manual/config-editor-streaming-enabled.png" alt="환경설정 편집기에서 streaming.enabled 설정" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/config-editor-streaming-enabled.png" alt="환경설정 편집기에서 streaming.enabled 설정" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/config-editor-streaming-enabled.png</code></div>
 						<figcaption><code>streaming.enabled = false</code> 로 설정한 모습</figcaption>
 					</figure>
@@ -214,12 +216,12 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 				</ol>
 				<div class="shots">
 					<figure class="shot">
-						<img src="/manual/sync-signin.png" alt="Zotero 설정 → 동기화의 로그인 패널" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/sync-signin.png" alt="Zotero 설정 → 동기화의 로그인 패널" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin.png</code></div>
 						<figcaption><span class="cap-num">1</span>Zotero 데스크톱 앱: 설정 → 동기화의 로그인(Sign In / Link Account) 버튼</figcaption>
 					</figure>
 					<figure class="shot">
-						<img src="/manual/sync-signin-web.png" alt="브라우저에 열리는 로그인 폼" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/sync-signin-web.png" alt="브라우저에 열리는 로그인 폼" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 스크린샷 자리 — <code>/manual/sync-signin-web.png</code></div>
 						<figcaption><span class="cap-num">2</span>클릭하면 브라우저에 열리는 로그인 페이지 (사용자명·비밀번호 입력)</figcaption>
 					</figure>
@@ -385,12 +387,12 @@ docker compose restart php-fpm</div>
 				<div class="note"><strong>Trailing slash recommended.</strong> Add the <code>/</code> at the end to match the example. (Zotero 7 usually works without it, but matching the example exactly is safest.)</div>
 				<div class="shots">
 					<figure class="shot">
-						<img src="/manual/config-editor-api-url.png" alt="Setting api.url in the Config Editor" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/config-editor-api-url.png" alt="Setting api.url in the Config Editor" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-api-url.png</code></div>
 						<figcaption>Setting <code>api.url</code> (trailing slash included)</figcaption>
 					</figure>
 					<figure class="shot">
-						<img src="/manual/config-editor-streaming-enabled.png" alt="Setting streaming.enabled in the Config Editor" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/config-editor-streaming-enabled.png" alt="Setting streaming.enabled in the Config Editor" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/config-editor-streaming-enabled.png</code></div>
 						<figcaption>Setting <code>streaming.enabled = false</code></figcaption>
 					</figure>
@@ -406,12 +408,12 @@ docker compose restart php-fpm</div>
 				</ol>
 				<div class="shots">
 					<figure class="shot">
-						<img src="/manual/sync-signin.png" alt="Zotero Settings → Sync sign-in panel" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/sync-signin.png" alt="Zotero Settings → Sync sign-in panel" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin.png</code></div>
 						<figcaption><span class="cap-num">1</span>Zotero desktop app: the Sign In / Link Account button in Settings → Sync</figcaption>
 					</figure>
 					<figure class="shot">
-						<img src="/manual/sync-signin-web.png" alt="The browser login form that opens" onerror="this.closest('.shot').classList.add('missing')">
+						<span class="shot-frame"><img src="/manual/sync-signin-web.png" alt="The browser login form that opens" onerror="this.closest('.shot').classList.add('missing')"></span>
 						<div class="shot-missing">📷 Screenshot slot — <code>/manual/sync-signin-web.png</code></div>
 						<figcaption><span class="cap-num">2</span>The login page that opens in your browser (enter username &amp; password)</figcaption>
 					</figure>
