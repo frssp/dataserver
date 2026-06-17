@@ -31,3 +31,17 @@ Suggested capture:
   button so the save popup is visible.
 - Capture the browser with the connector popup showing.
 - Save as PNG, reasonably wide (e.g. ~1200px). Optimize if large.
+
+## Plugins screenshot
+
+Drop a screenshot of the **Zotero Add-ons / plugins manager** here as:
+
+    zotero-plugin.png
+
+It is shown in the "Extend Zotero with plugins" section of
+`htdocs/home.html`. Until the file exists, a labelled placeholder box is
+shown in its place (via `onerror`).
+
+Suggested capture:
+- Open the Zotero Add-ons manager inside Zotero with a few plugins listed.
+- Save as PNG, reasonably wide (e.g. ~1200px). Optimize if large.
