@@ -58,6 +58,8 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 .cta:hover, .content a.cta:hover { background: #a52924; color: #fff; }
 .cta.secondary, .content a.cta.secondary { background: #fff; color: #333; border: 1px solid #ddd; }
 .cta.secondary:hover, .content a.cta.secondary:hover { background: #f0f0f0; color: #111; }
+.video-links { display: inline-flex; flex-direction: column; align-items: stretch; gap: 10px; margin: 8px 0 4px; }
+.video-links .cta { margin-top: 0; }
 /* Screenshot slots — show a dashed placeholder until the PNG is uploaded */
 .shots { display: flex; flex-direction: column; gap: 16px; margin: 16px 0; }
 .shots .shot { margin: 0; }
@@ -133,7 +135,7 @@ code { background: #f3f4f6; border: 1px solid #e1e4e8; border-radius: 4px; paddi
 					<li><strong>공식 사이트 둘러보기</strong> — <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>에서 Zotero가 무엇이고 무엇을 할 수 있는지 살펴보세요.</li>
 					<li><strong>입문 영상 보기</strong> — 짧은 소개 영상과 강의 재생목록으로 전체 사용 흐름을 익히세요.</li>
 				</ul>
-				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">입문 영상 (YouTube) →</a> <a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">강의 재생목록 (YouTube) →</a></p>
+				<div class="video-links"><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">입문 영상 (YouTube) →</a><a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">강의 재생목록 (YouTube) →</a></div>
 				<div class="note">기본기를 익혔다면, 아래 <a href="#start">1. 계정 만들기</a>부터 이 사내 서버 설정을 시작하세요.</div>
 			</section>
 
@@ -325,7 +327,7 @@ docker compose restart php-fpm</div>
 					<li><strong>Explore the official site</strong> — see what Zotero is and what it does at <a href="https://www.zotero.org" target="_blank" rel="noopener">zotero.org</a>.</li>
 					<li><strong>Watch a quick intro</strong> — a short video and a playlist walk through the overall workflow.</li>
 				</ul>
-				<p><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">Intro video (YouTube) →</a> <a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">Video playlist (YouTube) →</a></p>
+				<div class="video-links"><a href="https://www.youtube.com/watch?v=JG7Uq_JFDzE" target="_blank" rel="noopener" class="cta secondary">Intro video (YouTube) →</a><a href="https://www.youtube.com/playlist?list=PLbkhiRA2P3qKVmNpZPNDkK0Aede2Hs_Fm" target="_blank" rel="noopener" class="cta secondary">Video playlist (YouTube) →</a></div>
 				<div class="note">Once you're comfortable with the basics, start the server setup at <a href="#start">1. Create an account</a> below.</div>
 			</section>
 
