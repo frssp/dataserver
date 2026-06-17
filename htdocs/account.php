@@ -143,6 +143,18 @@ if (isset($_GET['action'])) {
 
 			jsonResponse(['groupID' => $group->id, 'libraryID' => $group->libraryID], 201);
 
+		case 'group.join':
+			// Self-service join: a logged-in user may add themselves to a group
+			// ONLY if it has open membership (PublicOpen). Closed/private groups
+			// still require an owner/admin to add members.
+			$groupID = (int)($_GET['groupID'] ?? 0);
+			$group = Zotero_Groups::get($groupID);
+			if (!$group) jsonResponse(['error' => 'Group not found.'], 404);
+			if ($group->type !== 'PublicOpen') jsonResponse(['error' => 'This group is not open for self sign-up.'], 403);
+			if ($group->hasUser($currentUserID)) jsonResponse(['error' => 'You are already a member of this group.'], 400);
+			$group->addUser($currentUserID, 'member');
+			jsonResponse(['ok' => true]);
+
 		case 'group.leave':
 			$groupID = (int)($_GET['groupID'] ?? 0);
 			$group = Zotero_Groups::get($groupID);

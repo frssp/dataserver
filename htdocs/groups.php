@@ -22,16 +22,27 @@ require_once("selfhosted.inc.php");
 
 // ── JSON: list public groups ─────────────────────────────────────────
 if (($_GET['action'] ?? '') === 'list') {
+	// Browsing is open to anyone. If the request carries a valid API key we
+	// also flag which of these groups the viewer already belongs to, so the
+	// UI can show "Join" vs "Joined / View library".
+	$viewerUserID = 0;
+	$apiKey = $_SERVER['HTTP_ZOTERO_API_KEY'] ?? '';
+	if ($apiKey) {
+		$vid = Zotero_DB::valueQuery("SELECT userID FROM zotero_master.`keys` WHERE `key`=?", $apiKey);
+		if ($vid) $viewerUserID = (int)$vid;
+	}
 	$rows = Zotero_DB::query(
 		"SELECT g.groupID, g.name, g.slug, g.type, g.libraryReading, g.description,
 		        g.dateAdded,
 		        (SELECT COUNT(*) FROM zotero_master.groupUsers gu WHERE gu.groupID = g.groupID) AS members,
+		        EXISTS(SELECT 1 FROM zotero_master.groupUsers gum WHERE gum.groupID = g.groupID AND gum.userID = ?) AS isMember,
 		        u.username AS owner
 		 FROM zotero_master.groups g
 		 LEFT JOIN zotero_master.groupUsers gu2 ON g.groupID = gu2.groupID AND gu2.role = 'owner'
 		 LEFT JOIN zotero_master.users u ON gu2.userID = u.userID
 		 WHERE g.type != 'Private'
-		 ORDER BY g.name"
+		 ORDER BY g.name",
+		[$viewerUserID]
 	);
 	jsonResponse($rows ?: []);
 }
@@ -68,9 +79,16 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 .badge-closed { background: #fff3cd; color: #856404; }
 .badge-read-all { background: #e7f0ff; color: #0356b6; }
 .badge-read-members { background: #eceef0; color: #555; }
-.gc-view { margin-left: auto; font-size: 13px; font-weight: 500; color: #c1302b; text-decoration: none; }
+.badge-member { background: #dfe9ff; color: #1b3fae; }
+.gc-actions { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.gc-view { font-size: 13px; font-weight: 500; color: #c1302b; text-decoration: none; white-space: nowrap; }
 .gc-view:hover { text-decoration: underline; }
 .gc-view.disabled { color: #aaa; pointer-events: none; }
+.gc-signin { font-size: 13px; font-weight: 500; color: #c1302b; text-decoration: none; white-space: nowrap; }
+.gc-signin:hover { text-decoration: underline; }
+.gc-join { background: #c1302b; color: #fff; border: none; padding: 6px 15px; border-radius: 7px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background .15s; }
+.gc-join:hover { background: #a82824; }
+.gc-join:disabled { opacity: .6; cursor: default; }
 .empty { text-align: center; color: #999; padding: 48px 20px; background: #fff; border: 1px dashed #d0d7de; border-radius: 10px; }
 
 .footer { background: #404040; color: #999; padding: 16px 0; text-align: center; font-size: 12px; }
@@ -84,7 +102,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 <div class="wrap">
 	<div class="page-head">
 		<h1>Group Search</h1>
-		<p>Browse public groups on this server. No sign-in required.</p>
+		<p>Browse public groups on this server. Sign in to join open-membership groups.</p>
 	</div>
 	<input type="text" id="search" class="search-box" placeholder="Search groups by name or description…" autocomplete="off">
 	<div class="count" id="count"></div>
@@ -94,6 +112,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Ar
 
 <script>
 let allGroups = [];
+const loggedIn = !!localStorage.getItem('zotero_api_key');
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s == null ? '' : s; return d.innerHTML; }
 
@@ -119,10 +138,23 @@ function render(list) {
 	}
 	count.textContent = `${list.length} public group${list.length === 1 ? '' : 's'}`;
 	results.innerHTML = list.map(g => {
-		const canRead = g.libraryReading === 'all';
-		const view = canRead
-			? `<a class="gc-view" href="/library/?group=${g.groupID}&name=${encodeURIComponent(g.name)}">View library →</a>`
-			: `<span class="gc-view disabled">Members only</span>`;
+		const isMember = g.isMember == 1;
+		const canRead = isMember || g.libraryReading === 'all';
+
+		// Right-hand actions: Join (open groups you haven't joined) and/or
+		// a library link (members, or anyone when reading is public).
+		let actions = '';
+		if (g.type === 'PublicOpen' && !isMember) {
+			actions += loggedIn
+				? `<button class="gc-join" data-id="${g.groupID}">Join group</button>`
+				: `<a class="gc-signin" href="/library/">Sign in to join</a>`;
+		}
+		if (canRead) {
+			actions += `<a class="gc-view" href="/library/?group=${g.groupID}&name=${encodeURIComponent(g.name)}">View library →</a>`;
+		} else if (!actions) {
+			actions += `<span class="gc-view disabled">Members only</span>`;
+		}
+
 		return `<div class="group-card">
 			<div class="gc-top">
 				<span class="gc-name">${esc(g.name)}</span>
@@ -132,7 +164,8 @@ function render(list) {
 			<div class="gc-foot">
 				${typeBadge(g.type)}
 				${readBadge(g.libraryReading)}
-				${view}
+				${isMember ? '<span class="badge badge-member">Joined</span>' : ''}
+				<span class="gc-actions">${actions}</span>
 			</div>
 		</div>`;
 	}).join('');
@@ -149,10 +182,42 @@ function filter() {
 
 document.getElementById('search').addEventListener('input', filter);
 
-fetch('groups.php?action=list')
-	.then(r => r.json())
-	.then(data => { allGroups = Array.isArray(data) ? data : []; render(allGroups); })
-	.catch(() => { document.getElementById('results').innerHTML = '<div class="empty">Could not load groups.</div>'; });
+function loadGroups() {
+	const headers = {};
+	const key = localStorage.getItem('zotero_api_key');
+	if (key) headers['Zotero-API-Key'] = key;   // lets the server flag joined groups
+	return fetch('groups.php?action=list', { headers })
+		.then(r => r.json())
+		.then(data => { allGroups = Array.isArray(data) ? data : []; filter(); })
+		.catch(() => { document.getElementById('results').innerHTML = '<div class="empty">Could not load groups.</div>'; });
+}
+
+// Join an open-membership group (delegated; cards are re-rendered on filter)
+document.getElementById('results').addEventListener('click', async (e) => {
+	const btn = e.target.closest('.gc-join');
+	if (!btn) return;
+	const id = btn.dataset.id;
+	btn.disabled = true;
+	btn.textContent = 'Joining…';
+	try {
+		const r = await fetch('account.php?action=group.join&groupID=' + encodeURIComponent(id), {
+			method: 'POST',
+			headers: {
+				'X-Requested-With': 'XMLHttpRequest',
+				'Zotero-API-Key': localStorage.getItem('zotero_api_key') || ''
+			}
+		});
+		const data = await r.json().catch(() => ({}));
+		if (!r.ok) throw new Error(data.error || 'Could not join the group.');
+		await loadGroups();   // reflect new membership (Joined badge + library link)
+	} catch (err) {
+		alert(err.message || 'Could not join the group.');
+		btn.disabled = false;
+		btn.textContent = 'Join group';
+	}
+});
+
+loadGroups();
 </script>
 <script src="/nav.js"></script>
 </body>
