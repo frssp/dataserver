@@ -61,10 +61,12 @@ a { color: inherit; }
 /* ── Getting started cards ────────────────────────────────── */
 .start { max-width: 1000px; margin: 0 auto; padding: 44px 24px 56px; }
 .start h2 { font-size: 24px; font-weight: 500; color: #2b2b2b; text-align: center; margin-bottom: 28px; }
-.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+.cards { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+@media (min-width: 900px) { .cards { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 480px) { .cards { grid-template-columns: 1fr; } }
 .card { background: #fff; border: 1px solid #e6e8ee; border-radius: 10px; padding: 24px 22px; text-decoration: none; transition: transform .15s, box-shadow .15s, border-color .15s; display: block; }
 .card:hover { transform: translateY(-3px); box-shadow: 0 10px 26px rgba(40,50,70,.10); border-color: #d8b9b7; }
-.card .num { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 50%; background: #fbe9e8; color: #c1302b; font-size: 14px; font-weight: 600; margin-bottom: 14px; }
+.card .num { display: inline-block; color: #c1302b; font-size: 22px; font-weight: 700; margin-bottom: 10px; }
 .card h3 { font-size: 17px; font-weight: 600; color: #2b2b2b; margin-bottom: 8px; }
 .card p { font-size: 14.5px; color: #6a6f7a; line-height: 1.65; }
 .card code { background: #f3f4f7; border: 1px solid #e6e8ee; border-radius: 4px; padding: 1px 5px; font-size: 12px; color: #c1302b; }
